@@ -100,7 +100,7 @@ export default function KnowledgePage() {
     <main className="toolShell">
       <header className="toolHeader">
         <div><span className="eyebrow">CONTENTOS · KNOWLEDGE BASE</span><h1>Teach ContentOS what is true.</h1><p>Campaigns use these facts, rules, objections and examples as brand memory.</p></div>
-        <nav className="toolNav"><a href="/">Campaign Studio</a><a className="active" href="/knowledge">Knowledge Base</a><a href="/planner">30-Day Planner</a></nav>
+        <nav className="toolNav"><a href="/">Campaign Studio</a><a className="active" href="/knowledge">Knowledge Base</a><a href="/assets">Brand Assets</a><a href="/planner">30-Day Planner</a></nav>
       </header>
 
       {message && <div className="notice">{message}</div>}
