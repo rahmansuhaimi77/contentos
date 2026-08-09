@@ -45,6 +45,7 @@ create table if not exists public.contentos_brand_assets (
 );
 
 create index if not exists contentos_brand_assets_brand_id_idx on public.contentos_brand_assets(brand_id);
+create index if not exists contentos_brand_assets_uploaded_by_idx on public.contentos_brand_assets(uploaded_by);
 
 alter table public.contentos_brand_assets enable row level security;
 
