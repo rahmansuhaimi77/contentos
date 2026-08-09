@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - fix/vercel-build
+  pull_request:
+    branches:
+      - main
 
 jobs:
   build:
