@@ -1,6 +1,20 @@
 import type { BrandBrain, CampaignBrief } from './types';
 
-export function buildCampaignPrompt(brand: BrandBrain, brief: CampaignBrief) {
+export type PromptKnowledgeItem = {
+  kind: string;
+  title: string;
+  content: string;
+};
+
+export function buildCampaignPrompt(
+  brand: BrandBrain,
+  brief: CampaignBrief,
+  knowledge: PromptKnowledgeItem[] = [],
+) {
+  const knowledgeBlock = knowledge.length
+    ? knowledge.map((item, index) => `${index + 1}. [${item.kind}] ${item.title}: ${item.content}`).join('\n')
+    : 'No additional knowledge items supplied.';
+
   return `You are the senior content strategist and direct-response creative director for this brand.
 
 BRAND BRAIN
@@ -14,6 +28,9 @@ Proof / trust signals: ${brand.proof}
 Preferred CTA: ${brand.cta}
 Avoid: ${brand.avoid}
 
+VERIFIED BRAND KNOWLEDGE
+${knowledgeBlock}
+
 CAMPAIGN BRIEF
 Objective: ${brief.objective}
 Platform: ${brief.platform}
@@ -22,7 +39,14 @@ Language: ${brief.language}
 Number of variants: ${brief.count}
 Extra instructions: ${brief.extra}
 
-Create content that sounds native to the platform, specific to the audience and commercially useful. Avoid generic AI phrasing, fake claims, invented testimonials and unsupported numbers.
+Rules:
+- Treat the verified brand knowledge as factual constraints, not optional inspiration.
+- Never invent price, availability, testimonials, guarantees, numbers or capabilities.
+- Make each variant meaningfully different in angle, not just reworded.
+- The hook must be short enough to work in the first 1-2 seconds for short-form video.
+- Prefer specific customer situations and natural platform-native language.
+- Avoid repeating the full audience description in the hook or script.
+- Keep Bahasa Melayu natural and Malaysian when requested; use Manglish only where it sounds human.
 
 Return ONLY valid JSON with this exact shape:
 {
