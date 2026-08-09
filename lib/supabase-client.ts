@@ -1,9 +1,9 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
 const FALLBACK_SUPABASE_URL = 'https://xqlfytlknhazusowiiug.supabase.co';
 const FALLBACK_SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_BjTjAlbEe74g3PLYu6akVg_tjruki1i';
 
-let browserClient: ReturnType<typeof createClient> | null = null;
+let browserClient: SupabaseClient<any, 'public', any> | null = null;
 
 export function getSupabaseBrowserClient() {
   if (!browserClient) {
