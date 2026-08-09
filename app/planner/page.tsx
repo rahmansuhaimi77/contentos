@@ -19,7 +19,7 @@ type PlanItem = {
   production_status?: string;
 };
 type PlanResult = { plan: { id: string; name: string; created_at: string }; brand: string; items: PlanItem[]; mode: string };
-type StoryboardScene = { scene: number; duration: string; visual: string; on_screen_text: string; voiceover: string };
+type StoryboardScene = { scene: number; duration: string; visual: string; on_screen_text: string; voiceover: string; image_prompt?: string };
 type ProductionPack = {
   strategy: string;
   hook: string;
@@ -172,8 +172,13 @@ export default function PlannerPage() {
     setResult({ ...result, items: result.items.map((row) => row.day_number === item.day_number ? { ...row, status } : row) });
   }
 
+  async function copyScenePrompt(scene: StoryboardScene) {
+    await navigator.clipboard.writeText(scene.image_prompt || scene.visual);
+    setMessage(`Scene ${scene.scene} visual prompt copied.`);
+  }
+
   async function copyPack(pack: ProductionPack) {
-    const storyboard = pack.storyboard.map((scene) => `Scene ${scene.scene} (${scene.duration})\nVisual: ${scene.visual}\nText: ${scene.on_screen_text}\nVO: ${scene.voiceover}`).join('\n\n');
+    const storyboard = pack.storyboard.map((scene) => `Scene ${scene.scene} (${scene.duration})\nVisual: ${scene.visual}\nText: ${scene.on_screen_text}\nVO: ${scene.voiceover}\nImage prompt: ${scene.image_prompt || scene.visual}`).join('\n\n');
     await navigator.clipboard.writeText(`HOOK\n${pack.hook}\n\nSCRIPT\n${pack.script}\n\nCAPTION\n${pack.caption}\n\nSTORYBOARD\n${storyboard}\n\nPRODUCTION PROMPT\n${pack.creative_prompt}`);
     setMessage('Full production pack copied.');
   }
@@ -212,8 +217,8 @@ export default function PlannerPage() {
         <div className="productionGrid">
           <article className="productionSection"><span>SCRIPT</span><p>{production.pack.script}</p></article>
           <article className="productionSection"><span>CAPTION</span><p>{production.pack.caption}</p></article>
-          <article className="productionSection wide"><span>STORYBOARD</span><div className="storyboardList">{production.pack.storyboard.map((scene) => <div className="storyScene" key={scene.scene}><b>Scene {scene.scene} · {scene.duration}</b><p>{scene.visual}</p><small>TEXT: {scene.on_screen_text}</small>{scene.voiceover && <small>VO: {scene.voiceover}</small>}</div>)}</div></article>
-          <article className="productionSection wide"><span>VIDEO / IMAGE PROMPT</span><p>{production.pack.creative_prompt}</p></article>
+          <article className="productionSection wide"><span>STORYBOARD + SCENE PROMPTS</span><div className="storyboardList">{production.pack.storyboard.map((scene) => <div className="storyScene" key={scene.scene}><b>Scene {scene.scene} · {scene.duration}</b><p>{scene.visual}</p><small>TEXT: {scene.on_screen_text}</small>{scene.voiceover && <small>VO: {scene.voiceover}</small>}{scene.image_prompt && <div className="scenePrompt"><small>VISUAL PROMPT</small><p>{scene.image_prompt}</p><button onClick={() => copyScenePrompt(scene)}>Copy scene prompt</button></div>}</div>)}</div></article>
+          <article className="productionSection wide"><span>MASTER VIDEO / IMAGE PROMPT</span><p>{production.pack.creative_prompt}</p></article>
           <article className="productionSection wide"><span>QA RULES</span><ul>{production.pack.qa_notes.map((note) => <li key={note}>{note}</li>)}</ul></article>
         </div>
         <div className="productionFooter"><span>✓ Creative sent to Approval Queue</span><a href="/">Open ContentOS Studio</a></div>
