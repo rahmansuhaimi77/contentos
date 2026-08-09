@@ -56,6 +56,7 @@ export default function PlannerPage() {
       const { data } = await supabase.auth.getUser();
       setUser(data.user ?? null);
       if (!data.user) { setLoading(false); return; }
+
       const { data: brandRows, error: brandError } = await supabase
         .from('contentos_brands')
         .select('id,name')
@@ -64,6 +65,41 @@ export default function PlannerPage() {
       const nextBrands = (brandRows ?? []) as Brand[];
       setBrands(nextBrands);
       if (nextBrands[0]) setBrandId(nextBrands[0].id);
+
+      const { data: latestPlans, error: latestPlanError } = await supabase
+        .from('contentos_content_plans')
+        .select('id,name,created_at,brand_id,objective,platforms,language')
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      if (latestPlanError) {
+        setError(latestPlanError.message);
+      } else {
+        const latestPlan = (latestPlans as any[] | null)?.[0];
+        if (latestPlan) {
+          const { data: itemRows, error: itemError } = await supabase
+            .from('contentos_plan_items')
+            .select('id,day_number,pillar,objective,platform,format,hook,concept,cta,status,production_status')
+            .eq('plan_id', latestPlan.id)
+            .order('day_number', { ascending: true });
+
+          if (itemError) {
+            setError(itemError.message);
+          } else {
+            const planBrand = nextBrands.find((brand) => brand.id === latestPlan.brand_id);
+            setBrandId(latestPlan.brand_id);
+            setObjective(latestPlan.objective);
+            setPlatforms(latestPlan.platforms?.length ? latestPlan.platforms : ['TikTok / Reels']);
+            setLanguage(latestPlan.language);
+            setResult({
+              plan: { id: latestPlan.id, name: latestPlan.name, created_at: latestPlan.created_at },
+              brand: planBrand?.name || 'Brand',
+              items: (itemRows ?? []) as PlanItem[],
+              mode: 'saved',
+            });
+          }
+        }
+      }
       setLoading(false);
     }
     init();
@@ -184,7 +220,7 @@ export default function PlannerPage() {
       </section>}
 
       {result && <section id="plan-results" className="plannerResults">
-        <div className="plannerResultsHead"><div><span className="eyebrow">{result.mode.toUpperCase()} PLAN</span><h2>{result.plan.name}</h2><p>{result.brand} · 30 planned content pieces</p></div><a className="toolPrimaryLink" href="/knowledge">Improve Knowledge Base</a></div>
+        <div className="plannerResultsHead"><div><span className="eyebrow">{result.mode.toUpperCase()} PLAN</span><h2>{result.plan.name}</h2><p>{result.brand} · {result.items.length} planned content pieces</p></div><a className="toolPrimaryLink" href="/knowledge">Improve Knowledge Base</a></div>
         <div className="planList">
           {result.items.map((item) => <article className="planCard" key={item.day_number}>
             <div className="dayBadge">DAY<br/><strong>{String(item.day_number).padStart(2, '0')}</strong></div>
