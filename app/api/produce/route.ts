@@ -1,6 +1,10 @@
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { z } from 'zod';
-import { buildProductionPack, type ProductionKnowledgeItem } from '@/lib/production-pack-generator';
+import {
+  buildProductionPack,
+  type ProductionKnowledgeItem,
+  type ProductionVisualContext,
+} from '@/lib/production-pack-generator';
 
 export const runtime = 'nodejs';
 
@@ -59,13 +63,35 @@ export async function POST(req: Request) {
       .single();
     if (brandError || !brand) return Response.json({ error: 'Brand not found.' }, { status: 404 });
 
-    const { data: knowledgeRows, error: knowledgeError } = await auth.supabase
-      .from('contentos_knowledge_items')
-      .select('kind,title,content')
-      .eq('brand_id', brand.id)
-      .order('updated_at', { ascending: false })
-      .limit(100);
-    if (knowledgeError) throw knowledgeError;
+    const [knowledgeResult, visualResult, assetsResult] = await Promise.all([
+      auth.supabase
+        .from('contentos_knowledge_items')
+        .select('kind,title,content')
+        .eq('brand_id', brand.id)
+        .order('updated_at', { ascending: false })
+        .limit(100),
+      auth.supabase
+        .from('contentos_brand_visuals')
+        .select('primary_color,secondary_color,accent_color,font_notes,visual_style,image_rules')
+        .eq('brand_id', brand.id)
+        .maybeSingle(),
+      auth.supabase
+        .from('contentos_brand_assets')
+        .select('kind,title')
+        .eq('brand_id', brand.id)
+        .limit(50),
+    ]);
+
+    if (knowledgeResult.error) throw knowledgeResult.error;
+    if (visualResult.error) throw visualResult.error;
+    if (assetsResult.error) throw assetsResult.error;
+
+    const assetRows = (assetsResult.data ?? []) as Array<{ kind: string; title: string }>;
+    const visualContext: ProductionVisualContext = {
+      ...(visualResult.data ?? {}),
+      asset_kinds: [...new Set(assetRows.map((row) => row.kind))],
+      asset_titles: assetRows.map((row) => row.title),
+    };
 
     const pack = buildProductionPack({
       brandName: brand.name,
@@ -77,7 +103,7 @@ export async function POST(req: Request) {
       hook: item.hook,
       concept: item.concept,
       cta: item.cta || brand.preferred_cta || '',
-    }, (knowledgeRows ?? []) as ProductionKnowledgeItem[]);
+    }, (knowledgeResult.data ?? []) as ProductionKnowledgeItem[], visualContext);
 
     const { data: existingVariants } = await auth.supabase
       .from('contentos_content_variants')
@@ -144,7 +170,14 @@ export async function POST(req: Request) {
       .eq('id', item.id);
     if (planItemError) throw planItemError;
 
-    return Response.json({ pack, campaignId, variantId, mode: 'zero-cost', productionStatus: 'produced' });
+    return Response.json({
+      pack,
+      campaignId,
+      variantId,
+      mode: 'zero-cost',
+      productionStatus: 'produced',
+      visualAssets: { count: assetRows.length, kinds: visualContext.asset_kinds ?? [] },
+    });
   } catch (error) {
     console.error(error);
     return Response.json({ error: error instanceof Error ? error.message : 'Production failed.' }, { status: 500 });
