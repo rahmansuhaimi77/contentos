@@ -84,11 +84,22 @@ function storyboardFor(input: ProductionInput, body: string, cta: string): Story
   ];
 }
 
+function naturalSewaProCta(input: ProductionInput) {
+  const pillar = input.pillar.toLowerCase();
+  if (pillar.includes('education') || pillar.includes('trust')) return 'Nak kami bantu semak? WhatsApp SewaPro dengan tarikh, lokasi dan kereta pilihan.';
+  if (pillar.includes('faq') || pillar.includes('process')) return 'Hantar tarikh + lokasi + kategori kereta. Kami bantu semak pilihan yang sesuai.';
+  if (pillar.includes('conversion')) return 'Nak semak kereta sekarang? WhatsApp SewaPro dengan tarikh, lokasi, kereta pilihan dan bajet.';
+  return 'Nak compare tanpa buka banyak chat? Hantar requirement sekali dekat SewaPro.';
+}
+
 export function buildProductionPack(input: ProductionInput, knowledgeItems: ProductionKnowledgeItem[]): ProductionPack {
   const isSewaPro = input.brandName.toLowerCase().includes('sewapro');
+  const isMalay = /bahasa|melayu|manglish/i.test(input.language);
   const preferredCta = knowledge(knowledgeItems, 'Preferred CTA');
   const availabilityRule = knowledge(knowledgeItems, 'Availability rule');
-  const cta = input.cta || preferredCta || 'WhatsApp kami dengan tarikh, lokasi dan kereta pilihan untuk semak availability.';
+  const cta = isSewaPro && isMalay
+    ? naturalSewaProCta(input)
+    : input.cta || preferredCta || 'WhatsApp kami dengan tarikh, lokasi dan kereta pilihan untuk semak availability.';
   const body = isSewaPro ? sewProBody(input) : `${input.concept} Keep the explanation practical, specific and grounded in the saved Brand Brain.`;
   const script = `${input.hook}\n\n${body}\n\n${cta}`;
   const caption = isSewaPro
