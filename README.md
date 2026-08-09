@@ -1,52 +1,79 @@
-# ContentOS MVP
+# ContentOS
 
-A multi-brand AI marketing operating system.
+A multi-brand AI marketing operating system: Brand Brain → campaign generation → saved creative library → human approval.
 
-## What works in v0.1
+## v0.2 status
 
-- Brand Brain form
-- Campaign brief builder
-- OpenAI-powered campaign generation
-- Strategy + multiple creative variants
-- Hook, angle, script, caption, CTA and image/video production prompt
-- Responsive dashboard UI
-- Supabase multi-tenant schema + RLS migration ready for the persistence phase
+Working in this build:
+
+- Supabase email/password authentication
+- Isolated `contentos_*` tables inside the selected existing Supabase Pro project
+- Row Level Security for workspaces, brands, campaign history and creative variants
+- Multi-brand Brand Brain persistence
+- Campaign Studio with multiple creative variants
+- Automatic campaign + creative persistence
+- Content Library / campaign history
+- Approval Queue with approve / needs review / reject states
+- Protected generation endpoint that requires a valid Supabase session
+- Zero-cost demo generator when no OpenAI key is configured
+- Optional OpenAI Responses API generation when an API key/model are added
 
 ## Architecture
 
-Browser → Next.js App Router → `/api/generate` → OpenAI Responses API
+Browser → Next.js App Router → Supabase Auth → ContentOS RLS tables
 
-Persistence phase:
-Next.js → Supabase Auth/Postgres → workspace → brands → knowledge_items → campaigns → content_variants
+Campaign generation:
 
-## Run locally
+Browser (authenticated) → `/api/generate` → verify Supabase access token → OpenAI Responses API **or** zero-cost demo generator → persist campaign/variants to Supabase
 
-1. Copy `.env.example` to `.env.local`.
-2. Add `OPENAI_API_KEY`.
-3. Set `OPENAI_MODEL` to a model available in your OpenAI API project.
-4. Run `npm install`.
-5. Run `npm run dev`.
-6. Open `http://localhost:3000`.
+## Database isolation
 
-Supabase is not required for the first generation screen. The included SQL migration is for the next phase: login, saved Brand Brains, campaign history and approvals.
+ContentOS shares the existing Supabase project, but not the SewaPro application tables. All ContentOS tables are prefixed:
 
-## Build order
+- `contentos_workspaces`
+- `contentos_workspace_members`
+- `contentos_brands`
+- `contentos_knowledge_items`
+- `contentos_campaigns`
+- `contentos_content_variants`
 
-### Phase 1 — Campaign engine (included)
-Brand Brain → campaign brief → generated creative pack.
+RLS helper functions live in a non-public `contentos_private` schema.
 
-### Phase 2 — Persistent Brand Brain
-Supabase Auth, workspaces, brands, knowledge base, save/load campaigns.
+## Environment variables
 
-### Phase 3 — Creative pipeline
-Generate image storyboards, image assets and video-ready prompts; store all assets against each creative.
+The current selected Supabase URL and **publishable** key are included as safe fallbacks for this private MVP repository. They can be overridden with:
 
-### Phase 4 — Approval & publishing
-Draft → review → approve → schedule/publish. Never auto-publish by default.
+```bash
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
+```
 
-### Phase 5 — Learning loop
-Ingest platform/GA4 performance, score hooks/angles/formats and feed those learnings back into the strategist.
+Real AI generation is optional:
 
-## Recommended first production principle
+```bash
+OPENAI_API_KEY=
+OPENAI_MODEL=
+```
 
-Keep a human approval checkpoint between AI generation and publishing. Automatic publishing should only be introduced after brand rules, permissions, audit history and platform integrations are stable.
+Without the OpenAI variables, the app remains fully testable and stores campaigns using demo-mode content generation.
+
+## Local run
+
+```bash
+npm install
+npm run dev
+```
+
+Open `http://localhost:3000`.
+
+## Production principle
+
+Publishing is intentionally not automated yet. Human approval remains mandatory while the Brand Brain, prompts, permissions and performance feedback loop are being validated.
+
+## Next phases
+
+1. Knowledge uploads: FAQs, testimonials, product docs and best-performing historical content.
+2. Separate strategist / copywriter / creative-director agents.
+3. Image and storyboard generation.
+4. Publishing integrations.
+5. Performance ingestion + learning loop.
