@@ -192,7 +192,7 @@ async function loadKnowledge(supabase: ReturnType<typeof createSupabaseClient>, 
     .order('updated_at', { ascending: false })
     .limit(1);
 
-  const brandId = brandRows?.[0]?.id;
+  const brandId = (brandRows as Array<{ id: string }> | null)?.[0]?.id;
   if (!brandId) return [] as PromptKnowledgeItem[];
 
   const { data } = await supabase
