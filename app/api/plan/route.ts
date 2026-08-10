@@ -3,6 +3,11 @@ import { z } from 'zod';
 import { buildThirtyDayPlan, type PlanKnowledgeItem } from '@/lib/plan-generator';
 import { buildKampusRideThirtyDayPlan, isKampusRide } from '@/lib/kampusride-strategy';
 import { buildKampusRideLaunchAwarePlan } from '@/lib/kampusride-launch-context';
+import {
+  applyKampusRideGrowthCalendar,
+  type GrowthCalendarItem,
+  type GrowthProfile,
+} from '@/lib/kampusride-growth-calendar';
 
 export const runtime = 'nodejs';
 
@@ -36,8 +41,17 @@ function addDaysIso(date: string, days: number) {
 }
 
 function kampusRideAcademicContext(date: string) {
+  if (date < '2026-09-12') {
+    return 'Semester 3 short-semester lecture period. Use live beta behaviour for learning, not as a proxy for normal-semester demand.';
+  }
+  if (date <= '2026-09-13') {
+    return 'Semester 3 revision window. Keep public content lighter and prioritise product stabilisation.';
+  }
+  if (date <= '2026-09-19') {
+    return 'Semester 3 examination window. Keep marketing low-pressure and prioritise QA, support and launch readiness.';
+  }
   if (date < '2026-09-28') {
-    return 'Pre-semester / return-to-campus preparation. Official Semester 1 lectures begin 28 September 2026. Keep KampusRide pre-launch unless the founder has separately confirmed launch.';
+    return 'Post-short-semester / return-to-campus preparation. Official Semester 1 lectures begin 28 September 2026. Do not let the date itself force launch; manual Product Phase remains the source of truth.';
   }
   if (date <= '2026-11-13') {
     return 'Semester 1 first lecture block (28 Sep–13 Nov 2026). Prioritise real campus routines, class movement, rain, LRT Gombak, app how-to and practical adoption content.';
@@ -57,7 +71,7 @@ function kampusRideAcademicContext(date: string) {
   if (date <= '2027-02-21') {
     return 'Inter-semester vacation (6–21 Feb 2027). Use lighter feedback, retention, community stories and product-improvement content.';
   }
-  return 'Outside the currently verified Semester 1 2026/27 academic window. Use the newest verified IIUM calendar/event context from the Knowledge Base and do not invent dates.';
+  return 'Outside the currently verified academic window. Use the newest verified IIUM calendar/event context from the Knowledge Base and do not invent dates.';
 }
 
 async function getAuthenticatedClient(req: Request) {
@@ -105,6 +119,29 @@ export async function POST(req: Request) {
 
     if (knowledgeError) throw knowledgeError;
 
+    const kampusRide = isKampusRide(brandRow.name);
+    let growthProfile: GrowthProfile | null = null;
+    let growthCalendar: GrowthCalendarItem[] = [];
+
+    if (kampusRide) {
+      const [profileResult, calendarResult] = await Promise.all([
+        auth.supabase
+          .from('contentos_growth_profiles')
+          .select('current_phase,marketplace_need,target_launch_start,target_launch_end')
+          .eq('brand_id', brandId)
+          .maybeSingle(),
+        auth.supabase
+          .from('contentos_growth_calendar_items')
+          .select('start_date,end_date,phase,academic_phase,title,objective,audience_focus,marketplace_need,content_mix,ops_priorities,success_gates')
+          .eq('brand_id', brandId)
+          .order('sort_order', { ascending: true }),
+      ]);
+      if (profileResult.error) throw profileResult.error;
+      if (calendarResult.error) throw calendarResult.error;
+      growthProfile = (profileResult.data as GrowthProfile | null) ?? null;
+      growthCalendar = (calendarResult.data ?? []) as GrowthCalendarItem[];
+    }
+
     const plannerInput = {
       brandName: brandRow.name,
       objective,
@@ -113,7 +150,7 @@ export async function POST(req: Request) {
       cta: brandRow.preferred_cta || undefined,
     };
     const knowledge = (knowledgeRows ?? []) as PlanKnowledgeItem[];
-    const baseItems = isKampusRide(brandRow.name)
+    const baseItems = kampusRide
       ? buildKampusRideLaunchAwarePlan(
           plannerInput,
           knowledge,
@@ -123,11 +160,12 @@ export async function POST(req: Request) {
 
     const datedItems = baseItems.map((item) => {
       const plannedDate = addDaysIso(startDate, item.day_number - 1);
-      if (!isKampusRide(brandRow.name)) return { ...item, planned_date: plannedDate };
+      if (!kampusRide) return { ...item, planned_date: plannedDate };
+      const growthAware = applyKampusRideGrowthCalendar(item, plannedDate, growthCalendar, growthProfile);
       return {
-        ...item,
+        ...growthAware,
         planned_date: plannedDate,
-        concept: `${item.concept} TIMING GUARDRAIL (${plannedDate}): ${kampusRideAcademicContext(plannedDate)}`,
+        concept: `${growthAware.concept} TIMING GUARDRAIL (${plannedDate}): ${kampusRideAcademicContext(plannedDate)}`,
       };
     });
 
@@ -154,7 +192,7 @@ export async function POST(req: Request) {
 
     if (itemsError) throw itemsError;
 
-    return Response.json({ plan, brand: brandRow.name, items: datedItems, mode: 'zero-cost' });
+    return Response.json({ plan, brand: brandRow.name, items: datedItems, mode: 'zero-cost', growthProfile, growthCalendar });
   } catch (error) {
     console.error(error);
     return Response.json({ error: error instanceof Error ? error.message : 'Planner failed.' }, { status: 500 });
