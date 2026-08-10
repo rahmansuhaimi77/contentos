@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import './app-shell.css';
+import AppShell from '@/components/app-shell';
 
 export const metadata: Metadata = {
   title: 'ContentOS',
@@ -9,7 +11,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body><AppShell>{children}</AppShell></body>
     </html>
   );
 }
