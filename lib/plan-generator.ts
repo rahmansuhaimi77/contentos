@@ -52,6 +52,39 @@ const sewaProIdeas = [
   ['Recap', '30 saat: cara paling simple guna SewaPro.', 'Recap flow penuh SewaPro dengan CTA WhatsApp dan reminder bahawa harga serta availability perlu disahkan.'],
 ] as const;
 
+const kampusRideIdeas = [
+  ['Pain Point', 'Dah post transporter, lepas tu kena buka 6 DM?', 'POV student post ride dalam group, kemudian banyak chat masuk serentak. Contrast dengan KampusRide: post sekali, semua offer duduk satu tempat untuk compare.'],
+  ['Product Education', 'Post sekali. Compare semua offer satu tempat.', 'Tunjuk flow mudah: post route → driver offer → compare price/reputation → pilih → chat.'],
+  ['Driver Growth', 'Driver kampus: tak perlu camp Telegram tunggu job.', 'Tunjuk driver asyik refresh group, kemudian switch ke Driver mode dan check ride demand bila free. Jangan janji jumlah job atau income.'],
+  ['Privacy', 'Nak cari ride tak semestinya kena bagi nombor phone.', 'Explain bahawa coordination boleh dibuat dalam in-app chat dan nombor phone tak perlu diberi kepada setiap orang yang DM.'],
+  ['Relatable', 'Class 8AM. Hujan. Mahallah jauh. 😭', 'Campus skit yang relatable: student tengok hujan + jam, kemudian post ride. Product appearance ringan dan natural.'],
+  ['How It Works', 'KampusRide works macam mana dalam 20 saat?', 'Screen-record real app flow dari Passenger mode: pilih route/time/pax, post request, offers appear, choose one, chat.'],
+  ['Female Preference', 'Prefer female driver? Letak preference.', 'Explain bahawa passenger boleh set driver gender preference. Matching bergantung pada availability dan tidak guaranteed.'],
+  ['Driver Lifestyle', 'Free 30 minit sebelum class? Switch Driver mode.', 'Show student driver dengan free window check ride demand. Offer hanya bila available. No earnings promise.'],
+  ['Reputation', 'Cheapest bukan satu-satunya benda nak compare.', 'Show price + rating + car details + reputation tags + offer note as decision inputs.'],
+  ['Price Education', 'Ride dalam UIA RM3, RM4, RM5 — price guide tu macam mana?', 'Explain suggested price anchor sebagai guide berdasarkan route/community rate, bukan guaranteed fixed fare.'],
+  ['Relatable', 'Bila dah pilih driver… tapi 5 orang lagi DM “still need?”', 'Comedy tentang old group workflow, kemudian tunjuk KampusRide organise offers dan selection dalam satu flow.'],
+  ['Multi Stop', 'Nak pickup member dulu sebelum pergi? Add stop.', 'Demo intermediate stop dalam ride request. Driver nampak stops sebelum offer. Jangan promise extra stop free.'],
+  ['Use Case', 'Nak ke LRT Gombak? Post route, biar driver offer.', 'Common external-trip scenario: destination → price guide → offers → passenger chooses.'],
+  ['Trust', 'Driver boleh rate passenger juga? Yes.', 'Explain accountability works both ways dan passenger pun boleh build reputation.'],
+  ['Privacy', 'Apa driver boleh nampak — dan apa yang dia tak perlu nampak.', 'Explain enough ride/profile context to offer while personal phone details stay private.'],
+  ['Driver Value', 'Fare anda, anda keep. KampusRide tak potong per ride.', 'Explain peer-to-peer fare and no per-ride commission. Do not publish unconfirmed subscription price.'],
+  ['Positioning', 'KampusRide bukan “Grab versi kampus”.', 'Explain community cost-sharing marketplace: passenger posts, drivers offer, passenger chooses, direct fare.'],
+  ['New Student', 'Tak kenal semua mahallah lagi? Takpe.', 'Show current IIUM place list/search helping newer students choose common campus locations.'],
+  ['Notifications', 'Tak payah refresh group tiap 2 minit.', 'Show push notification when an offer/message arrives. Emphasise less manual checking.'],
+  ['Driver Reputation', 'Rating anda ikut anda — bukan hilang dalam chat lama.', 'Explain on-platform rating/reputation history. Do not guarantee more jobs.'],
+  ['Passenger Choice', 'Offer murah belum tentu offer yang anda nak pilih.', 'Show multiple offers and passenger control over the final choice.'],
+  ['Accountability', 'Apa beza ride community yang “tersusun”?', 'Compare scattered anonymous workflow vs profiles, in-app chat, trip record, ratings and moderation.'],
+  ['Dual Mode', 'Pagi passenger. Petang driver.', 'Show one user switching between Passenger and Driver modes through a normal campus day.'],
+  ['Relatable', 'Kawan: “boleh tumpang?” Aku: “post KampusRide je 😂”', 'Light campus comedy that ends with a quick app shot rather than a hard sell.'],
+  ['FAQ', 'Bayar dekat KampusRide ke driver?', 'Answer clearly: passenger pays selected driver directly; KampusRide does not process the ride fare.'],
+  ['FAQ', 'Semua driver mesti student UIA ke?', 'Explain carefully that the pool can be mixed; do not claim all drivers are IIUM students or formally document-verified.'],
+  ['Female Preference', 'Female preferred ≠ female guaranteed.', 'Set expectation clearly: preference helps prioritise female drivers when available; supply may be limited.'],
+  ['Brand', 'Satu request. Satu tempat. Sampai ride selesai.', 'Montage the full lifecycle: post → offer → choose → chat → en route → arrived → complete → rate.'],
+  ['Driver Growth', 'Ada kereta dan selalu drive sekitar UIA?', 'Driver recruitment: offer rides when free, see demand, keep direct fare, build reputation. No guaranteed-job claim.'],
+  ['Community', 'Ride community, tapi lebih tersusun.', 'Brand montage featuring real campus moments and both passenger/driver perspectives.'],
+] as const;
+
 const genericPillars = ['Pain Point','Education','Use Case','Trust','FAQ','Comparison','Convenience','Conversion'];
 const formats = ['15-30 sec short-form video','UGC / POV video','Talking-head explainer','Carousel','Static ad','WhatsApp-ready post'];
 const sewaProCtas = [
@@ -62,11 +95,21 @@ const sewaProCtas = [
   'Nak compare tanpa buka banyak chat? Hantar requirement sekali dekat SewaPro.',
   'WhatsApp SewaPro untuk semak pilihan semasa — harga dan availability akan disahkan dahulu.',
 ];
+const kampusRideCtas = [
+  'Post ride anda dalam KampusRide.',
+  'Check offer dalam satu tempat, kemudian pilih.',
+  'Cuba KampusRide untuk ride seterusnya.',
+  'Switch ke Driver mode bila anda free.',
+  'Check ride yang tengah cari driver.',
+  'Save dulu — guna KampusRide bila perlukan ride.',
+];
 
 export function buildThirtyDayPlan(input: PlannerInput, knowledge: PlanKnowledgeItem[]): PlanItem[] {
   const ctaFromKnowledge = knowledge.find((item) => item.title.toLowerCase() === 'preferred cta')?.content;
   const fallbackCta = input.cta || ctaFromKnowledge || 'Contact us to check suitable options.';
-  const isSewaPro = input.brandName.toLowerCase().includes('sewapro');
+  const lowerName = input.brandName.toLowerCase();
+  const isSewaPro = lowerName.includes('sewapro');
+  const isKampusRide = lowerName.includes('kampusride');
   const isMalay = /bahasa|melayu|manglish/i.test(input.language);
   const platforms = input.platforms.length ? input.platforms : ['TikTok / Reels'];
 
@@ -80,6 +123,19 @@ export function buildThirtyDayPlan(input: PlannerInput, knowledge: PlanKnowledge
       hook,
       concept,
       cta: isMalay ? sewaProCtas[index % sewaProCtas.length] : fallbackCta,
+    }));
+  }
+
+  if (isKampusRide) {
+    return kampusRideIdeas.map(([pillar, hook, concept], index) => ({
+      day_number: index + 1,
+      pillar,
+      objective: pillar.toLowerCase().includes('driver') ? 'Driver acquisition and activation' : input.objective,
+      platform: platforms[index % platforms.length],
+      format: formats[index % formats.length],
+      hook,
+      concept,
+      cta: isMalay ? kampusRideCtas[index % kampusRideCtas.length] : fallbackCta,
     }));
   }
 

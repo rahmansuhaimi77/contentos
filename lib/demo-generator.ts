@@ -12,13 +12,18 @@ function findKnowledge(knowledge: PromptKnowledgeItem[], title: string) {
 
 export function buildDemoResult(data: DemoInput, knowledge: PromptKnowledgeItem[]): GenerationResult {
   const isMalay = /bahasa|melayu|manglish/i.test(data.brief.language);
-  const isSewaPro = data.brand.name.toLowerCase().includes('sewapro');
-  const cta = data.brand.cta || findKnowledge(knowledge, 'Preferred CTA') || (isMalay ? 'WhatsApp kami untuk semak pilihan.' : 'Contact us to check suitable options.');
+  const lowerName = data.brand.name.toLowerCase();
+  const isSewaPro = lowerName.includes('sewapro');
+  const isKampusRide = lowerName.includes('kampusride');
+  const fallbackCta = isKampusRide
+    ? (isMalay ? 'Post ride anda dalam KampusRide dan compare offer dalam satu tempat.' : 'Post your ride in KampusRide and compare offers in one place.')
+    : (isMalay ? 'WhatsApp kami untuk semak pilihan.' : 'Contact us to check suitable options.');
+  const cta = data.brand.cta || findKnowledge(knowledge, 'Preferred CTA') || fallbackCta;
   const bookingFlow = findKnowledge(knowledge, 'Booking flow');
   const availabilityRule = findKnowledge(knowledge, 'Availability rule');
   const trustRule = findKnowledge(knowledge, 'Trust rules');
 
-  const sewaproAngles = [
+  const sewaProAngles = [
     {
       hook: 'Dah WhatsApp banyak rental, semua reply full?',
       angle: 'Pain point — search fatigue and repeated rejection.',
@@ -49,25 +54,58 @@ export function buildDemoResult(data: DemoInput, knowledge: PromptKnowledgeItem[
       angle: 'Trust — move the conversation beyond headline price.',
       script: `Bila sewa kereta, jangan tengok harga saja. Check juga jenis kereta, detail booking, lokasi dan apa yang sebenarnya termasuk. SewaPro bantu shortlist pilihan yang sesuai dan pastikan harga serta availability disahkan sebelum anda confirm. ${cta}`,
     },
+  ];
+
+  const kampusRideAngles = [
     {
-      hook: 'Landing KL dan perlukan kereta? Bagi detail sebelum sampai.',
-      angle: 'Traveller use case — pre-arrival convenience.',
-      script: `Kalau anda akan sampai KL dan perlukan kereta rental, hantar detail lebih awal: tarikh, lokasi pickup atau delivery dan kategori kereta. SewaPro bantu semak pilihan daripada rental partner supaya anda boleh review sebelum confirm. ${cta}`,
+      hook: 'Dah post transporter, lepas tu kena buka 6 DM?',
+      angle: 'Passenger pain point — replace scattered DMs with one offer screen.',
+      script: `Cara lama: post dekat group, lepas tu banyak driver DM dan anda kena compare satu-satu. Dengan KampusRide, post ride sekali, tengok semua offer dalam satu tempat, compare price dan reputation, kemudian pilih driver yang anda nak. Lepas match, coordinate dalam in-app chat. ${cta}`,
     },
     {
-      hook: 'Tak pasti nak pilih Sedan, MPV atau SUV?',
-      angle: 'Decision support — help customers choose the right vehicle category.',
-      script: `Tak semua trip perlukan kereta yang sama. Beritahu SewaPro berapa orang, berapa lama sewa dan kegunaan anda. Kami bantu shortlist kategori serta pilihan yang lebih sesuai berdasarkan availability partner. ${cta}`,
+      hook: 'Post sekali. Compare semua offer satu tempat.',
+      angle: 'Product simplicity — explain the full marketplace in one line.',
+      script: `Pilih route, masa dan pax. Post ride. Driver offer. Anda compare price, rating dan car details, kemudian pilih. Tak perlu ulang benda sama dekat banyak chat. ${cta}`,
     },
     {
-      hook: 'Satu request. Beberapa pilihan. Anda pilih.',
-      angle: 'Simple product explanation — describe the SewaPro model in one line.',
-      script: `SewaPro bukan satu lagi fleet kereta rental. Kami bantu anda cari. Hantar requirement sekali, kami semak network rental partner dan shortlist pilihan yang sesuai. Anda review detail, kemudian pilih mana yang anda nak. ${cta}`,
+      hook: 'Driver kampus: tak perlu camp Telegram tunggu job.',
+      angle: 'Driver acquisition — flexible driver mode without guaranteed earnings.',
+      script: `Kalau anda free dan nak drive, switch ke Driver mode. Tengok ride yang tengah cari driver, semak route dan price guide, then offer bila sesuai dengan masa anda. Passenger pilih offer, dan fare ride dibayar terus kepada driver. ${isMalay ? 'Switch ke Driver mode bila anda free.' : 'Switch to Driver mode when you are free.'}`,
     },
     {
-      hook: 'Sebelum transfer deposit, confirm benda ni dulu.',
-      angle: 'Educational trust content that naturally introduces SewaPro.',
-      script: `Sebelum confirm rental, pastikan tarikh, jenis kereta, harga dan availability memang jelas. Jangan assume berdasarkan posting lama. Dengan SewaPro, pilihan yang diberi perlu disemak dengan partner sebelum booking disahkan. ${cta}`,
+      hook: 'Nak cari ride tak semestinya kena bagi nombor phone.',
+      angle: 'Privacy — keep coordination inside the app.',
+      script: `Tak perlu share nombor phone dekat setiap orang yang DM. KampusRide susun request dan offer dalam app, kemudian bila dah pilih driver anda boleh coordinate melalui in-app chat. Lebih kemas, lebih private. ${cta}`,
+    },
+    {
+      hook: 'Prefer female driver? Letak preference.',
+      angle: 'Female-passenger preference — transparent, not guaranteed.',
+      script: `Kalau anda lebih selesa dengan female driver, letak preference masa post ride. KampusRide boleh prioritise female driver bila available, tapi ia bukan guarantee sebab supply mungkin terhad pada masa tertentu. ${cta}`,
+    },
+    {
+      hook: 'Cheapest bukan satu-satunya benda nak compare.',
+      angle: 'Trust — compare reputation and car details as well as price.',
+      script: `Bila offer masuk, jangan tengok harga sahaja. Check rating, reputation, car details dan offer note sebelum pilih. KampusRide bagi semua tu dalam satu tempat supaya keputusan lebih informed. Rating bantu accountability, bukan jaminan keselamatan. ${cta}`,
+    },
+    {
+      hook: 'KampusRide bukan “Grab versi kampus”.',
+      angle: 'Positioning — campus cost-sharing marketplace, not corporate e-hailing.',
+      script: `KampusRide bukan auto-assign driver macam e-hailing biasa. Passenger post request, drivers offer, passenger compare dan pilih. Fare dibayar terus kepada driver. Familiar macam transporter community, cuma lebih tersusun. ${cta}`,
+    },
+    {
+      hook: 'Free 30 minit sebelum class? Switch Driver mode.',
+      angle: 'Driver lifestyle — offer rides only when available.',
+      script: `Ada free time sebelum class? Kalau anda driver, buka Driver mode dan tengok ride yang sesuai dengan route dan masa anda. Offer bila free, skip bila tak sesuai. Tak perlu duduk tunggu group sepanjang hari. ${isMalay ? 'Check ride yang tengah cari driver.' : 'Check rides looking for a driver.'}`,
+    },
+    {
+      hook: 'Tak payah refresh group tiap 2 minit.',
+      angle: 'Product convenience — notifications reduce manual checking.',
+      script: `Post ride dalam KampusRide dan biar app susun offer serta message dalam satu flow. Bila ada update, notification bantu anda tahu tanpa kena stare dekat group sepanjang masa. ${cta}`,
+    },
+    {
+      hook: 'Ride community, tapi lebih tersusun.',
+      angle: 'Brand — community-first structure and accountability.',
+      script: `KampusRide ambil behaviour yang student dah biasa — cari transporter — dan susun jadi flow yang lebih jelas: post, offer, pilih, chat, ride, rate. Community feel kekal, cuma kurang chaos. ${cta}`,
     },
   ];
 
@@ -93,28 +131,36 @@ export function buildDemoResult(data: DemoInput, knowledge: PromptKnowledgeItem[
     },
   ];
 
-  const angleBank = isSewaPro ? sewaproAngles : genericAngles;
+  const angleBank = isSewaPro ? sewaProAngles : isKampusRide ? kampusRideAngles : genericAngles;
   const variants = Array.from({ length: data.brief.count }, (_, index) => {
     const base = angleBank[index % angleBank.length];
     const productionNotes = data.brief.extra ? ` Extra campaign direction: ${data.brief.extra}` : '';
     const knowledgeNotes = [bookingFlow, availabilityRule].filter(Boolean).join(' ');
+    const caption = isSewaPro
+      ? `Tak perlu cari rental satu-satu. Hantar tarikh, lokasi dan kereta yang anda perlukan kepada SewaPro — kami bantu semak pilihan yang sesuai. Availability & harga tertakluk kepada pengesahan partner. ${cta}`
+      : isKampusRide
+        ? `${base.hook}\n\nKampusRide susun ride request, driver offers, pilihan dan chat dalam satu flow. Passenger pilih sendiri; fare ride dibayar terus kepada driver. Jangan assume female preference, price guide atau ride availability sebagai guarantee.\n\n${cta}`
+        : `${data.brand.name} — ${data.brand.offer || data.brand.product}. ${cta}`;
+    const visualDirection = isKampusRide
+      ? 'Authentic Malaysian university-campus UGC/POV, natural student-life setting, realistic KampusRide app/phone interactions using approved screenshots when available, short Malay subtitles, no fake IIUM endorsement, no fake fares/ratings/verification badges, and no guaranteed female-driver or safety claims.'
+      : 'Authentic, mobile-first, natural Malaysian UGC where relevant, realistic phone/WhatsApp interactions, concise subtitles, fast clear pacing, no fake testimonials or unverified claims.';
 
     return {
       hook: base.hook,
       angle: base.angle,
       script: base.script,
-      caption: isSewaPro
-        ? `Tak perlu cari rental satu-satu. Hantar tarikh, lokasi dan kereta yang anda perlukan kepada SewaPro — kami bantu semak pilihan yang sesuai. Availability & harga tertakluk kepada pengesahan partner. ${cta}`
-        : `${data.brand.name} — ${data.brand.offer || data.brand.product}. ${cta}`,
+      caption,
       cta,
-      creative_prompt: `Create a ${data.brief.format} for ${data.brief.platform}. Use the hook “${base.hook}” in the first 1-2 seconds. Audience context: ${data.brand.audience}. Visual style: authentic, mobile-first, natural Malaysian UGC where relevant, realistic phone/WhatsApp interactions, concise subtitles, fast clear pacing, no fake testimonials or unverified claims. Show the problem first, then the simpler process, then the CTA. Language: ${data.brief.language}.${productionNotes}${knowledgeNotes ? ` Brand constraints: ${knowledgeNotes}` : ''}`,
+      creative_prompt: `Create a ${data.brief.format} for ${data.brief.platform}. Use the hook “${base.hook}” in the first 1-2 seconds. Audience context: ${data.brand.audience}. Visual direction: ${visualDirection} Show the problem first, then one clear product idea, then the CTA. Language: ${data.brief.language}.${productionNotes}${knowledgeNotes ? ` Brand constraints: ${knowledgeNotes}` : ''}`,
     };
   });
 
   return {
     strategy: isSewaPro
       ? 'Zero-cost strategy: position SewaPro as the car-rental finder that replaces multiple searches with one request. Variants rotate through pain-point, convenience, comparison and real-life use cases while preserving pricing and availability rules.'
-      : `Zero-cost strategy: use distinct pain-point, convenience and trust angles for ${data.brand.name}, grounded in the saved Brand Brain and Knowledge Base.`,
+      : isKampusRide
+        ? 'Zero-cost strategy: position KampusRide as the campus-made marketplace that replaces scattered transporter DMs with one structured ride flow. Rotate passenger pain points, driver opportunity, trust/privacy, female-preference education and campus-life angles without overclaiming safety, verification or availability.'
+        : `Zero-cost strategy: use distinct pain-point, convenience and trust angles for ${data.brand.name}, grounded in the saved Brand Brain and Knowledge Base.`,
     variants,
     mode: 'demo',
   };
