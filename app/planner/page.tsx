@@ -33,7 +33,7 @@ type ProductionPack = {
 };
 type ProductionResult = { dayNumber: number; pack: ProductionPack; variantId: string; campaignId: string; mode: string };
 
-const platformOptions = ['TikTok / Reels', 'Facebook', 'Instagram', 'WhatsApp'];
+const platformOptions = ['TikTok / Reels', 'Threads', 'Facebook', 'Instagram', 'WhatsApp'];
 
 export default function PlannerPage() {
   const supabase = useMemo(() => getSupabaseBrowserClient(), []);
@@ -179,7 +179,7 @@ export default function PlannerPage() {
 
   async function copyPack(pack: ProductionPack) {
     const storyboard = pack.storyboard.map((scene) => `Scene ${scene.scene} (${scene.duration})\nVisual: ${scene.visual}\nText: ${scene.on_screen_text}\nVO: ${scene.voiceover}\nImage prompt: ${scene.image_prompt || scene.visual}`).join('\n\n');
-    await navigator.clipboard.writeText(`HOOK\n${pack.hook}\n\nSCRIPT\n${pack.script}\n\nCAPTION\n${pack.caption}\n\nSTORYBOARD\n${storyboard}\n\nPRODUCTION PROMPT\n${pack.creative_prompt}`);
+    await navigator.clipboard.writeText(`HOOK\n${pack.hook}\n\nSCRIPT\n${pack.script}\n\nCAPTION\n${pack.caption}\n\nSTORYBOARD / OPTIONAL VISUAL\n${storyboard}\n\nPRODUCTION BRIEF\n${pack.creative_prompt}`);
     setMessage('Full production pack copied.');
   }
 
@@ -189,7 +189,7 @@ export default function PlannerPage() {
   return (
     <main className="toolShell">
       <header className="toolHeader">
-        <div><span className="eyebrow">CONTENTOS · 30-DAY PLANNER</span><h1>Turn the Brand Brain into a month of content.</h1><p>Plan the month, then turn any day into a production-ready script, storyboard and creative prompt.</p></div>
+        <div><span className="eyebrow">CONTENTOS · 30-DAY PLANNER</span><h1>Turn the Brand Brain into a month of content.</h1><p>Plan the month, then turn any day into a production-ready post, script, storyboard or creative brief.</p></div>
         <nav className="toolNav"><a href="/">Campaign Studio</a><a href="/knowledge">Knowledge Base</a><a className="active" href="/planner">30-Day Planner</a></nav>
       </header>
 
@@ -205,7 +205,7 @@ export default function PlannerPage() {
         </div>
         <div className="platformPicker"><span>Platforms</span><div>{platformOptions.map((platform) => <button type="button" key={platform} className={platforms.includes(platform) ? 'selected' : ''} onClick={() => togglePlatform(platform)}>{platform}</button>)}</div></div>
         <button className="generate" disabled={generating || !brandId || platforms.length === 0}>{generating ? 'Building 30-day plan…' : '✦ Generate & Save 30-Day Plan'}</button>
-        <p className="hint">Still RM0: planning and production packs use the zero-cost SewaPro framework and your saved Knowledge Base.</p>
+        <p className="hint">Still RM0: ContentOS generates platform-native briefs from each Brand Brain and Knowledge Base. Threads days use text-first conversation formats instead of recycled video captions.</p>
       </form>
 
       {production && <section id="production-pack" className="productionPack">
@@ -215,10 +215,10 @@ export default function PlannerPage() {
         </div>
         <div className="agentFlow"><span>Strategist</span><b>→</b><span>Copywriter</span><b>→</b><span>Creative Director</span><b>→</b><span>QA</span></div>
         <div className="productionGrid">
-          <article className="productionSection"><span>SCRIPT</span><p>{production.pack.script}</p></article>
-          <article className="productionSection"><span>CAPTION</span><p>{production.pack.caption}</p></article>
-          <article className="productionSection wide"><span>STORYBOARD + SCENE PROMPTS</span><div className="storyboardList">{production.pack.storyboard.map((scene) => <div className="storyScene" key={scene.scene}><b>Scene {scene.scene} · {scene.duration}</b><p>{scene.visual}</p><small>TEXT: {scene.on_screen_text}</small>{scene.voiceover && <small>VO: {scene.voiceover}</small>}{scene.image_prompt && <div className="scenePrompt"><small>VISUAL PROMPT</small><p>{scene.image_prompt}</p><button onClick={() => copyScenePrompt(scene)}>Copy scene prompt</button></div>}</div>)}</div></article>
-          <article className="productionSection wide"><span>MASTER VIDEO / IMAGE PROMPT</span><p>{production.pack.creative_prompt}</p></article>
+          <article className="productionSection"><span>PRIMARY COPY / SCRIPT</span><p>{production.pack.script}</p></article>
+          <article className="productionSection"><span>PUBLISH COPY</span><p>{production.pack.caption}</p></article>
+          <article className="productionSection wide"><span>STORYBOARD / OPTIONAL VISUAL</span><div className="storyboardList">{production.pack.storyboard.map((scene) => <div className="storyScene" key={scene.scene}><b>Scene {scene.scene} · {scene.duration}</b><p>{scene.visual}</p>{scene.on_screen_text && <small>TEXT: {scene.on_screen_text}</small>}{scene.voiceover && <small>VO: {scene.voiceover}</small>}{scene.image_prompt && <div className="scenePrompt"><small>VISUAL PROMPT</small><p>{scene.image_prompt}</p><button onClick={() => copyScenePrompt(scene)}>Copy scene prompt</button></div>}</div>)}</div></article>
+          <article className="productionSection wide"><span>PRODUCTION BRIEF / PROMPT</span><p>{production.pack.creative_prompt}</p></article>
           <article className="productionSection wide"><span>QA RULES</span><ul>{production.pack.qa_notes.map((note) => <li key={note}>{note}</li>)}</ul></article>
         </div>
         <div className="productionFooter"><span>✓ Creative sent to Approval Queue</span><a href="/">Open ContentOS Studio</a></div>

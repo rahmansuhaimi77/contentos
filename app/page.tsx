@@ -218,6 +218,16 @@ export default function Home() {
     setView('brands');
   }
 
+  function changePlatform(platform: string) {
+    const leavingThreads = /threads/i.test(brief.platform) && !/threads/i.test(platform);
+    const enteringThreads = /threads/i.test(platform);
+    setBrief({
+      ...brief,
+      platform,
+      format: enteringThreads ? 'Threads text post' : leavingThreads ? '15-30 second short-form video' : brief.format,
+    });
+  }
+
   async function persistBrand(): Promise<string | null> {
     if (!user || !workspaceId) return null;
     if (!brand.name.trim() || !brand.product.trim() || !brand.audience.trim()) {
@@ -380,6 +390,7 @@ export default function Home() {
   }
 
   const variant = result?.variants[active];
+  const isThreadsBrief = /threads/i.test(brief.platform);
 
   if (authLoading) {
     return <main className="authShell"><div className="authCard"><div className="logo">CO</div><h1>ContentOS</h1><p>Loading your workspace…</p></div></main>;
@@ -440,13 +451,13 @@ export default function Home() {
               <section className="panel stickyPanel">
                 <div className="panelHead"><span>02</span><div><h3>Campaign Brief</h3><p>Tell the strategist what outcome you want.</p></div></div>
                 <Field label="Objective" value={brief.objective} onChange={(v) => setBrief({ ...brief, objective: v })} />
-                <Select label="Platform" value={brief.platform} onChange={(v) => setBrief({ ...brief, platform: v })} options={['TikTok / Reels','Facebook','Instagram carousel','WhatsApp','Landing page','Multi-platform']} />
-                <Select label="Format" value={brief.format} onChange={(v) => setBrief({ ...brief, format: v })} options={['15-30 second short-form video','UGC / POV video','Static ad','Carousel','Long-form post','Direct-response message']} />
+                <Select label="Platform" value={brief.platform} onChange={changePlatform} options={['TikTok / Reels','Threads','Facebook','Instagram carousel','WhatsApp','Landing page','Multi-platform']} />
+                <Select label="Format" value={brief.format} onChange={(v) => setBrief({ ...brief, format: v })} options={['15-30 second short-form video','UGC / POV video','Threads text post','Conversation starter','Mini-story / opinion post','Question-led post','Static ad','Carousel','Long-form post','Direct-response message']} />
                 <Field label="Language" value={brief.language} onChange={(v) => setBrief({ ...brief, language: v })} />
                 <label className="field"><span>Variants</span><input type="number" min={1} max={10} value={brief.count} onChange={(e) => setBrief({ ...brief, count: Number(e.target.value) })} /></label>
                 <Field label="Extra direction" value={brief.extra} onChange={(v) => setBrief({ ...brief, extra: v })} placeholder="Promo dates, visual style, key message, objections..." multiline />
                 <button className="generate" disabled={loading || completion < 100}>{loading ? 'Building campaign…' : '✦ Generate Campaign'}</button>
-                <p className="hint">Every campaign is saved automatically. Without an OpenAI key, the system stays in zero-cost demo mode so the full workflow can still be tested.</p>
+                <p className="hint">Every campaign is saved automatically. Threads uses a text-first conversation engine; video platforms keep the existing creative workflow. Without an OpenAI key, both stay in zero-cost mode.</p>
               </section>
             </form>
 
@@ -457,10 +468,10 @@ export default function Home() {
                 <div className="resultGrid">
                   <ResultCard title="Hook" text={variant.hook} />
                   <ResultCard title="Angle" text={variant.angle} />
-                  <ResultCard title="Script" text={variant.script} wide />
-                  <ResultCard title="Caption" text={variant.caption} />
-                  <ResultCard title="CTA" text={variant.cta} />
-                  <ResultCard title="Image / video production prompt" text={variant.creative_prompt} wide />
+                  <ResultCard title={isThreadsBrief ? 'Threads post' : 'Script'} text={variant.script} wide />
+                  <ResultCard title={isThreadsBrief ? 'Publish copy' : 'Caption'} text={variant.caption} />
+                  <ResultCard title={isThreadsBrief ? 'Conversation prompt' : 'CTA'} text={variant.cta} />
+                  <ResultCard title={isThreadsBrief ? 'Threads production guidance' : 'Image / video production prompt'} text={variant.creative_prompt} wide />
                 </div>
               </section>
             )}
