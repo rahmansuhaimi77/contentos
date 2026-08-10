@@ -87,6 +87,7 @@ const kampusRideIdeas = [
 
 const genericPillars = ['Pain Point','Education','Use Case','Trust','FAQ','Comparison','Convenience','Conversion'];
 const formats = ['15-30 sec short-form video','UGC / POV video','Talking-head explainer','Carousel','Static ad','WhatsApp-ready post'];
+const threadsFormats = ['Threads text post','Conversation starter','Mini-story / opinion post','Question-led post'];
 const sewaProCtas = [
   'Nak semak kereta? WhatsApp SewaPro dengan tarikh, lokasi dan kereta pilihan.',
   'Hantar tarikh + lokasi + kategori kereta. Kami bantu semak pilihan yang sesuai.',
@@ -103,6 +104,31 @@ const kampusRideCtas = [
   'Check ride yang tengah cari driver.',
   'Save dulu — guna KampusRide bila perlukan ride.',
 ];
+const sewaProThreadsCtas = [
+  'Pernah kena situasi macam ni masa cari kereta sewa?',
+  'Kalau korang sewa kereta, benda pertama korang check apa?',
+  'Team cari satu-satu atau prefer bagi requirement sekali?',
+  'Apa part paling leceh bila cari kereta rental?',
+];
+const kampusRideThreadsCtas = [
+  'Student UIA — korang biasa cari ride macam mana sekarang?',
+  'Passenger: part paling leceh bila cari transporter apa?',
+  'Driver kampus: korang paling penat part mana bila cari ride request?',
+  'Kalau feature ni ada masa korang perlukan ride, useful tak?',
+];
+
+function isThreads(platform: string) {
+  return /threads/i.test(platform);
+}
+
+function formatForPlatform(platform: string, index: number) {
+  return isThreads(platform) ? threadsFormats[index % threadsFormats.length] : formats[index % formats.length];
+}
+
+function conceptForPlatform(platform: string, concept: string) {
+  if (!isThreads(platform)) return concept;
+  return `${concept} Untuk Threads, tulis sebagai observation/opinion yang natural dan conversational, bukan iklan keras. Buka dengan satu sharp thought, beri satu useful point, kemudian invite meaningful response.`;
+}
 
 export function buildThirtyDayPlan(input: PlannerInput, knowledge: PlanKnowledgeItem[]): PlanItem[] {
   const ctaFromKnowledge = knowledge.find((item) => item.title.toLowerCase() === 'preferred cta')?.content;
@@ -114,43 +140,54 @@ export function buildThirtyDayPlan(input: PlannerInput, knowledge: PlanKnowledge
   const platforms = input.platforms.length ? input.platforms : ['TikTok / Reels'];
 
   if (isSewaPro) {
-    return sewaProIdeas.map(([pillar, hook, concept], index) => ({
-      day_number: index + 1,
-      pillar,
-      objective: index % 5 === 4 ? 'Conversion' : input.objective,
-      platform: platforms[index % platforms.length],
-      format: formats[index % formats.length],
-      hook,
-      concept,
-      cta: isMalay ? sewaProCtas[index % sewaProCtas.length] : fallbackCta,
-    }));
+    return sewaProIdeas.map(([pillar, hook, concept], index) => {
+      const platform = platforms[index % platforms.length];
+      return {
+        day_number: index + 1,
+        pillar,
+        objective: index % 5 === 4 ? 'Conversion' : input.objective,
+        platform,
+        format: formatForPlatform(platform, index),
+        hook,
+        concept: conceptForPlatform(platform, concept),
+        cta: isThreads(platform) && isMalay
+          ? sewaProThreadsCtas[index % sewaProThreadsCtas.length]
+          : isMalay ? sewaProCtas[index % sewaProCtas.length] : fallbackCta,
+      };
+    });
   }
 
   if (isKampusRide) {
-    return kampusRideIdeas.map(([pillar, hook, concept], index) => ({
-      day_number: index + 1,
-      pillar,
-      objective: pillar.toLowerCase().includes('driver') ? 'Driver acquisition and activation' : input.objective,
-      platform: platforms[index % platforms.length],
-      format: formats[index % formats.length],
-      hook,
-      concept,
-      cta: isMalay ? kampusRideCtas[index % kampusRideCtas.length] : fallbackCta,
-    }));
+    return kampusRideIdeas.map(([pillar, hook, concept], index) => {
+      const platform = platforms[index % platforms.length];
+      return {
+        day_number: index + 1,
+        pillar,
+        objective: pillar.toLowerCase().includes('driver') ? 'Driver acquisition and activation' : input.objective,
+        platform,
+        format: formatForPlatform(platform, index),
+        hook,
+        concept: conceptForPlatform(platform, concept),
+        cta: isThreads(platform) && isMalay
+          ? kampusRideThreadsCtas[index % kampusRideThreadsCtas.length]
+          : isMalay ? kampusRideCtas[index % kampusRideCtas.length] : fallbackCta,
+      };
+    });
   }
 
   return Array.from({ length: 30 }, (_, index) => {
     const pillar = genericPillars[index % genericPillars.length];
+    const platform = platforms[index % platforms.length];
     return {
       day_number: index + 1,
       pillar,
       objective: input.objective,
-      platform: platforms[index % platforms.length],
-      format: formats[index % formats.length],
+      platform,
+      format: formatForPlatform(platform, index),
       hook: `${pillar}: satu idea practical untuk ${input.brandName}`,
-      concept: isMalay
+      concept: conceptForPlatform(platform, isMalay
         ? `Hasilkan content ${pillar.toLowerCase()} berdasarkan Brand Brain dan Knowledge Base yang disimpan. Gunakan claim yang boleh disahkan dan jadikan next action jelas.`
-        : `Create a ${pillar.toLowerCase()} content piece grounded in the saved Brand Brain and Knowledge Base. Use only verified claims and make the next action obvious.`,
+        : `Create a ${pillar.toLowerCase()} content piece grounded in the saved Brand Brain and Knowledge Base. Use only verified claims and make the next action obvious.`),
       cta: fallbackCta,
     };
   });
