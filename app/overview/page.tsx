@@ -127,12 +127,12 @@ export default function OverviewPage() {
   const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
 
   if (loading) return <section className="overviewPage"><div className="dashboardSkeleton">Loading overview…</div></section>;
-  if (!user) return <section className="overviewPage"><div className="dashboardEmpty"><div className="logo">CO</div><h1>Welcome to ContentOS</h1><p>Sign in through Campaign Studio to open your workspace.</p><Link className="appPrimary" href="/create">Sign in</Link></div></section>;
+  if (!user) return <section className="overviewPage"><div className="dashboardEmpty"><div className="logo">CO</div><h1>Welcome to ContentOS</h1><p>Sign in through Quick Create to open your workspace.</p><Link className="appPrimary" href="/">Sign in</Link></div></section>;
 
   return (
     <section className="overviewPage">
       <header className="pageHero">
-        <div><span className="eyebrow">OVERVIEW</span><h1>{greeting}. <span>{selectedBrand?.name || 'Your workspace'}</span></h1><p>Strategy, content and publishing — one workflow.</p></div>
+        <div><span className="eyebrow">OVERVIEW</span><h1>{greeting}. <span>{selectedBrand?.name || 'Your workspace'}</span></h1><p>Strategy → Calendar → Create → Review → Publish.</p></div>
         <Link href="/create" className="appPrimary">✦ Create content</Link>
       </header>
 
@@ -147,8 +147,8 @@ export default function OverviewPage() {
         <section className="dashboardPanel actionPanel">
           <div className="dashboardPanelHead"><div><span className="eyebrow">NEXT</span><h2>What needs attention</h2></div></div>
           <Link href="/growth-calendar" className="nextAction"><span>01</span><div><b>Confirm current strategy</b><small>Keep product phase and marketplace priority accurate.</small></div><em>→</em></Link>
-          <Link href="/planner" className="nextAction"><span>02</span><div><b>Review the content plan</b><small>Make sure upcoming content matches the current phase and campus context.</small></div><em>→</em></Link>
-          <Link href={dashboard.counts.review ? '/review' : '/create'} className="nextAction"><span>03</span><div><b>{dashboard.counts.review ? `Review ${dashboard.counts.review} content item${dashboard.counts.review === 1 ? '' : 's'}` : 'Create the next content'}</b><small>{dashboard.counts.review ? 'Human approval remains the publishing gate.' : 'Create from the plan or start a campaign.'}</small></div><em>→</em></Link>
+          <Link href="/calendar" className="nextAction"><span>02</span><div><b>Review the content calendar</b><small>Decide what should be communicated and when before creating the asset.</small></div><em>→</em></Link>
+          <Link href={dashboard.counts.review ? '/review' : '/create'} className="nextAction"><span>03</span><div><b>{dashboard.counts.review ? `Review ${dashboard.counts.review} content item${dashboard.counts.review === 1 ? '' : 's'}` : 'Create the next content'}</b><small>{dashboard.counts.review ? 'Human approval remains the publishing gate.' : 'Create from Calendar or use Quick Create.'}</small></div><em>→</em></Link>
         </section>
 
         <section className="dashboardPanel pipelinePanel">
@@ -157,8 +157,8 @@ export default function OverviewPage() {
         </section>
 
         <section className="dashboardPanel upcomingPanel">
-          <div className="dashboardPanelHead"><div><span className="eyebrow">PLAN</span><h2>Upcoming content</h2></div><Link href="/planner">Open Plan</Link></div>
-          {dashboard.nextItems.length === 0 ? <p className="dashboardMuted">No upcoming plan items yet.</p> : dashboard.nextItems.map((item) => (
+          <div className="dashboardPanelHead"><div><span className="eyebrow">CALENDAR</span><h2>Upcoming content</h2></div><Link href="/calendar">Open Calendar</Link></div>
+          {dashboard.nextItems.length === 0 ? <p className="dashboardMuted">No upcoming Calendar items yet.</p> : dashboard.nextItems.map((item) => (
             <article className="upcomingItem" key={item.id}><time>{item.planned_date ? new Date(`${item.planned_date}T00:00:00`).toLocaleDateString('en-MY', { day: '2-digit', month: 'short' }) : 'Next'}</time><div><b>{item.hook}</b><span>{item.platform} · {pretty(item.status)}</span></div></article>
           ))}
         </section>
