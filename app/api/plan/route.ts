@@ -1,6 +1,7 @@
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import { buildThirtyDayPlan, type PlanKnowledgeItem } from '@/lib/plan-generator';
+import { buildKampusRideThirtyDayPlan, isKampusRide } from '@/lib/kampusride-strategy';
 
 export const runtime = 'nodejs';
 
@@ -58,13 +59,17 @@ export async function POST(req: Request) {
 
     if (knowledgeError) throw knowledgeError;
 
-    const items = buildThirtyDayPlan({
+    const plannerInput = {
       brandName: brandRow.name,
       objective,
       platforms,
       language,
       cta: brandRow.preferred_cta || undefined,
-    }, (knowledgeRows ?? []) as PlanKnowledgeItem[]);
+    };
+    const knowledge = (knowledgeRows ?? []) as PlanKnowledgeItem[];
+    const items = isKampusRide(brandRow.name)
+      ? buildKampusRideThirtyDayPlan(plannerInput, knowledge)
+      : buildThirtyDayPlan(plannerInput, knowledge);
 
     const { data: plan, error: planError } = await auth.supabase
       .from('contentos_content_plans')
