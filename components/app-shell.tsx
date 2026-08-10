@@ -83,6 +83,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   function active(href: string) {
     if (href === '/overview') return pathname === '/overview';
+    if (href === '/brand') return ['/brand', '/knowledge', '/assets'].some((route) => pathname === route || pathname.startsWith(`${route}/`));
+    if (href === '/create') return ['/create', '/storyboards'].some((route) => pathname === route || pathname.startsWith(`${route}/`));
     return pathname === href || pathname.startsWith(`${href}/`);
   }
 
