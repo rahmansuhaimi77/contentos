@@ -53,7 +53,9 @@ export default function ConnectionsPage() {
   }, [brandId, brands]);
 
   async function loadConnection(current: Brand) {
-    setError('');
+    // Do not clear callback feedback here. The OAuth callback redirects back with
+    // ?threads=error&message=... and clearing error during this load hid the real
+    // Meta/API failure behind the generic READY TO CONNECT state.
     const [appResult, connectionResult] = await Promise.all([
       supabase.from('contentos_social_apps').select('client_id,redirect_uri,status').eq('workspace_id', current.workspace_id).eq('platform', 'threads').maybeSingle(),
       supabase.from('contentos_social_connections').select('id,username,display_name,status,token_expires_at').eq('brand_id', current.id).eq('platform', 'threads').maybeSingle(),
@@ -124,7 +126,7 @@ export default function ConnectionsPage() {
       {error && <div className="error globalError">{error}</div>}
 
       <section className="panel connectionBrandBar">
-        <label className="field"><span>Brand</span><select value={brandId} onChange={(e) => setBrandId(e.target.value)}>{brands.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
+        <label className="field"><span>Brand</span><select value={brandId} onChange={(e) => { setError(''); setMessage(''); setBrandId(e.target.value); }}>{brands.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
         <div><span className="eyebrow">PUBLISHING IDENTITY</span><strong>{brand?.name || 'Select brand'}</strong><small>Connections are isolated by brand to prevent accidental cross-posting.</small></div>
       </section>
 
