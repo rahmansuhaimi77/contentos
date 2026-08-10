@@ -12,7 +12,7 @@ type Brand = { id: string; name: string };
 const primaryNav = [
   { href: '/overview', icon: '⌂', label: 'Overview' },
   { href: '/growth-calendar', icon: '◎', label: 'Strategy' },
-  { href: '/planner', icon: '□', label: 'Plan' },
+  { href: '/calendar', icon: '▦', label: 'Calendar' },
   { href: '/create', icon: '✦', label: 'Create' },
   { href: '/review', icon: '✓', label: 'Review' },
   { href: '/publishing', icon: '↗', label: 'Publish' },
@@ -25,7 +25,7 @@ const secondaryNav = [
 
 const mobileNav = [
   { href: '/overview', icon: '⌂', label: 'Home' },
-  { href: '/planner', icon: '□', label: 'Plan' },
+  { href: '/calendar', icon: '▦', label: 'Calendar' },
   { href: '/create', icon: '✦', label: 'Create' },
   { href: '/review', icon: '✓', label: 'Review' },
   { href: '/brand', icon: '•••', label: 'More' },
@@ -86,6 +86,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     if (href === '/overview') return pathname === '/overview';
     if (href === '/brand') return ['/brand', '/knowledge', '/assets'].some((route) => pathname === route || pathname.startsWith(`${route}/`));
     if (href === '/create') return ['/create', '/storyboards'].some((route) => pathname === route || pathname.startsWith(`${route}/`));
+    if (href === '/calendar') return ['/calendar', '/planner'].some((route) => pathname === route || pathname.startsWith(`${route}/`));
     return pathname === href || pathname.startsWith(`${href}/`);
   }
 
