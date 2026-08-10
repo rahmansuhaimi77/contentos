@@ -7,6 +7,7 @@ import {
 } from '@/lib/production-pack-generator';
 import { buildThreadsProductionPack } from '@/lib/threads-production-pack';
 import { buildKampusRideProductionPack, isKampusRide } from '@/lib/kampusride-strategy';
+import { enforceKampusRidePreLaunchProduction } from '@/lib/kampusride-launch-context';
 
 export const runtime = 'nodejs';
 
@@ -107,11 +108,15 @@ export async function POST(req: Request) {
       cta: item.cta || brand.preferred_cta || '',
     };
     const knowledgeItems = (knowledgeResult.data ?? []) as ProductionKnowledgeItem[];
-    const pack = isKampusRide(brand.name)
+    let pack = isKampusRide(brand.name)
       ? buildKampusRideProductionPack(productionInput, knowledgeItems, visualContext)
       : /threads/i.test(item.platform)
         ? buildThreadsProductionPack(productionInput, knowledgeItems, visualContext)
         : buildProductionPack(productionInput, knowledgeItems, visualContext);
+
+    if (isKampusRide(brand.name)) {
+      pack = enforceKampusRidePreLaunchProduction(pack, knowledgeItems);
+    }
 
     const { data: existingVariants } = await auth.supabase
       .from('contentos_content_variants')

@@ -5,6 +5,7 @@ import { buildCampaignPrompt, type PromptKnowledgeItem } from '@/lib/prompt';
 import { buildDemoResult } from '@/lib/demo-generator';
 import { buildThreadsDemoResult } from '@/lib/threads-generator';
 import { buildKampusRideCampaignResult, isKampusRide } from '@/lib/kampusride-strategy';
+import { buildKampusRidePreLaunchCampaignResult } from '@/lib/kampusride-launch-context';
 
 export const runtime = 'nodejs';
 
@@ -109,11 +110,13 @@ export async function POST(req: Request) {
     const kampusRide = isKampusRide(parsed.data.brand.name);
 
     if (!process.env.OPENAI_API_KEY || !process.env.OPENAI_MODEL) {
-      return Response.json(kampusRide
-        ? buildKampusRideCampaignResult(parsed.data)
-        : isThreads
-          ? buildThreadsDemoResult(parsed.data, knowledge)
-          : buildDemoResult(parsed.data, knowledge));
+      if (kampusRide) {
+        const fallback = buildKampusRideCampaignResult(parsed.data);
+        return Response.json(buildKampusRidePreLaunchCampaignResult(parsed.data, knowledge, fallback));
+      }
+      return Response.json(isThreads
+        ? buildThreadsDemoResult(parsed.data, knowledge)
+        : buildDemoResult(parsed.data, knowledge));
     }
 
     const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -130,7 +133,10 @@ export async function POST(req: Request) {
       return Response.json({ error: 'Model returned the wrong number of variants.' }, { status: 502 });
     }
 
-    return Response.json({ ...validated, mode: 'ai' });
+    const aiResult = { ...validated, mode: 'ai' as const };
+    return Response.json(kampusRide
+      ? buildKampusRidePreLaunchCampaignResult(parsed.data, knowledge, aiResult)
+      : aiResult);
   } catch (error) {
     console.error(error);
     return Response.json(
