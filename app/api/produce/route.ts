@@ -5,6 +5,7 @@ import {
   type ProductionKnowledgeItem,
   type ProductionVisualContext,
 } from '@/lib/production-pack-generator';
+import { buildThreadsProductionPack } from '@/lib/threads-production-pack';
 
 export const runtime = 'nodejs';
 
@@ -93,7 +94,7 @@ export async function POST(req: Request) {
       asset_titles: assetRows.map((row) => row.title),
     };
 
-    const pack = buildProductionPack({
+    const productionInput = {
       brandName: brand.name,
       platform: item.platform,
       format: item.format,
@@ -103,7 +104,11 @@ export async function POST(req: Request) {
       hook: item.hook,
       concept: item.concept,
       cta: item.cta || brand.preferred_cta || '',
-    }, (knowledgeResult.data ?? []) as ProductionKnowledgeItem[], visualContext);
+    };
+    const knowledgeItems = (knowledgeResult.data ?? []) as ProductionKnowledgeItem[];
+    const pack = /threads/i.test(item.platform)
+      ? buildThreadsProductionPack(productionInput, knowledgeItems, visualContext)
+      : buildProductionPack(productionInput, knowledgeItems, visualContext);
 
     const { data: existingVariants } = await auth.supabase
       .from('contentos_content_variants')
