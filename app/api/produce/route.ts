@@ -6,6 +6,7 @@ import {
   type ProductionVisualContext,
 } from '@/lib/production-pack-generator';
 import { buildThreadsProductionPack } from '@/lib/threads-production-pack';
+import { buildKampusRideProductionPack, isKampusRide } from '@/lib/kampusride-strategy';
 
 export const runtime = 'nodejs';
 
@@ -106,9 +107,11 @@ export async function POST(req: Request) {
       cta: item.cta || brand.preferred_cta || '',
     };
     const knowledgeItems = (knowledgeResult.data ?? []) as ProductionKnowledgeItem[];
-    const pack = /threads/i.test(item.platform)
-      ? buildThreadsProductionPack(productionInput, knowledgeItems, visualContext)
-      : buildProductionPack(productionInput, knowledgeItems, visualContext);
+    const pack = isKampusRide(brand.name)
+      ? buildKampusRideProductionPack(productionInput, knowledgeItems, visualContext)
+      : /threads/i.test(item.platform)
+        ? buildThreadsProductionPack(productionInput, knowledgeItems, visualContext)
+        : buildProductionPack(productionInput, knowledgeItems, visualContext);
 
     const { data: existingVariants } = await auth.supabase
       .from('contentos_content_variants')

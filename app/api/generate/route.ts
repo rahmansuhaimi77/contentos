@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { buildCampaignPrompt, type PromptKnowledgeItem } from '@/lib/prompt';
 import { buildDemoResult } from '@/lib/demo-generator';
 import { buildThreadsDemoResult } from '@/lib/threads-generator';
+import { buildKampusRideCampaignResult, isKampusRide } from '@/lib/kampusride-strategy';
 
 export const runtime = 'nodejs';
 
@@ -105,11 +106,14 @@ export async function POST(req: Request) {
 
     const knowledge = await loadKnowledge(supabase, parsed.data.brand.name);
     const isThreads = /threads/i.test(parsed.data.brief.platform);
+    const kampusRide = isKampusRide(parsed.data.brand.name);
 
     if (!process.env.OPENAI_API_KEY || !process.env.OPENAI_MODEL) {
-      return Response.json(isThreads
-        ? buildThreadsDemoResult(parsed.data, knowledge)
-        : buildDemoResult(parsed.data, knowledge));
+      return Response.json(kampusRide
+        ? buildKampusRideCampaignResult(parsed.data)
+        : isThreads
+          ? buildThreadsDemoResult(parsed.data, knowledge)
+          : buildDemoResult(parsed.data, knowledge));
     }
 
     const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
