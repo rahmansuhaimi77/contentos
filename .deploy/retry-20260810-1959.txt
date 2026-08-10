@@ -1,0 +1,1 @@
+Redeploy trigger for ContentOS Calendar → Create production release.
