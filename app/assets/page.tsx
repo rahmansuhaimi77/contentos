@@ -59,6 +59,8 @@ export default function AssetsPage() {
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const selectedBrandName = brands.find((brand) => brand.id === brandId)?.name ?? 'this brand';
+  const isKampusRide = selectedBrandName.toLowerCase() === 'kampusride';
 
   useEffect(() => {
     async function init() {
@@ -186,7 +188,14 @@ export default function AssetsPage() {
       {error && <div className="error globalError">{error}</div>}
 
       <div className="assetIntro panel">
-        <div><span className="eyebrow">START HERE</span><h2>For SewaPro, upload the real references first.</h2><p>Best first set: transparent logo, website or WhatsApp screenshots, 3–5 representative vehicle photos, and 2–3 visual references you actually like. ContentOS will treat these as approved references, not invent replacements.</p></div>
+        <div>
+          <span className="eyebrow">START HERE</span>
+          <h2>For {selectedBrandName}, upload the real references first.</h2>
+          <p>{isKampusRide
+            ? 'Best first set: approved logo variants, app or PWA icon, product screenshots, and visual references you actually like. ContentOS will treat these as approved references, not invent replacements.'
+            : 'Best first set: transparent logo, website or WhatsApp screenshots, 3–5 representative vehicle photos, and 2–3 visual references you actually like. ContentOS will treat these as approved references, not invent replacements.'}
+          </p>
+        </div>
       </div>
 
       <section className="toolGrid assetToolGrid">
@@ -208,7 +217,7 @@ export default function AssetsPage() {
           <form className="panel" onSubmit={uploadAsset}>
             <div className="panelHead"><span>02</span><div><h3>Upload approved asset</h3><p>Private files. Maximum 5 MB each.</p></div></div>
             <label className="field"><span>Asset type</span><select value={kind} onChange={(e) => setKind(e.target.value as AssetKind)}>{assetKinds.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select></label>
-            <label className="field"><span>Title</span><input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Primary SewaPro logo" /></label>
+            <label className="field"><span>Title</span><input value={title} onChange={(e) => setTitle(e.target.value)} placeholder={`e.g. Primary ${selectedBrandName} logo`} /></label>
             <label className="field"><span>File</span><input id="asset-file" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" onChange={(e) => setFile(e.target.files?.[0] ?? null)} /></label>
             <label className="field"><span>Notes (optional)</span><textarea rows={3} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="How should ContentOS use this reference?" /></label>
             <button className="generate" disabled={uploading || !file || !title.trim()}>{uploading ? 'Uploading…' : '+ Upload Brand Asset'}</button>
