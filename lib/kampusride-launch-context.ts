@@ -224,6 +224,8 @@ export function enforceKampusRidePreLaunchProduction(
   knowledge: ProductionKnowledgeItem[],
 ): ProductionPack {
   if (!isKampusRidePreLaunch(knowledge)) return pack;
+  const anonymousPublic = /anonymous public beta recruitment/i.test(pack.strategy)
+    || pack.qa_notes.some((note) => /public recruitment must not reveal/i.test(note));
   const questionCta = pack.cta.trim().endsWith('?');
   const cta = questionCta ? pack.cta : sanitizePrelaunchText(pack.cta || 'Follow KampusRide untuk launch updates.');
   const safeCta = cta === pack.cta && !questionCta && /post|book|try|cuba|check ride|switch|offer ride/i.test(cta)
@@ -235,9 +237,13 @@ export function enforceKampusRidePreLaunchProduction(
     script: sanitizePrelaunchText(pack.script),
     caption: sanitizePrelaunchText(pack.caption),
     cta: safeCta,
-    creative_prompt: `${pack.creative_prompt} PRE-LAUNCH GUARDRAIL: KampusRide is not yet generally launched. Do not show or say that viewers can book/post a ride today. Use education, community feedback or launch-update CTA only.`,
+    creative_prompt: anonymousPublic
+      ? `${pack.creative_prompt} PRE-LAUNCH GUARDRAIL: the unnamed product is not generally launched. Do not reveal its identity or suggest viewers can book/post a ride today.`
+      : `${pack.creative_prompt} PRE-LAUNCH GUARDRAIL: KampusRide is not yet generally launched. Do not show or say that viewers can book/post a ride today. Use education, community feedback or launch-update CTA only.`,
     qa_notes: [
-      'PRE-LAUNCH: do not imply KampusRide is already generally available or that a viewer can book/post a ride today.',
+      anonymousPublic
+        ? 'PRE-LAUNCH: keep the product unnamed and do not imply that viewers can book/post a ride today.'
+        : 'PRE-LAUNCH: do not imply KampusRide is already generally available or that a viewer can book/post a ride today.',
       'TIMELINESS: use only verified IIUM semester/Ta’aruf/event dates from the Knowledge Base; never invent a current campus event.',
       ...pack.qa_notes,
     ],
