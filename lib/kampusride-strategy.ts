@@ -176,7 +176,7 @@ function buildBetaProductionPack(input: ProductionInput, audience: 'public' | 'p
   if (audience === 'public') {
     const body = 'We are recruiting 20 passenger testers and 10 student-driver testers at IIUM Gombak for a short guided simulation of a new campus transport coordination app. No real trips, fares or payments. No long-term commitment. Feedback will focus on the flow, privacy and bugs.';
     const post = `${input.hook}\n\n${body}\n\n${cta}`;
-    const anonymousRules = 'Keep the product identity completely anonymous: do not use the KampusRide name, logo, wordmark, app icon, screenshots, interface, brand palette, website, QR code or any identifying product detail. Do not invent contact details.';
+    const anonymousRules = 'Keep the product identity completely anonymous: do not use the product name, logo, wordmark, app icon, screenshots, interface, brand palette, website, QR code or any identifying product detail. Do not invent contact details.';
     return {
       strategy: 'Anonymous public beta recruitment: recruit suitable IIUM Gombak testers without revealing the product identity. Set accurate expectations that this is a guided simulation only.',
       hook: input.hook,
@@ -194,7 +194,7 @@ function buildBetaProductionPack(input: ProductionInput, audience: 'public' | 'p
         image_prompt: `Vertical 9:16 anonymous beta tester recruitment poster for a Malaysian university community. Clear hierarchy, generous spacing, modest campus-life visual cues, and no identifiable institution marks. ${anonymousRules}`,
       }],
       qa_notes: [
-        'Public recruitment must not reveal KampusRide in text or visuals.',
+        'Public recruitment must not reveal the product identity in text or visuals.',
         'Do not use any supplied brand assets, screenshots, icons or brand colours.',
         'State clearly that this is a guided simulation with no real trips, fares or payments.',
         'Do not imply official IIUM endorsement or invent contact details.',
