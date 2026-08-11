@@ -174,7 +174,7 @@ function buildBetaProductionPack(input: ProductionInput, audience: 'public' | 'p
   const cta = input.cta || 'Message the admin to join. Limited slots.';
 
   if (audience === 'public') {
-    const body = 'We are recruiting 20 passenger testers and 10 student-driver testers at IIUM Gombak for a short guided simulation of a new campus transport coordination app. No real trips, fares or payments. No long-term commitment. Feedback will focus on the flow, privacy and bugs.';
+    const body = 'We are recruiting 20 passenger testers and 10 student-driver testers at IIUM Gombak for a short guided simulation of a new UIA Transporter app. No real trips, fares or payments. No long-term commitment. Feedback will focus on the flow, privacy and bugs.';
     const post = `${input.hook}\n\n${body}\n\n${cta}`;
     const anonymousRules = 'Keep the product identity completely anonymous: do not use the product name, logo, wordmark, app icon, screenshots, interface, brand palette, website, QR code or any identifying product detail. Do not invent contact details.';
     return {
@@ -184,7 +184,7 @@ function buildBetaProductionPack(input: ProductionInput, audience: 'public' | 'p
       script: post,
       caption: post,
       cta,
-      creative_prompt: `Create a clean vertical 9:16 public beta recruitment poster for IIUM Gombak. Lead with the exact hook “${input.hook}”. State: 20 passenger testers wanted, 10 student-driver testers wanted, short guided simulation, no real trips, no payment, no long-term commitment. CTA: “${cta}” ${anonymousRules} Use neutral, non-branded campus-community styling and legible typography. Do not imply official IIUM endorsement.`,
+      creative_prompt: `Create a clean vertical 9:16 public beta recruitment poster for a new UIA Transporter app at IIUM Gombak. Lead with the exact hook “${input.hook}”. State: 20 passenger testers wanted, 10 student-driver testers wanted, short guided simulation, no real trips, no payment, no long-term commitment. Use “UIA Transporter app” as the familiar community-facing description, not as an official institution or product-brand claim. CTA: “${cta}” ${anonymousRules} Use neutral, non-branded campus-community styling and legible typography. Do not imply official IIUM endorsement.`,
       storyboard: [{
         scene: 1,
         duration: 'Static poster',
