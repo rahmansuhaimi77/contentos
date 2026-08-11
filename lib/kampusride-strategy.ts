@@ -163,6 +163,73 @@ function productionQuestion(input: ProductionInput) {
   return 'Student UIA — pernah kena situasi macam ni bila cari transporter?';
 }
 
+function betaAudience(input: ProductionInput) {
+  const source = `${input.pillar} ${input.objective} ${input.hook} ${input.concept}`.toLowerCase();
+  if (/public|anonymous/.test(source)) return 'public';
+  if (/private|onboarding|simulation|retest|readiness/.test(source)) return 'private';
+  return null;
+}
+
+function buildBetaProductionPack(input: ProductionInput, audience: 'public' | 'private'): ProductionPack {
+  const cta = input.cta || 'Message the admin to join. Limited slots.';
+
+  if (audience === 'public') {
+    const body = 'We are recruiting 20 passenger testers and 10 student-driver testers at IIUM Gombak for a short guided simulation of a new campus transport coordination app. No real trips, fares or payments. No long-term commitment. Feedback will focus on the flow, privacy and bugs.';
+    const post = `${input.hook}\n\n${body}\n\n${cta}`;
+    const anonymousRules = 'Keep the product identity completely anonymous: do not use the KampusRide name, logo, wordmark, app icon, screenshots, interface, brand palette, website, QR code or any identifying product detail. Do not invent contact details.';
+    return {
+      strategy: 'Anonymous public beta recruitment: recruit suitable IIUM Gombak testers without revealing the product identity. Set accurate expectations that this is a guided simulation only.',
+      hook: input.hook,
+      angle: `${input.pillar} — anonymous tester recruitment`,
+      script: post,
+      caption: post,
+      cta,
+      creative_prompt: `Create a clean vertical 9:16 public beta recruitment poster for IIUM Gombak. Lead with the exact hook “${input.hook}”. State: 20 passenger testers wanted, 10 student-driver testers wanted, short guided simulation, no real trips, no payment, no long-term commitment. CTA: “${cta}” ${anonymousRules} Use neutral, non-branded campus-community styling and legible typography. Do not imply official IIUM endorsement.`,
+      storyboard: [{
+        scene: 1,
+        duration: 'Static poster',
+        visual: 'Neutral, anonymous campus-community recruitment poster with clear tester counts and simulation-only expectations.',
+        on_screen_text: `${input.hook}\n20 passenger testers\n10 student-driver testers\nGuided simulation only\nNo real trips or payments\n${cta}`,
+        voiceover: '',
+        image_prompt: `Vertical 9:16 anonymous beta tester recruitment poster for a Malaysian university community. Clear hierarchy, generous spacing, modest campus-life visual cues, and no identifiable institution marks. ${anonymousRules}`,
+      }],
+      qa_notes: [
+        'Public recruitment must not reveal KampusRide in text or visuals.',
+        'Do not use any supplied brand assets, screenshots, icons or brand colours.',
+        'State clearly that this is a guided simulation with no real trips, fares or payments.',
+        'Do not imply official IIUM endorsement or invent contact details.',
+        'Do not approve or publish without founder review.',
+      ],
+    };
+  }
+
+  const body = input.concept.trim();
+  const post = `${input.hook}\n\n${body}\n\n${cta}`;
+  return {
+    strategy: 'Private KampusRide beta-group content: reveal the product only inside the private group and guide testers through the planned simulation step without implying a live ride service.',
+    hook: input.hook,
+    angle: `${input.pillar} — private guided beta simulation`,
+    script: post,
+    caption: post,
+    cta,
+    creative_prompt: `Create a private-group KampusRide beta instruction visual for ${input.platform}. Open with “${input.hook}”. Follow this simulation brief exactly: ${body} CTA: “${cta}” This is a guided simulation only: no real trips, fares or payments. ${visualRules({})} Keep the layout instructional and do not imply public launch, official IIUM endorsement, guaranteed safety, availability or earnings.`,
+    storyboard: [{
+      scene: 1,
+      duration: 'Instruction card',
+      visual: 'Clear private beta instruction card describing only the current guided simulation task.',
+      on_screen_text: `${input.hook}\n${cta}`,
+      voiceover: body,
+      image_prompt: `Private KampusRide beta-group instruction card. Guided simulation only; no real trips, fares or payments. Show the task clearly without inventing product claims, user data or official IIUM endorsement.`,
+    }],
+    qa_notes: [
+      'KampusRide identity may appear only because this item is for the private testing group.',
+      'Keep every action simulation-only; no real trips, fares or payments.',
+      'Follow the calendar brief directly instead of substituting generic marketing copy.',
+      'Do not imply public launch or advance beyond the founder-approved test stage.',
+    ],
+  };
+}
+
 function scenesFor(input: ProductionInput, body: string, cta: string, context: ProductionVisualContext): StoryboardScene[] {
   const lower = `${input.hook} ${input.concept}`.toLowerCase();
   const driver = driverIdea(input.pillar, input.concept);
@@ -192,6 +259,9 @@ export function buildKampusRideProductionPack(
   _knowledge: ProductionKnowledgeItem[],
   context: ProductionVisualContext = {},
 ): ProductionPack {
+  const beta = betaAudience(input);
+  if (beta) return buildBetaProductionPack(input, beta);
+
   const body = productionBody(input);
   const isThreads = threads(input.platform);
   const cta = isThreads ? productionQuestion(input) : input.cta || (driverIdea(input.pillar, input.concept) ? driverCtas[0] : passengerCtas[0]);
