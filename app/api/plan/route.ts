@@ -4,6 +4,10 @@ import { buildThirtyDayPlan, type PlanKnowledgeItem } from '@/lib/plan-generator
 import { buildKampusRideThirtyDayPlan, isKampusRide } from '@/lib/kampusride-strategy';
 import { buildKampusRideLaunchAwarePlan } from '@/lib/kampusride-launch-context';
 import {
+  buildKampusRideSimulationRecruitmentPlan,
+  isKampusRideSimulationRecruitment,
+} from '@/lib/kampusride-beta-recruitment';
+import {
   applyKampusRideGrowthCalendar,
   type GrowthCalendarItem,
   type GrowthProfile,
@@ -150,17 +154,27 @@ export async function POST(req: Request) {
       cta: brandRow.preferred_cta || undefined,
     };
     const knowledge = (knowledgeRows ?? []) as PlanKnowledgeItem[];
-    const baseItems = kampusRide
-      ? buildKampusRideLaunchAwarePlan(
+    const simulationRecruitment = kampusRide && isKampusRideSimulationRecruitment(objective);
+    const baseItems = simulationRecruitment
+      ? buildKampusRideSimulationRecruitmentPlan(plannerInput)
+      : kampusRide
+        ? buildKampusRideLaunchAwarePlan(
           plannerInput,
           knowledge,
           buildKampusRideThirtyDayPlan(plannerInput, knowledge),
-        )
-      : buildThirtyDayPlan(plannerInput, knowledge);
+          )
+        : buildThirtyDayPlan(plannerInput, knowledge);
 
     const datedItems = baseItems.map((item) => {
       const plannedDate = addDaysIso(startDate, item.day_number - 1);
       if (!kampusRide) return { ...item, planned_date: plannedDate };
+      if (simulationRecruitment) {
+        return {
+          ...item,
+          planned_date: plannedDate,
+          concept: `${item.concept} TIMING GUARDRAIL (${plannedDate}): ${kampusRideAcademicContext(plannedDate)}`,
+        };
+      }
       const growthAware = applyKampusRideGrowthCalendar(item, plannedDate, growthCalendar, growthProfile);
       return {
         ...growthAware,
