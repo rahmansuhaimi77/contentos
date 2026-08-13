@@ -23,6 +23,12 @@ type AssistantFill = {
 };
 
 type ContentType = 'write' | 'poster' | 'carousel' | 'video' | 'pack';
+type Routing = {
+  copy_engine: 'openai' | 'claude';
+  visual_engine: 'openai_image' | 'claude_openai_image' | 'manual';
+  video_engine: 'veo_api' | 'flow_handoff' | 'manual';
+  review_engine: 'none' | 'openai' | 'claude';
+};
 
 type ContentTypeOption = {
   id: ContentType;
@@ -31,20 +37,20 @@ type ContentTypeOption = {
   description: string;
   platform: string;
   format: string;
-  route: string;
 };
 
 const contentTypes: ContentTypeOption[] = [
-  { id: 'write', icon: '✎', label: 'Write only', description: 'Caption, copy or script. No visual needed.', platform: 'Multi-platform', format: 'Long-form post', route: 'Copy only · visual production skipped' },
-  { id: 'poster', icon: '▣', label: 'Make poster', description: 'One static visual + supporting copy.', platform: 'Multi-platform', format: 'Static ad', route: 'Copy + static visual production' },
-  { id: 'carousel', icon: '▦', label: 'Make carousel', description: 'Multi-slide visual content + caption.', platform: 'Instagram carousel', format: 'Carousel', route: 'Slide copy + carousel visual production' },
-  { id: 'video', icon: '▶', label: 'Make video', description: 'Hook, script, storyboard + video handoff.', platform: 'TikTok / Reels', format: '15-30 second short-form video', route: 'Script + storyboard · Veo / Flow handoff' },
-  { id: 'pack', icon: '✣', label: 'Make post pack', description: 'Adapt the same idea for several channels.', platform: 'Multi-platform', format: 'Long-form post', route: 'Multi-platform copy pack · visuals skipped unless added later' },
+  { id: 'write', icon: '✎', label: 'Write only', description: 'Caption, copy or script. No visual needed.', platform: 'Multi-platform', format: 'Long-form post' },
+  { id: 'poster', icon: '▣', label: 'Make poster', description: 'One static visual + supporting copy.', platform: 'Multi-platform', format: 'Static ad' },
+  { id: 'carousel', icon: '▦', label: 'Make carousel', description: 'Multi-slide visual content + caption.', platform: 'Instagram carousel', format: 'Carousel' },
+  { id: 'video', icon: '▶', label: 'Make video', description: 'Hook, script, storyboard + video handoff.', platform: 'TikTok / Reels', format: '15-30 second short-form video' },
+  { id: 'pack', icon: '✣', label: 'Make post pack', description: 'Adapt the same idea for several channels.', platform: 'Multi-platform', format: 'Long-form post' },
 ];
 
 const platformOptions = ['Instagram carousel', 'TikTok / Reels', 'Threads', 'Facebook', 'WhatsApp', 'Multi-platform'];
 const formatOptions = ['Carousel', '15-30 second short-form video', 'UGC / POV video', 'Static ad', 'Threads text post', 'Long-form post'];
 const phaseOptions = ['Pre-Launch', 'Launch Week', 'Early Growth', 'Evergreen'];
+const defaultRouting: Routing = { copy_engine: 'openai', visual_engine: 'openai_image', video_engine: 'flow_handoff', review_engine: 'none' };
 
 const installTutorialPreset = {
   helper: 'Create a public how-to showing students how to install KampusRide on Android and iPhone, then enable notifications.',
@@ -56,10 +62,20 @@ const installTutorialPreset = {
   language: 'Bahasa Melayu / natural Manglish, simple student-friendly instructions',
 };
 
+function routingNames(routing: Routing) {
+  return {
+    copy: routing.copy_engine === 'claude' ? 'Claude' : 'ChatGPT',
+    visual: routing.visual_engine === 'manual' ? 'Manual upload' : routing.visual_engine === 'claude_openai_image' ? 'Claude planning → ChatGPT Image' : 'ChatGPT Image',
+    video: routing.video_engine === 'veo_api' ? 'Veo API' : routing.video_engine === 'manual' ? 'Manual upload' : 'Veo / Flow handoff',
+    review: routing.review_engine === 'claude' ? 'Claude review' : routing.review_engine === 'openai' ? 'ChatGPT review' : '',
+  };
+}
+
 export default function QuickCreatePage() {
   const supabase = useMemo(() => getSupabaseBrowserClient(), []);
   const [user, setUser] = useState<User | null>(null);
   const [brand, setBrand] = useState<BrandBrain | null>(null);
+  const [routing, setRouting] = useState<Routing>(defaultRouting);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [filling, setFilling] = useState(false);
@@ -77,6 +93,12 @@ export default function QuickCreatePage() {
 
   const selectedType = contentTypes.find((item) => item.id === contentType)!;
   const needsCreative = contentType === 'poster' || contentType === 'carousel' || contentType === 'video';
+  const routeNames = routingNames(routing);
+  const routeSummary = contentType === 'write' || contentType === 'pack'
+    ? `${routeNames.copy}${routeNames.review ? ` → ${routeNames.review}` : ''} · visuals skipped`
+    : contentType === 'video'
+      ? `${routeNames.copy} → ${routeNames.video}${routeNames.review ? ` → ${routeNames.review}` : ''}`
+      : `${routeNames.copy} → ${routeNames.visual}${routeNames.review ? ` → ${routeNames.review}` : ''}`;
 
   useEffect(() => {
     let mounted = true;
@@ -89,8 +111,10 @@ export default function QuickCreatePage() {
       if (!mounted) return;
       if (brandError) { setError(brandError.message); return; }
       const row = data?.[0];
-      if (!row) { setBrand(null); return; }
+      if (!row) { setBrand(null); setRouting(defaultRouting); return; }
       setBrand({ id: row.id, name: row.name, product: row.product, audience: row.audience, positioning: row.positioning, voice: row.voice, offer: row.offer, proof: row.proof, cta: row.preferred_cta, avoid: row.avoid });
+      const { data: routingRow } = await supabase.from('contentos_ai_routing').select('copy_engine,visual_engine,video_engine,review_engine').eq('brand_id', row.id).maybeSingle();
+      if (mounted) setRouting((routingRow as Routing | null) ?? defaultRouting);
     }
 
     async function initialise() {
@@ -172,11 +196,6 @@ export default function QuickCreatePage() {
       const token = sessionData.session?.access_token;
       if (!token) throw new Error('Your session expired. Please sign in again.');
 
-      const engineRouting = {
-        copy: 'ChatGPT',
-        visual: contentType === 'poster' || contentType === 'carousel' ? 'ChatGPT visual route' : null,
-        video: contentType === 'video' ? 'Veo / Flow' : null,
-      };
       const brief = {
         objective, platform, format, language, count: 1,
         extra: `SELECTED OUTPUT TYPE: ${contentType}. TARGET CONTENT PHASE: ${phase}. This asset is being created now for future use and should be publish-ready for that phase; do not assume it must be posted today. CONTENT REQUEST: ${idea.trim()}`,
@@ -197,7 +216,7 @@ export default function QuickCreatePage() {
         platform,
         format,
         language,
-        brief: { ...brief, target_phase: phase, quick_create: true, content_type: contentType, assistant_request: helperRequest.trim() || null, engine_routing: engineRouting },
+        brief: { ...brief, target_phase: phase, quick_create: true, content_type: contentType, assistant_request: helperRequest.trim() || null, engine_routing: routing },
         strategy: generated.strategy,
         status: 'generated',
       }).select('id').single();
@@ -244,7 +263,7 @@ export default function QuickCreatePage() {
           <span className={styles.typeIcon}>{item.icon}</span><strong>{item.label}</strong><small>{item.description}</small>
         </button>)}
       </div>
-      <div className={styles.routeNote}><b>Automatic route:</b> {selectedType.route}</div>
+      <div className={styles.routeNote}><b>Smart route:</b> {routeSummary} <Link href="/connections">Change in Settings</Link></div>
     </section>
 
     <section className={styles.panel}>
@@ -262,7 +281,7 @@ export default function QuickCreatePage() {
         <div><span>Output</span><strong>{selectedType.label}</strong></div>
         <div><span>Use during</span><strong>{phase}</strong></div>
         <div><span>Platform</span><strong>{platform}</strong></div>
-        <div><span>Format</span><strong>{format}</strong></div>
+        <div><span>Smart route</span><strong>{routeSummary}</strong></div>
       </div>}
 
       <details className={styles.advanced}>
@@ -275,7 +294,7 @@ export default function QuickCreatePage() {
           <label className={styles.field}><span>Format</span><select value={format} onChange={(event) => setFormat(event.target.value)}>{formatOptions.map((item) => <option key={item}>{item}</option>)}</select></label>
           <label className={`${styles.field} ${styles.wide}`}><span>Language / tone</span><input value={language} onChange={(event) => setLanguage(event.target.value)} /></label>
         </div>
-        <small>Routing is automatic for now: copy → ChatGPT route, poster/carousel → static visual route, video → Veo / Flow handoff. Provider controls can be added later without cluttering this screen.</small>
+        <small>AI/provider defaults are managed in Settings → AI & Channels, so this screen stays simple.</small>
       </details>
 
       <div className={styles.generateRow}><button disabled={creating || !brand || !idea.trim()}>{creating ? 'Creating…' : `✦ Create ${selectedType.label.toLowerCase()}`}</button></div>
