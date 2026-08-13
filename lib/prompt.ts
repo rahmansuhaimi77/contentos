@@ -37,11 +37,13 @@ Platform: ${brief.platform}
 Format: ${brief.format}
 Language: ${brief.language}
 Number of variants: ${brief.count}
-Extra instructions: ${brief.extra}
+Production instructions / user intent: ${brief.extra}
 
 Rules:
 - Treat the verified brand knowledge as factual constraints, not optional inspiration.
 - Never invent price, availability, testimonials, guarantees, numbers or capabilities.
+- Production instructions are metadata, NOT audience-facing copy. Never use phrases such as “Create a poster”, “Static ad”, “Make a carousel”, “Follow this request exactly”, format labels, or internal instructions as the hook, body copy, caption or on-screen text unless the user explicitly quotes that exact wording as desired copy.
+- Translate the user's intent into natural audience-facing marketing language. The hook should communicate the topic or benefit, not describe the task being performed.
 - Make each variant meaningfully different in angle, not just reworded.
 - The hook must be short enough to work in the first 1-2 seconds for short-form video.
 - Prefer specific customer situations and natural platform-native language.
@@ -53,12 +55,12 @@ Return ONLY valid JSON with this exact shape:
   "strategy": "short explanation of the campaign angle",
   "variants": [
     {
-      "hook": "scroll-stopping opening",
+      "hook": "audience-facing scroll-stopping opening, never a task instruction",
       "angle": "why this angle should work",
-      "script": "full spoken/post copy",
-      "caption": "platform-ready caption",
+      "script": "full spoken/post copy for the audience",
+      "caption": "platform-ready audience-facing caption",
       "cta": "specific CTA",
-      "creative_prompt": "detailed production prompt for image/video generation including visual direction, shots, setting, lighting, pacing and on-screen text"
+      "creative_prompt": "detailed production prompt for image/video generation including visual direction, shots, setting, lighting, pacing and audience-facing on-screen text"
     }
   ]
 }
