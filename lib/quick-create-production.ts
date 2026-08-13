@@ -1,4 +1,5 @@
 import type { ProductionKnowledgeItem, ProductionPack, ProductionVisualContext, StoryboardScene } from './production-pack-generator';
+import { deriveAudienceHeadline, looksLikeProductionInstruction } from './audience-copy-safety';
 
 type QuickCreateInput = {
   brandName: string;
@@ -28,6 +29,12 @@ function visualRules(brandName: string, context: ProductionVisualContext) {
   return rules.join(' ');
 }
 
+function safeHeadline(input: QuickCreateInput) {
+  return looksLikeProductionInstruction(input.hook)
+    ? deriveAudienceHeadline(input.brandName, input.request, input.language)
+    : input.hook;
+}
+
 function isInstallTutorial(input: QuickCreateInput) {
   return /install.*kampusride|add to home screen|home screen.*notification|enable notifications?/i.test(`${input.request} ${input.hook}`);
 }
@@ -46,25 +53,27 @@ function installStoryboard(input: QuickCreateInput, context: ProductionVisualCon
 }
 
 function staticStoryboard(input: QuickCreateInput, context: ProductionVisualContext): StoryboardScene[] {
-  const base = `Create one finished static poster for ${input.brandName}. Follow the user's explicit request exactly: ${input.request}. Target phase: ${input.targetPhase || 'Unscheduled'}. ${visualRules(input.brandName, context)} Keep the composition simple, mobile-first and production-ready. Do not invent unsupported claims or UI.`;
+  const headline = safeHeadline(input);
+  const base = `Create one finished static poster for ${input.brandName}. TASK INTENT — production metadata only, NEVER render this instruction verbatim: ${input.request}. Target phase: ${input.targetPhase || 'Unscheduled'}. ${visualRules(input.brandName, context)} Keep the composition simple, mobile-first and production-ready. Do not invent unsupported claims or UI. Do not display format labels, task wording, prompt text, or phrases such as “Create a poster”, “Static ad”, or “Follow this request exactly” anywhere in the artwork.`;
   return [{
     scene: 1,
     duration: 'Static poster',
-    visual: 'One complete poster composition with a clear headline, supporting visual hierarchy and a clean CTA area. Use only approved brand assets.',
-    on_screen_text: input.hook,
+    visual: 'One complete poster composition with a clear audience-facing headline, supporting visual hierarchy and a clean CTA area. Use only approved brand assets.',
+    on_screen_text: headline,
     voiceover: '',
-    image_prompt: `${base} Headline: “${input.hook}”. CTA: “${input.cta}”.`,
+    image_prompt: `${base} AUDIENCE-FACING HEADLINE: “${headline}”. CTA: “${input.cta}”. Only these audience-facing content elements may appear as copy unless supporting copy is derived naturally from the approved script.`,
   }];
 }
 
 function genericStoryboard(input: QuickCreateInput, context: ProductionVisualContext): StoryboardScene[] {
-  const base = `Create ${input.format} content for ${input.brandName} on ${input.platform}. Follow the user's explicit request exactly: ${input.request}. Target phase: ${input.targetPhase || 'Unscheduled'}. ${visualRules(input.brandName, context)} Do not substitute a different campaign topic.`;
+  const headline = safeHeadline(input);
+  const base = `Create ${input.format} content for ${input.brandName} on ${input.platform}. TASK INTENT — production metadata only, NEVER render verbatim: ${input.request}. Target phase: ${input.targetPhase || 'Unscheduled'}. ${visualRules(input.brandName, context)} Do not substitute a different campaign topic and do not display internal task wording as audience copy.`;
   const scenes = [
-    { scene: 1, duration: 'Frame 1', visual: 'Strong request-led opening visual.', on_screen_text: input.hook, voiceover: input.hook },
+    { scene: 1, duration: 'Frame 1', visual: 'Strong request-led opening visual.', on_screen_text: headline, voiceover: headline },
     { scene: 2, duration: 'Frame 2', visual: 'Explain or demonstrate the main requested idea clearly.', on_screen_text: input.objective, voiceover: input.script },
     { scene: 3, duration: 'Frame 3', visual: 'Clean branded close with the requested next action.', on_screen_text: input.cta, voiceover: input.cta },
   ];
-  return scenes.map((scene) => ({ ...scene, image_prompt: `${base} ${scene.visual} On-screen text: “${scene.on_screen_text}”.` }));
+  return scenes.map((scene) => ({ ...scene, image_prompt: `${base} ${scene.visual} Audience-facing on-screen text: “${scene.on_screen_text}”.` }));
 }
 
 export function buildQuickCreateProductionPack(
@@ -74,15 +83,16 @@ export function buildQuickCreateProductionPack(
 ): ProductionPack {
   const install = isInstallTutorial(input) && /carousel/i.test(input.format);
   const isStatic = /static/i.test(input.format);
+  const headline = safeHeadline(input);
   const storyboard = install ? installStoryboard(input, context) : isStatic ? staticStoryboard(input, context) : genericStoryboard(input, context);
   return {
-    strategy: `${input.targetPhase || 'Unscheduled'} Quick Create production. Explicit request is the source of truth.`,
-    hook: input.hook,
+    strategy: `${input.targetPhase || 'Unscheduled'} Quick Create production. Explicit request defines the topic; production instructions must never become audience-facing copy.`,
+    hook: headline,
     angle: install ? 'Public onboarding · Install + notifications' : isStatic ? 'Quick Create · static poster' : 'Quick Create · explicit request',
     script: input.script,
     caption: input.caption,
     cta: input.cta,
-    creative_prompt: `${input.creativePrompt} PRODUCTION RULE: follow the explicit request exactly: ${input.request}.`,
+    creative_prompt: `${input.creativePrompt} PRODUCTION RULE: follow the intent of this request: ${input.request}. COPY SAFETY: the request, format labels and production instructions are metadata only and must never be rendered verbatim as headline or body copy.`,
     storyboard,
     qa_notes: install
       ? [
@@ -95,11 +105,13 @@ export function buildQuickCreateProductionPack(
       : isStatic
         ? [
             'Produce one static poster only; do not expand it into a carousel or video.',
+            'Task instructions and format labels must never appear as visible poster copy.',
             'Use approved brand assets and verified knowledge only.',
             'Keep target phase separate from publish date; creating now does not mean publishing now.',
           ]
         : [
-            'The explicit Quick Create request is the source of truth; do not substitute a canned brand topic.',
+            'The explicit Quick Create request defines the topic; do not substitute a canned brand topic.',
+            'Task instructions and format labels must never appear as visible audience copy.',
             'Use approved brand assets and verified knowledge only.',
             'Keep target phase separate from publish date; creating now does not mean publishing now.',
           ],
