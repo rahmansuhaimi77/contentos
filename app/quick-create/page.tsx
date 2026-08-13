@@ -25,15 +25,21 @@ type AssistantFill = {
 type ContentType = 'write' | 'poster' | 'carousel' | 'video' | 'pack';
 
 type ContentTypeOption = {
-  id: ContentType; icon: string; label: string; description: string; platform: string; format: string;
+  id: ContentType;
+  icon: string;
+  label: string;
+  description: string;
+  platform: string;
+  format: string;
+  route: string;
 };
 
 const contentTypes: ContentTypeOption[] = [
-  { id: 'write', icon: '✎', label: 'Write only', description: 'Caption, copy or script', platform: 'Multi-platform', format: 'Long-form post' },
-  { id: 'poster', icon: '▣', label: 'Make poster', description: 'One static visual + caption', platform: 'Instagram carousel', format: 'Static ad' },
-  { id: 'carousel', icon: '▦', label: 'Make carousel', description: 'Multi-slide visual content', platform: 'Instagram carousel', format: 'Carousel' },
-  { id: 'video', icon: '▶', label: 'Make video', description: 'Short-form video + caption', platform: 'TikTok / Reels', format: '15-30 second short-form video' },
-  { id: 'pack', icon: '✦', label: 'Make post pack', description: 'Adapt copy for several channels', platform: 'Multi-platform', format: 'Long-form post' },
+  { id: 'write', icon: '✎', label: 'Write only', description: 'Caption, copy or script. No visual needed.', platform: 'Multi-platform', format: 'Long-form post', route: 'Copy only · visual production skipped' },
+  { id: 'poster', icon: '▣', label: 'Make poster', description: 'One static visual + supporting copy.', platform: 'Multi-platform', format: 'Static ad', route: 'Copy + static visual production' },
+  { id: 'carousel', icon: '▦', label: 'Make carousel', description: 'Multi-slide visual content + caption.', platform: 'Instagram carousel', format: 'Carousel', route: 'Slide copy + carousel visual production' },
+  { id: 'video', icon: '▶', label: 'Make video', description: 'Hook, script, storyboard + video handoff.', platform: 'TikTok / Reels', format: '15-30 second short-form video', route: 'Script + storyboard · Veo / Flow handoff' },
+  { id: 'pack', icon: '✣', label: 'Make post pack', description: 'Adapt the same idea for several channels.', platform: 'Multi-platform', format: 'Long-form post', route: 'Multi-platform copy pack · visuals skipped unless added later' },
 ];
 
 const platformOptions = ['Instagram carousel', 'TikTok / Reels', 'Threads', 'Facebook', 'WhatsApp', 'Multi-platform'];
@@ -57,20 +63,20 @@ export default function QuickCreatePage() {
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [filling, setFilling] = useState(false);
-  const [contentType, setContentType] = useState<ContentType>('carousel');
+  const [contentType, setContentType] = useState<ContentType>('write');
   const [helperRequest, setHelperRequest] = useState('');
   const [idea, setIdea] = useState('');
-  const [objective, setObjective] = useState('Product education / awareness');
-  const [platform, setPlatform] = useState('Instagram carousel');
-  const [format, setFormat] = useState('Carousel');
+  const [objective, setObjective] = useState('Create a useful, platform-ready marketing asset.');
+  const [platform, setPlatform] = useState('Multi-platform');
+  const [format, setFormat] = useState('Long-form post');
   const [phase, setPhase] = useState('Pre-Launch');
   const [language, setLanguage] = useState('Bahasa Melayu / natural Manglish where appropriate');
-  const [copyEngine, setCopyEngine] = useState('ChatGPT');
-  const [visualEngine, setVisualEngine] = useState('ChatGPT');
-  const [videoEngine, setVideoEngine] = useState('Veo / Flow');
   const [result, setResult] = useState<GenerationResult | null>(null);
   const [notice, setNotice] = useState('');
   const [error, setError] = useState('');
+
+  const selectedType = contentTypes.find((item) => item.id === contentType)!;
+  const needsCreative = contentType === 'poster' || contentType === 'carousel' || contentType === 'video';
 
   useEffect(() => {
     let mounted = true;
@@ -122,12 +128,18 @@ export default function QuickCreatePage() {
   }, [supabase]);
 
   function chooseType(next: ContentType) {
-    setContentType(next);
     const preset = contentTypes.find((item) => item.id === next)!;
+    setContentType(next);
     setPlatform(preset.platform);
     setFormat(preset.format);
     setResult(null);
-    setNotice('');
+    setError('');
+    if (helperRequest.trim() || idea.trim()) {
+      setIdea('');
+      setNotice(`Output changed to ${preset.label}. Tap “Help me fill” to refresh the brief.`);
+    } else {
+      setNotice('');
+    }
   }
 
   async function fillForMe() {
@@ -145,7 +157,7 @@ export default function QuickCreatePage() {
       const filled: AssistantFill = await response.json();
       if (!response.ok) throw new Error(filled.error || 'Unable to fill the fields.');
       setIdea(filled.idea); setObjective(filled.objective); setPhase(filled.phase); setPlatform(filled.platform); setFormat(filled.format); setLanguage(filled.language);
-      setNotice('Done. Review anything below if you want, then tap Create content.');
+      setNotice(`Ready. ContentOS filled the ${selectedType.label.toLowerCase()} brief. Create now, or open Advanced if you want to edit.`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unable to fill the fields.');
     } finally { setFilling(false); }
@@ -161,13 +173,13 @@ export default function QuickCreatePage() {
       if (!token) throw new Error('Your session expired. Please sign in again.');
 
       const engineRouting = {
-        copy: copyEngine,
-        visual: ['poster', 'carousel'].includes(contentType) ? visualEngine : null,
-        video: contentType === 'video' ? videoEngine : null,
+        copy: 'ChatGPT',
+        visual: contentType === 'poster' || contentType === 'carousel' ? 'ChatGPT visual route' : null,
+        video: contentType === 'video' ? 'Veo / Flow' : null,
       };
       const brief = {
         objective, platform, format, language, count: 1,
-        extra: `TARGET CONTENT PHASE: ${phase}. This asset is being created now for future use and should be publish-ready for that phase; do not assume it must be posted today. CONTENT TYPE: ${contentType}. CONTENT REQUEST: ${idea.trim()}`,
+        extra: `SELECTED OUTPUT TYPE: ${contentType}. TARGET CONTENT PHASE: ${phase}. This asset is being created now for future use and should be publish-ready for that phase; do not assume it must be posted today. CONTENT REQUEST: ${idea.trim()}`,
       };
 
       const response = await fetch('/api/generate', {
@@ -199,10 +211,14 @@ export default function QuickCreatePage() {
       const saved = (savedVariants ?? generated.variants) as GeneratedVariant[];
       setResult({ ...generated, variants: saved });
       const variantId = saved[0]?.id;
-      if (variantId) {
+
+      if (variantId && needsCreative) {
         const productionResponse = await fetch('/api/produce', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ variantId }) });
-        if (!productionResponse.ok) setNotice('Content is in Review. The creative workspace can be prepared again later if needed.');
-        else setNotice('Created and sent to Review. Nothing will publish until you approve it.');
+        await productionResponse.json();
+        if (!productionResponse.ok) setNotice('Content is in Review. The visual/video production pack can be prepared again later.');
+        else setNotice(`Created and sent to Review. ${contentType === 'video' ? 'Video' : 'Visual'} production is ready; nothing will publish until you approve it.`);
+      } else {
+        setNotice('Created and sent to Review. No visual production was requested for this output type.');
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unable to create content.');
@@ -212,11 +228,9 @@ export default function QuickCreatePage() {
   if (loading) return <section className={styles.page}><div className={styles.empty}>Loading Create…</div></section>;
   if (!user) return <section className={styles.page}><div className={styles.empty}>Please sign in first.</div></section>;
 
-  const selectedType = contentTypes.find((item) => item.id === contentType)!;
-
   return <section className={styles.page}>
     <header className={styles.hero}>
-      <div><span className={styles.eyebrow}>CREATE</span><h1>What do you want to make?</h1><p>Pick the output, tell ContentOS the idea in one sentence, then let it fill the rest.</p></div>
+      <div><span className={styles.eyebrow}>CREATE</span><h1>Pick the output. Tell me the idea.</h1><p>ContentOS fills the rest. Only the content you choose gets produced — no unnecessary poster, carousel or video.</p></div>
       <Link href="/calendar" className={styles.secondary}>Create from Calendar</Link>
     </header>
 
@@ -224,16 +238,17 @@ export default function QuickCreatePage() {
     {error && <div className={styles.error}>{error}</div>}
 
     <section className={styles.panel}>
-      <div className={styles.panelHead}><div><span className={styles.eyebrow}>1 · OUTPUT</span><h2>Choose what you need</h2><p>Only the selected type is created. You can create other versions later if the campaign needs them.</p></div></div>
+      <div className={styles.panelHead}><div><span className={styles.eyebrow}>1 · OUTPUT</span><h2>What do you want to make?</h2><p>Pick one. ContentOS handles the production route automatically.</p></div></div>
       <div className={styles.typeGrid}>
         {contentTypes.map((item) => <button type="button" key={item.id} className={`${styles.typeCard} ${contentType === item.id ? styles.typeCardActive : ''}`} onClick={() => chooseType(item.id)}>
           <span className={styles.typeIcon}>{item.icon}</span><strong>{item.label}</strong><small>{item.description}</small>
         </button>)}
       </div>
+      <div className={styles.routeNote}><b>Automatic route:</b> {selectedType.route}</div>
     </section>
 
     <section className={styles.panel}>
-      <div className={styles.panelHead}><div><span className={styles.eyebrow}>2 · IDEA</span><h2>Tell me what it’s about</h2><p>One sentence is enough. ContentOS will use {brand?.name || 'the active brand'} knowledge and current phase.</p></div></div>
+      <div className={styles.panelHead}><div><span className={styles.eyebrow}>2 · IDEA</span><h2>What is it about?</h2><p>One sentence is enough. ContentOS uses {brand?.name || 'the active brand'} knowledge and current phase.</p></div></div>
       <div className={styles.formGrid}>
         <label className={`${styles.field} ${styles.wide}`}><span>Your idea</span><textarea value={helperRequest} onChange={(event) => setHelperRequest(event.target.value)} placeholder="Example: Teach students how to install KampusRide on Android and iPhone and enable notifications." rows={3} /></label>
         <div className={styles.generateRow}><button type="button" disabled={filling || !brand || helperRequest.trim().length < 3} onClick={fillForMe}>{filling ? 'Filling…' : '✦ Help me fill'}</button></div>
@@ -241,28 +256,29 @@ export default function QuickCreatePage() {
     </section>
 
     <form className={styles.panel} onSubmit={submit}>
-      <div className={styles.panelHead}><div><span className={styles.eyebrow}>3 · REVIEW</span><h2>{selectedType.label} · {brand?.name || 'Active brand'}</h2><p>ContentOS filled the production brief. Edit only if you want to.</p></div></div>
-      <div className={styles.formGrid}>
-        <label className={`${styles.field} ${styles.wide}`}><span>Content brief</span><textarea value={idea} onChange={(event) => setIdea(event.target.value)} placeholder="Tap Help me fill above, or write your own brief." rows={6} /></label>
-        <label className={styles.field}><span>Objective</span><input value={objective} onChange={(event) => setObjective(event.target.value)} /></label>
-        <label className={styles.field}><span>Use during</span><select value={phase} onChange={(event) => setPhase(event.target.value)}>{phaseOptions.map((item) => <option key={item}>{item}</option>)}</select></label>
-        <label className={styles.field}><span>Platform</span><select value={platform} onChange={(event) => setPlatform(event.target.value)}>{platformOptions.map((item) => <option key={item}>{item}</option>)}</select></label>
-        <label className={styles.field}><span>Format</span><select value={format} onChange={(event) => setFormat(event.target.value)}>{formatOptions.map((item) => <option key={item}>{item}</option>)}</select></label>
-        <label className={`${styles.field} ${styles.wide}`}><span>Language / tone</span><input value={language} onChange={(event) => setLanguage(event.target.value)} /></label>
+      <div className={styles.panelHead}><div><span className={styles.eyebrow}>3 · READY</span><h2>{idea ? 'Ready to create' : 'Fill the brief first'}</h2><p>{idea ? 'Create now. Open Advanced only if you want to change the details.' : 'Tap “Help me fill” above, or open Advanced to write the brief manually.'}</p></div></div>
 
-        <details className={`${styles.advanced} ${styles.wide}`}>
-          <summary>Advanced · AI engines</summary>
-          <p>Defaults are recommended. Change these only when you have a reason.</p>
-          <div className={styles.engineGrid}>
-            <label className={styles.field}><span>Copy</span><select value={copyEngine} onChange={(e) => setCopyEngine(e.target.value)}><option>ChatGPT</option><option>Claude</option></select></label>
-            {['poster','carousel'].includes(contentType) && <label className={styles.field}><span>Visual</span><select value={visualEngine} onChange={(e) => setVisualEngine(e.target.value)}><option>ChatGPT</option><option>Claude</option></select></label>}
-            {contentType === 'video' && <label className={styles.field}><span>Video</span><select value={videoEngine} onChange={(e) => setVideoEngine(e.target.value)}><option>Veo / Flow</option></select></label>}
-          </div>
-          <small>Engine choices are saved with the campaign. Automatic Claude/Veo rendering connectors will use these preferences when connected.</small>
-        </details>
+      {idea && <div className={styles.briefSummary}>
+        <div><span>Output</span><strong>{selectedType.label}</strong></div>
+        <div><span>Use during</span><strong>{phase}</strong></div>
+        <div><span>Platform</span><strong>{platform}</strong></div>
+        <div><span>Format</span><strong>{format}</strong></div>
+      </div>}
 
-        <div className={styles.generateRow}><button disabled={creating || !brand || !idea.trim()}>{creating ? 'Creating…' : `✦ Create ${selectedType.label.toLowerCase()}`}</button></div>
-      </div>
+      <details className={styles.advanced}>
+        <summary>Advanced · review or edit the brief</summary>
+        <div className={styles.formGrid}>
+          <label className={`${styles.field} ${styles.wide}`}><span>Detailed content brief</span><textarea value={idea} onChange={(event) => setIdea(event.target.value)} placeholder="Tap Help me fill above, or write your own brief." rows={6} /></label>
+          <label className={styles.field}><span>Objective</span><input value={objective} onChange={(event) => setObjective(event.target.value)} /></label>
+          <label className={styles.field}><span>Use during</span><select value={phase} onChange={(event) => setPhase(event.target.value)}>{phaseOptions.map((item) => <option key={item}>{item}</option>)}</select></label>
+          <label className={styles.field}><span>Platform</span><select value={platform} onChange={(event) => setPlatform(event.target.value)}>{platformOptions.map((item) => <option key={item}>{item}</option>)}</select></label>
+          <label className={styles.field}><span>Format</span><select value={format} onChange={(event) => setFormat(event.target.value)}>{formatOptions.map((item) => <option key={item}>{item}</option>)}</select></label>
+          <label className={`${styles.field} ${styles.wide}`}><span>Language / tone</span><input value={language} onChange={(event) => setLanguage(event.target.value)} /></label>
+        </div>
+        <small>Routing is automatic for now: copy → ChatGPT route, poster/carousel → static visual route, video → Veo / Flow handoff. Provider controls can be added later without cluttering this screen.</small>
+      </details>
+
+      <div className={styles.generateRow}><button disabled={creating || !brand || !idea.trim()}>{creating ? 'Creating…' : `✦ Create ${selectedType.label.toLowerCase()}`}</button></div>
     </form>
 
     {result && result.variants[0] && <section className={styles.result}>
@@ -272,11 +288,11 @@ export default function QuickCreatePage() {
         <article className={styles.resultCard}><span>CONTENT / SCRIPT</span><p>{result.variants[0].script}</p></article>
         <article className={styles.resultCard}><span>PUBLISH COPY</span><p>{result.variants[0].caption}</p></article>
         <article className={`${styles.resultCard} ${styles.wide}`}><span>CTA</span><p>{result.variants[0].cta}</p></article>
-        <article className={`${styles.resultCard} ${styles.wide}`}><span>CREATIVE DIRECTION</span><p>{result.variants[0].creative_prompt}</p></article>
+        {needsCreative && <article className={`${styles.resultCard} ${styles.wide}`}><span>CREATIVE DIRECTION</span><p>{result.variants[0].creative_prompt}</p></article>}
       </div>
       <div className={styles.resultActions}>
         <Link href="/review">Review & approve →</Link>
-        {result.variants[0].id && <Link href={`/storyboards/${result.variants[0].id}`}>Open creative workspace</Link>}
+        {needsCreative && result.variants[0].id && <Link href={`/storyboards/${result.variants[0].id}`}>{contentType === 'video' ? 'Open video workspace' : 'Open visual workspace'}</Link>}
         <Link href="/quick-create">Create another</Link>
       </div>
     </section>}
