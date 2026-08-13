@@ -35,6 +35,17 @@ type GenerationResult = {
   mode?: 'ai' | 'demo';
 };
 
+type AssistantFill = {
+  idea: string;
+  objective: string;
+  phase: 'Pre-Launch' | 'Launch Week' | 'Early Growth' | 'Evergreen';
+  platform: string;
+  format: string;
+  language: string;
+  mode?: 'ai' | 'smart';
+  error?: string;
+};
+
 const platformOptions = ['Instagram carousel', 'TikTok / Reels', 'Threads', 'Facebook', 'WhatsApp', 'Multi-platform'];
 const formatOptions = ['Carousel', '15-30 second short-form video', 'UGC / POV video', 'Static ad', 'Threads text post', 'Long-form post'];
 const phaseOptions = ['Pre-Launch', 'Launch Week', 'Early Growth', 'Evergreen'];
@@ -54,6 +65,8 @@ export default function QuickCreatePage() {
   const [brand, setBrand] = useState<BrandBrain | null>(null);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
+  const [filling, setFilling] = useState(false);
+  const [helperRequest, setHelperRequest] = useState('');
   const [idea, setIdea] = useState('');
   const [objective, setObjective] = useState('Public product education / onboarding');
   const [platform, setPlatform] = useState('Instagram carousel');
@@ -105,6 +118,7 @@ export default function QuickCreatePage() {
 
       const params = new URLSearchParams(window.location.search);
       if (params.get('preset') === 'install') {
+        setHelperRequest('Create a public how-to showing students how to install KampusRide on Android and iPhone, then enable notifications.');
         setIdea(installTutorialPreset.idea);
         setObjective(installTutorialPreset.objective);
         setPlatform(installTutorialPreset.platform);
@@ -133,6 +147,40 @@ export default function QuickCreatePage() {
       window.removeEventListener('contentos:brand-change', onBrandChange);
     };
   }, [supabase]);
+
+  async function fillForMe() {
+    if (!brand || !helperRequest.trim()) return;
+    setFilling(true);
+    setError('');
+    setNotice('');
+    setResult(null);
+
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token;
+      if (!token) throw new Error('Your session expired. Please sign in again.');
+
+      const response = await fetch('/api/assist-fill', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ brandId: brand.id, request: helperRequest.trim() }),
+      });
+      const filled: AssistantFill = await response.json();
+      if (!response.ok) throw new Error(filled.error || 'Unable to fill the fields.');
+
+      setIdea(filled.idea);
+      setObjective(filled.objective);
+      setPhase(filled.phase);
+      setPlatform(filled.platform);
+      setFormat(filled.format);
+      setLanguage(filled.language);
+      setNotice(`Fields filled${filled.mode === 'ai' ? ' with AI' : ''}. Review or edit anything below, then tap Create content.`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unable to fill the fields.');
+    } finally {
+      setFilling(false);
+    }
+  }
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -188,7 +236,7 @@ export default function QuickCreatePage() {
           platform,
           format,
           language,
-          brief: { ...brief, target_phase: phase, quick_create: true },
+          brief: { ...brief, target_phase: phase, quick_create: true, assistant_request: helperRequest.trim() || null },
           strategy: generated.strategy,
           status: 'generated',
         })
@@ -240,17 +288,25 @@ export default function QuickCreatePage() {
 
   return <section className={styles.page}>
     <header className={styles.hero}>
-      <div><span className={styles.eyebrow}>QUICK CREATE</span><h1>Create now. Publish at the right time later.</h1><p>Use this for marketing assets you want to prepare now even when they are not scheduled yet.</p></div>
+      <div><span className={styles.eyebrow}>QUICK CREATE</span><h1>Tell me the idea. I’ll fill the brief.</h1><p>Describe what you want in plain language. ContentOS can fill the detailed fields for you, and you stay in control before anything is generated.</p></div>
       <Link href="/calendar" className={styles.secondary}>Use Calendar instead</Link>
     </header>
 
     {notice && <div className={styles.notice}>{notice}</div>}
     {error && <div className={styles.error}>{error}</div>}
 
-    <form className={styles.panel} onSubmit={submit}>
-      <div className={styles.panelHead}><div><span className={styles.eyebrow}>BRIEF</span><h2>{brand?.name || 'Select a brand'}</h2><p>Describe the asset directly. Your request is the source of truth; Brand knowledge adds guardrails and context.</p></div></div>
+    <section className={styles.panel}>
+      <div className={styles.panelHead}><div><span className={styles.eyebrow}>ASSISTANT FILL</span><h2>What do you want to make?</h2><p>One sentence is enough. I’ll use the active brand, current product phase and saved knowledge to fill the form below.</p></div></div>
       <div className={styles.formGrid}>
-        <label className={`${styles.field} ${styles.wide}`}><span>What do you want to create?</span><textarea value={idea} onChange={(event) => setIdea(event.target.value)} placeholder="Example: Create a public 6-slide carousel showing how to install KampusRide on Android and iPhone and enable push notifications." rows={5} /></label>
+        <label className={`${styles.field} ${styles.wide}`}><span>Tell me in your own words</span><textarea value={helperRequest} onChange={(event) => setHelperRequest(event.target.value)} placeholder="Example: Make a public carousel teaching students how to install KampusRide on Android and iPhone and turn on notifications." rows={3} /></label>
+        <div className={styles.generateRow}><button type="button" disabled={filling || !brand || helperRequest.trim().length < 3} onClick={fillForMe}>{filling ? 'Filling the brief…' : '✦ Help me fill this'}</button></div>
+      </div>
+    </section>
+
+    <form className={styles.panel} onSubmit={submit}>
+      <div className={styles.panelHead}><div><span className={styles.eyebrow}>BRIEF</span><h2>{brand?.name || 'Select a brand'}</h2><p>These fields are editable. Your detailed request remains the source of truth; Brand knowledge adds guardrails and context.</p></div></div>
+      <div className={styles.formGrid}>
+        <label className={`${styles.field} ${styles.wide}`}><span>Detailed content brief</span><textarea value={idea} onChange={(event) => setIdea(event.target.value)} placeholder="Use Help me fill this above, or write the detailed brief yourself." rows={6} /></label>
         <label className={styles.field}><span>Objective</span><input value={objective} onChange={(event) => setObjective(event.target.value)} /></label>
         <label className={styles.field}><span>Use during</span><select value={phase} onChange={(event) => setPhase(event.target.value)}>{phaseOptions.map((item) => <option key={item}>{item}</option>)}</select></label>
         <label className={styles.field}><span>Platform</span><select value={platform} onChange={(event) => setPlatform(event.target.value)}>{platformOptions.map((item) => <option key={item}>{item}</option>)}</select></label>
