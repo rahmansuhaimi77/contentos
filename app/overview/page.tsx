@@ -133,7 +133,7 @@ export default function OverviewPage() {
     <section className="overviewPage">
       <header className="pageHero">
         <div><span className="eyebrow">OVERVIEW</span><h1>{greeting}. <span>{selectedBrand?.name || 'Your workspace'}</span></h1><p>Strategy → Calendar → Create → Review → Publish.</p></div>
-        <Link href="/create" className="appPrimary">✦ Create content</Link>
+        <Link href="/quick-create" className="appPrimary">✦ Quick Create</Link>
       </header>
 
       <div className="statusGrid">
@@ -148,7 +148,7 @@ export default function OverviewPage() {
           <div className="dashboardPanelHead"><div><span className="eyebrow">NEXT</span><h2>What needs attention</h2></div></div>
           <Link href="/growth-calendar" className="nextAction"><span>01</span><div><b>Confirm current strategy</b><small>Keep product phase and marketplace priority accurate.</small></div><em>→</em></Link>
           <Link href="/calendar" className="nextAction"><span>02</span><div><b>Review the content calendar</b><small>Decide what should be communicated and when before creating the asset.</small></div><em>→</em></Link>
-          <Link href={dashboard.counts.review ? '/review' : '/create'} className="nextAction"><span>03</span><div><b>{dashboard.counts.review ? `Review ${dashboard.counts.review} content item${dashboard.counts.review === 1 ? '' : 's'}` : 'Create the next content'}</b><small>{dashboard.counts.review ? 'Human approval remains the publishing gate.' : 'Create from Calendar or use Quick Create.'}</small></div><em>→</em></Link>
+          <Link href={dashboard.counts.review ? '/review' : '/quick-create'} className="nextAction"><span>03</span><div><b>{dashboard.counts.review ? `Review ${dashboard.counts.review} content item${dashboard.counts.review === 1 ? '' : 's'}` : 'Quick Create a future asset'}</b><small>{dashboard.counts.review ? 'Human approval remains the publishing gate.' : 'Create marketing material now, then schedule it when the timing is right.'}</small></div><em>→</em></Link>
         </section>
 
         <section className="dashboardPanel pipelinePanel">
