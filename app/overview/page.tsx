@@ -70,7 +70,7 @@ export default function OverviewPage() {
       await loadDashboard(custom.detail.brandId);
     }
 
-    initialise();
+    void initialise();
     window.addEventListener('contentos:brand-change', onBrandChange);
     return () => { mounted = false; window.removeEventListener('contentos:brand-change', onBrandChange); };
   }, [supabase]);
@@ -132,34 +132,34 @@ export default function OverviewPage() {
   return (
     <section className="overviewPage">
       <header className="pageHero">
-        <div><span className="eyebrow">OVERVIEW</span><h1>{greeting}. <span>{selectedBrand?.name || 'Your workspace'}</span></h1><p>Strategy → Calendar → Create → Review → Publish.</p></div>
+        <div><span className="eyebrow">OVERVIEW</span><h1>{greeting}. <span>{selectedBrand?.name || 'Your workspace'}</span></h1><p>Create → Review → Ready → Schedule / Publish. Use Calendar when a posting date matters.</p></div>
         <Link href="/quick-create" className="appPrimary">✦ Quick Create</Link>
       </header>
 
       <div className="statusGrid">
-        <article className="statusCard featured"><span>PRODUCT PHASE</span><strong>{pretty(dashboard.growth?.current_phase)}</strong><p>{dashboard.phase?.objective || 'Set the current product phase in Strategy so ContentOS can prioritise the right work.'}</p><Link href="/growth-calendar">Open Strategy →</Link></article>
-        <article className="statusCard"><span>MARKETPLACE PRIORITY</span><strong>{pretty(dashboard.growth?.marketplace_need)}</strong><p>Use this signal to decide whether content should prioritise product stability, drivers or passenger demand.</p></article>
-        <article className="statusCard"><span>CURRENT CONTEXT</span><strong>{dashboard.phase?.academic_phase || 'No active calendar phase'}</strong><p>{dashboard.phase?.title || 'ContentOS will use verified calendar context when available.'}</p></article>
-        <article className="statusCard"><span>CHANNEL</span><strong>{dashboard.connection ? `${pretty(dashboard.connection.platform)} · @${dashboard.connection.username || 'connected'}` : 'No channel connected'}</strong><p>{dashboard.connection ? 'Ready for approved publishing.' : 'Connect a publishing channel when you are ready.'}</p><Link href="/connections">Manage channels →</Link></article>
+        <article className="statusCard featured"><span>PRODUCT PHASE</span><strong>{pretty(dashboard.growth?.current_phase)}</strong><p>{dashboard.phase?.objective || 'Set the current product phase in Strategy so ContentOS can keep content appropriate for the product state.'}</p><Link href="/growth-calendar">Open Strategy →</Link></article>
+        <article className="statusCard"><span>MARKETPLACE PRIORITY</span><strong>{pretty(dashboard.growth?.marketplace_need)}</strong><p>Use this signal when choosing whether content should prioritise product stability, drivers or passenger demand.</p></article>
+        <article className="statusCard"><span>CURRENT CONTEXT</span><strong>{dashboard.phase?.academic_phase || 'No active roadmap window'}</strong><p>{dashboard.phase?.title || 'Verified timing context can guide content when relevant.'}</p></article>
+        <article className="statusCard"><span>DIRECT CHANNEL</span><strong>{dashboard.connection ? `${pretty(dashboard.connection.platform)} · @${dashboard.connection.username || 'connected'}` : 'No direct channel connected'}</strong><p>{dashboard.connection ? 'Ready content can be sent through the connected channel.' : 'Direct publishing is optional. You can still create and export content.'}</p><Link href="/connections">Manage channels →</Link></article>
       </div>
 
       <div className="dashboardGrid">
         <section className="dashboardPanel actionPanel">
-          <div className="dashboardPanelHead"><div><span className="eyebrow">NEXT</span><h2>What needs attention</h2></div></div>
-          <Link href="/growth-calendar" className="nextAction"><span>01</span><div><b>Confirm current strategy</b><small>Keep product phase and marketplace priority accurate.</small></div><em>→</em></Link>
-          <Link href="/calendar" className="nextAction"><span>02</span><div><b>Review the content calendar</b><small>Decide what should be communicated and when before creating the asset.</small></div><em>→</em></Link>
-          <Link href={dashboard.counts.review ? '/review' : '/quick-create'} className="nextAction"><span>03</span><div><b>{dashboard.counts.review ? `Review ${dashboard.counts.review} content item${dashboard.counts.review === 1 ? '' : 's'}` : 'Quick Create a future asset'}</b><small>{dashboard.counts.review ? 'Human approval remains the publishing gate.' : 'Create marketing material now, then schedule it when the timing is right.'}</small></div><em>→</em></Link>
+          <div className="dashboardPanelHead"><div><span className="eyebrow">NEXT</span><h2>Keep it simple</h2></div></div>
+          <Link href="/quick-create" className="nextAction"><span>01</span><div><b>Create a marketing asset</b><small>Make the content now even if the publish date is not decided yet.</small></div><em>→</em></Link>
+          <Link href="/review" className="nextAction"><span>02</span><div><b>{dashboard.counts.review ? `Review ${dashboard.counts.review} item${dashboard.counts.review === 1 ? '' : 's'}` : 'Open your content library'}</b><small>Approve good content as Ready and keep it for later.</small></div><em>→</em></Link>
+          <Link href="/calendar" className="nextAction"><span>03</span><div><b>Plan timing when needed</b><small>Use Calendar for dated campaigns, launch windows and planned sequences.</small></div><em>→</em></Link>
         </section>
 
         <section className="dashboardPanel pipelinePanel">
-          <div className="dashboardPanelHead"><div><span className="eyebrow">PIPELINE</span><h2>Content status</h2></div><Link href="/review">View review</Link></div>
-          <div className="pipelineRow"><div><b>{dashboard.counts.planned}</b><span>Planned</span></div><i>→</i><div><b>{dashboard.counts.review}</b><span>Review</span></div><i>→</i><div><b>{dashboard.counts.approved}</b><span>Approved</span></div><i>→</i><div><b>{dashboard.counts.scheduled}</b><span>Scheduled</span></div><i>→</i><div><b>{dashboard.counts.published}</b><span>Published</span></div></div>
+          <div className="dashboardPanelHead"><div><span className="eyebrow">PIPELINE</span><h2>Content status</h2></div><Link href="/review">Open library</Link></div>
+          <div className="pipelineRow"><div><b>{dashboard.counts.planned}</b><span>Planned</span></div><i>→</i><div><b>{dashboard.counts.review}</b><span>Review</span></div><i>→</i><div><b>{dashboard.counts.approved}</b><span>Ready</span></div><i>→</i><div><b>{dashboard.counts.scheduled}</b><span>Scheduled</span></div><i>→</i><div><b>{dashboard.counts.published}</b><span>Published</span></div></div>
         </section>
 
         <section className="dashboardPanel upcomingPanel">
-          <div className="dashboardPanelHead"><div><span className="eyebrow">CALENDAR</span><h2>Upcoming content</h2></div><Link href="/calendar">Open Calendar</Link></div>
-          {dashboard.nextItems.length === 0 ? <p className="dashboardMuted">No upcoming Calendar items yet.</p> : dashboard.nextItems.map((item) => (
-            <article className="upcomingItem" key={item.id}><time>{item.planned_date ? new Date(`${item.planned_date}T00:00:00`).toLocaleDateString('en-MY', { day: '2-digit', month: 'short' }) : 'Next'}</time><div><b>{item.hook}</b><span>{item.platform} · {pretty(item.status)}</span></div></article>
+          <div className="dashboardPanelHead"><div><span className="eyebrow">CALENDAR</span><h2>Upcoming planned content</h2></div><Link href="/calendar">Open Calendar</Link></div>
+          {dashboard.nextItems.length === 0 ? <p className="dashboardMuted">No upcoming Calendar items. That is fine — Quick Create does not require a date.</p> : dashboard.nextItems.map((item) => (
+            <article className="upcomingItem" key={item.id}><time>{item.planned_date ? new Date(`${item.planned_date}T00:00:00`).toLocaleDateString('en-MY', { day: '2-digit', month: 'short' }) : 'Later'}</time><div><b>{item.hook}</b><span>{item.platform} · {pretty(item.status)}</span></div></article>
           ))}
         </section>
       </div>
