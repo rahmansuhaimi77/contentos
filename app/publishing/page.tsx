@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { getSupabaseBrowserClient } from '@/lib/supabase-client';
@@ -32,27 +33,41 @@ export default function PublishingPage() {
   const [error, setError] = useState('');
 
   const selectedVariant = variants.find((item) => item.id === variantId);
+  const selectedBrand = brands.find((item) => item.id === brandId);
   const connected = connection?.status === 'connected';
   const overLimit = postText.length > THREADS_TEXT_LIMIT;
 
   useEffect(() => {
+    let mounted = true;
     async function init() {
       const { data } = await supabase.auth.getUser();
+      if (!mounted) return;
       setUser(data.user ?? null);
       if (!data.user) { setLoading(false); return; }
       const { data: brandRows, error: brandError } = await supabase.from('contentos_brands').select('id,name').order('updated_at', { ascending: false });
+      if (!mounted) return;
       if (brandError) setError(brandError.message);
       const next = (brandRows ?? []) as Brand[];
       setBrands(next);
-      if (next[0]) setBrandId(next[0].id);
+      const saved = window.localStorage.getItem('contentos:selectedBrandId');
+      const initial = next.find((item) => item.id === saved) || next[0];
+      if (initial) {
+        setBrandId(initial.id);
+        await loadBrandPublishing(initial.id);
+      }
       setLoading(false);
     }
+    async function onBrandChange(event: Event) {
+      const next = (event as CustomEvent<{ brandId: string }>).detail.brandId;
+      setBrandId(next);
+      setVariantId('');
+      setPostText('');
+      await loadBrandPublishing(next);
+    }
     void init();
+    window.addEventListener('contentos:brand-change', onBrandChange);
+    return () => { mounted = false; window.removeEventListener('contentos:brand-change', onBrandChange); };
   }, [supabase]);
-
-  useEffect(() => {
-    if (brandId) void loadBrandPublishing(brandId);
-  }, [brandId]);
 
   useEffect(() => {
     const selected = variants.find((item) => item.id === variantId);
@@ -78,14 +93,16 @@ export default function PublishingPage() {
       .from('contentos_content_variants')
       .select('id,hook,caption,script,status,source_plan_item_id,campaign_id')
       .in('campaign_id', campaignIds)
+      .eq('status', 'approved')
       .order('created_at', { ascending: false })
       .limit(100);
     if (variantError) { setError(variantError.message); return; }
     const next = (variantRows ?? []) as Variant[];
     setVariants(next);
     const requested = new URLSearchParams(window.location.search).get('variant');
-    const initial = next.find((item) => item.id === requested) || next.find((item) => item.status === 'approved' || item.status === 'in_review') || next[0];
+    const initial = next.find((item) => item.id === requested) || next[0];
     setVariantId(initial?.id || '');
+    if (!initial) setPostText('');
   }
 
   async function authHeaders() {
@@ -96,11 +113,10 @@ export default function PublishingPage() {
   }
 
   async function createPublication(status: 'approved' | 'scheduled') {
-    if (!user || !selectedVariant || !connection || !brandId || !postText.trim()) throw new Error('Select a connected brand and a content item first.');
+    if (!user || !selectedVariant || !connection || !brandId || !postText.trim()) throw new Error('Select approved content and a connected brand first.');
+    if (selectedVariant.status !== 'approved') throw new Error('This content must be approved in Review before publishing.');
     if (overLimit) throw new Error(`Threads primary text is over ${THREADS_TEXT_LIMIT} characters. Tighten the copy before publishing.`);
     const scheduledFor = status === 'scheduled' ? new Date(scheduleAt).toISOString() : null;
-    const { error: variantError } = await supabase.from('contentos_content_variants').update({ status: 'approved', updated_at: new Date().toISOString() }).eq('id', selectedVariant.id);
-    if (variantError) throw variantError;
     const { data: publication, error: publicationError } = await supabase.from('contentos_publications').insert({
       brand_id: brandId,
       variant_id: selectedVariant.id,
@@ -137,21 +153,21 @@ export default function PublishingPage() {
     setBusy('schedule'); setError(''); setMessage('');
     try {
       await createPublication('scheduled');
-      setMessage('Scheduled. The Supabase worker checks the queue every minute and will publish when due.');
+      setMessage('Scheduled. The publishing worker will send it when due.');
       setScheduleAt('');
       await loadBrandPublishing(brandId);
     } catch (err) { setError(err instanceof Error ? err.message : 'Scheduling failed.'); }
     finally { setBusy(''); }
   }
 
-  if (loading) return <main className="toolShell"><div className="toolCard">Loading Publishing…</div></main>;
-  if (!user) return <main className="toolShell"><div className="toolCard"><h1>Sign in first</h1><p>Open ContentOS Studio, sign in, then return here.</p><a className="toolPrimaryLink" href="/">Open Studio</a></div></main>;
+  if (loading) return <section className="unifiedPage"><div className="dashboardSkeleton">Loading Publish…</div></section>;
+  if (!user) return <section className="unifiedPage"><div className="dashboardEmpty"><h1>Sign in first</h1><p>Sign in to access publishing.</p><Link className="appPrimary" href="/login">Sign in</Link></div></section>;
 
   return (
-    <main className="toolShell">
-      <header className="toolHeader">
-        <div><span className="eyebrow">CONTENTOS · PUBLISHING</span><h1>Approve once. Publish now or schedule it.</h1><p>Threads is the first direct channel. Every publication is tied to the selected brand and connected account.</p></div>
-        <nav className="toolNav"><a href="/">Studio</a><a href="/planner">Planner</a><a href="/connections">Connections</a><a className="active" href="/publishing">Publishing</a></nav>
+    <section className="unifiedPage">
+      <header className="pageHero compactHero">
+        <div><span className="eyebrow">PUBLISH</span><h1>Only approved content can go live.</h1><p>{selectedBrand?.name || 'Active brand'} · Threads is the first direct publishing channel. Review remains the mandatory gate.</p></div>
+        <Link className="appPrimary" href="/review">Open Review</Link>
       </header>
 
       {message && <div className="notice">{message}</div>}
@@ -159,24 +175,24 @@ export default function PublishingPage() {
 
       <section className="publishingGrid">
         <div className="panel publishComposer">
-          <div className="panelHead"><span>01</span><div><h3>Final post</h3><p>Select approved/generated content, make the last edit, then choose when it goes live.</p></div></div>
-          <label className="field"><span>Brand</span><select value={brandId} onChange={(e) => setBrandId(e.target.value)}>{brands.map((brand) => <option key={brand.id} value={brand.id}>{brand.name}</option>)}</select></label>
+          <div className="panelHead"><span>01</span><div><h3>Final post</h3><p>Select approved content, make the last edit, then choose when it goes live.</p></div></div>
 
           <div className={`accountStrip ${connected ? 'connected' : ''}`}>
             <div><small>THREADS DESTINATION</small><strong>{connected ? `@${connection?.username || 'connected-account'}` : 'Not connected'}</strong></div>
-            {!connected && <a href={`/connections?brand=${brandId}`}>Connect Threads</a>}
+            {!connected && <Link href="/connections">Connect Threads</Link>}
             {connected && <span>✓ Connected</span>}
           </div>
 
-          <label className="field"><span>Content item</span><select value={variantId} onChange={(e) => setVariantId(e.target.value)}><option value="">Select content…</option>{variants.map((item) => <option key={item.id} value={item.id}>{item.status.toUpperCase()} · {item.hook.slice(0, 72)}</option>)}</select></label>
-          <label className="field publishText"><span>Final Threads copy</span><textarea rows={12} value={postText} onChange={(e) => setPostText(e.target.value)} placeholder="Choose a content item or paste the final Threads post." /></label>
+          <label className="field"><span>Approved content</span><select value={variantId} onChange={(e) => setVariantId(e.target.value)}><option value="">Select approved content…</option>{variants.map((item) => <option key={item.id} value={item.id}>{item.hook.slice(0, 90)}</option>)}</select></label>
+          {variants.length === 0 && <div className="emptyState">No approved content for this brand yet. Approve an item in Review first.</div>}
+          <label className="field publishText"><span>Final Threads copy</span><textarea rows={12} value={postText} onChange={(e) => setPostText(e.target.value)} placeholder="Choose an approved content item." /></label>
           <div className={`charCount ${overLimit ? 'over' : ''}`}><b>{postText.length}</b> / {THREADS_TEXT_LIMIT} characters {overLimit && <span>· shorten before publishing</span>}</div>
 
           <div className="publishActions">
             <button className="publishNow" disabled={!connected || !selectedVariant || !postText.trim() || overLimit || !!busy} onClick={publishNow}>{busy === 'publish' ? 'Publishing…' : 'Publish now'}</button>
             <div className="scheduleControls"><input type="datetime-local" value={scheduleAt} onChange={(e) => setScheduleAt(e.target.value)} /><button disabled={!connected || !selectedVariant || !scheduleAt || overLimit || !!busy} onClick={schedulePost}>{busy === 'schedule' ? 'Scheduling…' : 'Schedule'}</button></div>
           </div>
-          <p className="publishGuardrail">Nothing is auto-published from generation. A human still chooses the final copy and explicitly publishes or schedules it.</p>
+          <p className="publishGuardrail">Generation cannot publish. Review approves. Publish is the only place that can schedule or send approved content.</p>
         </div>
 
         <section className="panel publishHistory">
@@ -194,6 +210,6 @@ export default function PublishingPage() {
           </div>
         </section>
       </section>
-    </main>
+    </section>
   );
 }
