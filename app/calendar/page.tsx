@@ -17,7 +17,7 @@ function malaysiaToday() {
 }
 
 function formatDate(value: string | null, dayNumber: number) {
-  if (!value) return { top: `Day ${dayNumber}`, bottom: 'Planned' };
+  if (!value) return { top: `Day ${dayNumber}`, bottom: 'Unscheduled' };
   const date = new Date(`${value}T00:00:00`);
   return {
     top: date.toLocaleDateString('en-MY', { day: '2-digit', month: 'short' }),
@@ -132,12 +132,12 @@ export default function CalendarPage() {
   const selectedBrand = brands.find((brand) => brand.id === brandId);
 
   if (loading) return <section className={styles.page}><div className={styles.empty}>Loading Calendar…</div></section>;
-  if (!user) return <section className={styles.page}><div className={styles.empty}>Sign in first through ContentOS.</div></section>;
+  if (!user) return <section className={styles.page}><div className={styles.empty}>Please sign in first.</div></section>;
 
   return (
     <section className={styles.page}>
       <header className={styles.hero}>
-        <div><span className={styles.eyebrow}>CALENDAR</span><h1>Decide what to post — and when.</h1><p>Calendar is the planning layer. Pick the right message, audience, platform and date first. Then send the item to Create to make the actual asset.</p></div>
+        <div><span className={styles.eyebrow}>CALENDAR</span><h1>Decide what to post — and when.</h1><p>Calendar is the planning layer. Pick the right message, platform and date first. Then send the item to Create to make the actual asset.</p></div>
         <button className={styles.primary} onClick={() => setShowGenerator((value) => !value)}>{showGenerator ? 'Close generator' : '+ Generate calendar'}</button>
       </header>
 
@@ -145,7 +145,7 @@ export default function CalendarPage() {
       {error && <div className={styles.error}>{error}</div>}
 
       {showGenerator && <form className={styles.panel} onSubmit={generate}>
-        <div className={styles.panelHead}><div><span className={styles.eyebrow}>GENERATE</span><h2>Build a 30-day calendar</h2><p>Strategy and verified brand knowledge still guide the plan. This is an output, not the strategy itself.</p></div></div>
+        <div className={styles.panelHead}><div><span className={styles.eyebrow}>GENERATE</span><h2>Build a 30-day calendar</h2><p>Strategy and verified brand knowledge guide the plan. This is an execution calendar, not the strategy itself.</p></div></div>
         <div className={styles.formGrid}>
           <label className={styles.field}><span>Start date</span><input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} /></label>
           <label className={styles.field}><span>Language</span><input value={language} onChange={(e) => setLanguage(e.target.value)} /></label>
@@ -158,7 +158,7 @@ export default function CalendarPage() {
       <section className={styles.panel}>
         <div className={styles.summary}>
           <div><strong>{plan?.name || `${selectedBrand?.name || 'Brand'} Content Calendar`}</strong><span>{items.length ? `${items.length} planned content items · choose one to create` : 'No calendar yet for this brand.'}</span></div>
-          <div className={styles.toolbar}><Link className={styles.secondary} href="/growth-calendar">Strategy</Link><Link className={styles.secondary} href="/create">Quick Create</Link></div>
+          <div className={styles.toolbar}><Link className={styles.secondary} href="/growth-calendar">Strategy</Link><Link className={styles.secondary} href="/quick-create">Quick Create</Link></div>
         </div>
       </section>
 
