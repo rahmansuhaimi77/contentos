@@ -44,7 +44,12 @@ export default function CreatePage() {
       const params = new URLSearchParams(window.location.search);
       const planId = params.get('planId');
       const day = Number(params.get('day'));
-      if (!planId || !day) { setLoading(false); return; }
+
+      // The Create tab is Quick Create by default. Calendar links provide a planned brief here.
+      if (!planId || !day) {
+        window.location.replace('/quick-create');
+        return;
+      }
 
       const { data: plan, error: planError } = await supabase
         .from('contentos_content_plans')
@@ -81,7 +86,7 @@ export default function CreatePage() {
       window.dispatchEvent(new CustomEvent('contentos:brand-change', { detail: { brandId: plan.brand_id } }));
       setLoading(false);
     }
-    initialise();
+    void initialise();
     return () => { mounted = false; };
   }, [supabase]);
 
@@ -107,17 +112,9 @@ export default function CreatePage() {
     }
   }
 
-  if (loading) return <section className={styles.page}><div className={styles.empty}>Loading Create…</div></section>;
-  if (!user) return <section className={styles.page}><div className={styles.empty}>Sign in first through ContentOS.</div></section>;
-
-  if (!context) return <section className={styles.page}>
-    <header className={styles.hero}><div><span className={styles.eyebrow}>CREATE</span><h1>Make the actual content.</h1><p>Most of the time, start from Calendar so the strategy, timing and platform are already decided. Use Quick Create for assets you want to make now and schedule later.</p></div></header>
-    {error && <div className={styles.error}>{error}</div>}
-    <div className={styles.entryGrid}>
-      <Link href="/calendar" className={styles.entryCard}><span>RECOMMENDED</span><strong>Create from Calendar →</strong><p>Choose a planned item. ContentOS carries the brief into Create automatically, so you only focus on making the asset.</p></Link>
-      <Link href="/quick-create" className={styles.entryCard}><span>QUICK CREATE</span><strong>Create something unplanned →</strong><p>Create a marketing asset now without forcing it into today’s Calendar. Send it to Review and schedule it when the timing is right.</p></Link>
-    </div>
-  </section>;
+  if (loading) return <section className={styles.page}><div className={styles.empty}>Opening Create…</div></section>;
+  if (!user) return <section className={styles.page}><div className={styles.empty}>Please sign in first.</div></section>;
+  if (!context) return <section className={styles.page}><div className={styles.empty}>{error || 'Unable to open this Calendar item.'}<br /><br /><Link href="/calendar">Back to Calendar</Link></div></section>;
 
   return <section className={styles.page}>
     <header className={styles.hero}><div><span className={styles.eyebrow}>CREATE · FROM CALENDAR</span><h1>{context.hook}</h1><p>{context.brandName} · {context.platform} · {context.format}</p></div><Link className={styles.secondary} href="/calendar">← Back to Calendar</Link></header>
@@ -128,22 +125,22 @@ export default function CreatePage() {
         <div className={styles.contextMain}><span className={styles.contextLabel}>PLANNED BRIEF</span><h2>{context.hook}</h2><p>{context.concept}</p></div>
         <div className={styles.contextBox}><strong>Objective</strong><p>{context.objective}</p></div>
         <div className={styles.contextBox}><strong>CTA</strong><p>{context.cta}</p></div>
-        <div className={styles.contextBox}><strong>Audience / pillar</strong><p>{context.pillar}</p></div>
-        <div className={styles.contextBox}><strong>Timing</strong><p>{context.plannedDate || `Day ${context.dayNumber}`} · {context.platform}</p></div>
+        <div className={styles.contextBox}><strong>Pillar</strong><p>{context.pillar}</p></div>
+        <div className={styles.contextBox}><strong>Timing</strong><p>{context.plannedDate || 'Unscheduled'} · {context.platform}</p></div>
       </div>
     </section>
 
-    {!result && <section className={styles.panel}><div className={styles.createBar}><p>Calendar has already decided what and when. Create now turns this brief into the actual platform-ready content.</p><button onClick={createContent} disabled={creating}>{creating ? 'Creating content…' : '✦ Create content'}</button></div></section>}
+    {!result && <section className={styles.panel}><div className={styles.createBar}><p>The Calendar already carries the strategy and timing. Create turns this brief into the copy and creative pack.</p><button onClick={createContent} disabled={creating}>{creating ? 'Creating…' : '✦ Create content'}</button></div></section>}
 
     {result && <section className={styles.result}>
       <span className={styles.eyebrow}>CREATED · SENT TO REVIEW</span><h2>{result.pack.hook}</h2>
       <div className={styles.resultGrid}>
-        <article className={styles.resultCard}><span>PRIMARY COPY / SCRIPT</span><p>{result.pack.script}</p></article>
+        <article className={styles.resultCard}><span>CONTENT / SCRIPT</span><p>{result.pack.script}</p></article>
         <article className={styles.resultCard}><span>PUBLISH COPY</span><p>{result.pack.caption}</p></article>
         <article className={`${styles.resultCard} ${styles.wide}`}><span>CTA</span><p>{result.pack.cta}</p></article>
         <article className={`${styles.resultCard} ${styles.wide}`}><span>CREATIVE DIRECTION</span><p>{result.pack.creative_prompt}</p></article>
       </div>
-      <div className={styles.resultActions}><Link href="/review">Review & approve →</Link><Link href={`/storyboards/${result.variantId}`}>Open creative workspace</Link><Link href="/calendar">Back to Calendar</Link></div>
+      <div className={styles.resultActions}><Link href="/review">Review & approve →</Link><Link href={`/creative/${result.variantId}`}>Open creative workspace</Link><Link href="/calendar">Back to Calendar</Link></div>
     </section>}
   </section>;
 }
