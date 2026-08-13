@@ -61,6 +61,7 @@ export default function QuickCreatePage() {
   const [phase, setPhase] = useState('Pre-Launch');
   const [language, setLanguage] = useState('Bahasa Melayu / natural Manglish where appropriate');
   const [result, setResult] = useState<GenerationResult | null>(null);
+  const [notice, setNotice] = useState('');
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -77,16 +78,10 @@ export default function QuickCreatePage() {
         : await query.limit(1);
 
       if (!mounted) return;
-      if (brandError) {
-        setError(brandError.message);
-        return;
-      }
+      if (brandError) { setError(brandError.message); return; }
 
       const row = data?.[0];
-      if (!row) {
-        setBrand(null);
-        return;
-      }
+      if (!row) { setBrand(null); return; }
 
       setBrand({
         id: row.id,
@@ -126,6 +121,7 @@ export default function QuickCreatePage() {
     async function onBrandChange(event: Event) {
       const custom = event as CustomEvent<{ brandId: string }>;
       setResult(null);
+      setNotice('');
       setError('');
       await loadBrand(custom.detail.brandId);
     }
@@ -144,6 +140,7 @@ export default function QuickCreatePage() {
 
     setCreating(true);
     setError('');
+    setNotice('');
     setResult(null);
 
     try {
@@ -214,7 +211,23 @@ export default function QuickCreatePage() {
         .select('id,hook,angle,script,caption,cta,creative_prompt');
       if (variantsError) throw variantsError;
 
-      setResult({ ...generated, variants: (savedVariants ?? generated.variants) as GeneratedVariant[] });
+      const saved = (savedVariants ?? generated.variants) as GeneratedVariant[];
+      setResult({ ...generated, variants: saved });
+
+      const variantId = saved[0]?.id;
+      if (variantId) {
+        const productionResponse = await fetch('/api/produce', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ variantId }),
+        });
+        const production = await productionResponse.json();
+        if (!productionResponse.ok) {
+          setNotice('Copy was created and sent to Review, but the creative workspace could not be prepared yet. You can retry from Review.');
+        } else {
+          setNotice(`Created for ${phase}. Copy is in Review and the creative workspace is ready.`);
+        }
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unable to create content.');
     } finally {
@@ -227,22 +240,23 @@ export default function QuickCreatePage() {
 
   return <section className={styles.page}>
     <header className={styles.hero}>
-      <div><span className={styles.eyebrow}>QUICK CREATE</span><h1>Create now. Publish at the right time later.</h1><p>Use this for marketing assets you want to prepare now even when they are not yet scheduled in Calendar.</p></div>
+      <div><span className={styles.eyebrow}>QUICK CREATE</span><h1>Create now. Publish at the right time later.</h1><p>Use this for marketing assets you want to prepare now even when they are not scheduled yet.</p></div>
       <Link href="/calendar" className={styles.secondary}>Use Calendar instead</Link>
     </header>
 
+    {notice && <div className={styles.notice}>{notice}</div>}
     {error && <div className={styles.error}>{error}</div>}
 
     <form className={styles.panel} onSubmit={submit}>
-      <div className={styles.panelHead}><div><span className={styles.eyebrow}>BRIEF</span><h2>{brand?.name || 'Select a brand'}</h2><p>Tell ContentOS what asset you want. It will use the active Brand knowledge automatically.</p></div></div>
+      <div className={styles.panelHead}><div><span className={styles.eyebrow}>BRIEF</span><h2>{brand?.name || 'Select a brand'}</h2><p>Describe the asset directly. Your request is the source of truth; Brand knowledge adds guardrails and context.</p></div></div>
       <div className={styles.formGrid}>
         <label className={`${styles.field} ${styles.wide}`}><span>What do you want to create?</span><textarea value={idea} onChange={(event) => setIdea(event.target.value)} placeholder="Example: Create a public 6-slide carousel showing how to install KampusRide on Android and iPhone and enable push notifications." rows={5} /></label>
         <label className={styles.field}><span>Objective</span><input value={objective} onChange={(event) => setObjective(event.target.value)} /></label>
-        <label className={styles.field}><span>Target phase</span><select value={phase} onChange={(event) => setPhase(event.target.value)}>{phaseOptions.map((item) => <option key={item}>{item}</option>)}</select></label>
+        <label className={styles.field}><span>Use during</span><select value={phase} onChange={(event) => setPhase(event.target.value)}>{phaseOptions.map((item) => <option key={item}>{item}</option>)}</select></label>
         <label className={styles.field}><span>Platform</span><select value={platform} onChange={(event) => setPlatform(event.target.value)}>{platformOptions.map((item) => <option key={item}>{item}</option>)}</select></label>
         <label className={styles.field}><span>Format</span><select value={format} onChange={(event) => setFormat(event.target.value)}>{formatOptions.map((item) => <option key={item}>{item}</option>)}</select></label>
         <label className={`${styles.field} ${styles.wide}`}><span>Language / tone</span><input value={language} onChange={(event) => setLanguage(event.target.value)} /></label>
-        <div className={styles.generateRow}><button disabled={creating || !brand || !idea.trim()}>{creating ? 'Creating…' : '✦ Create content'}</button></div>
+        <div className={styles.generateRow}><button disabled={creating || !brand || !idea.trim()}>{creating ? 'Creating copy + creative pack…' : '✦ Create content'}</button></div>
       </div>
     </form>
 
@@ -250,7 +264,7 @@ export default function QuickCreatePage() {
       <span className={styles.eyebrow}>CREATED · SENT TO REVIEW</span>
       <h2>{result.variants[0].hook}</h2>
       <div className={styles.resultGrid}>
-        <article className={styles.resultCard}><span>PRIMARY COPY / SCRIPT</span><p>{result.variants[0].script}</p></article>
+        <article className={styles.resultCard}><span>CONTENT / SCRIPT</span><p>{result.variants[0].script}</p></article>
         <article className={styles.resultCard}><span>PUBLISH COPY</span><p>{result.variants[0].caption}</p></article>
         <article className={`${styles.resultCard} ${styles.wide}`}><span>CTA</span><p>{result.variants[0].cta}</p></article>
         <article className={`${styles.resultCard} ${styles.wide}`}><span>CREATIVE DIRECTION</span><p>{result.variants[0].creative_prompt}</p></article>
