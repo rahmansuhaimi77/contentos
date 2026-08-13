@@ -57,6 +57,104 @@ function currentIiumContext(now = new Date()) {
   return 'Use verified current IIUM academic/event context from the Knowledge Base. Never invent semester, Ta’aruf or campus-event dates.';
 }
 
+function extractContentRequest(extra: string) {
+  const match = extra.match(/CONTENT REQUEST:\s*([\s\S]*)$/i);
+  return match?.[1]?.trim() || '';
+}
+
+function extractTargetPhase(extra: string) {
+  const match = extra.match(/TARGET CONTENT PHASE:\s*([^\.\n]+)/i);
+  return match?.[1]?.trim() || '';
+}
+
+function isInstallTutorial(request: string) {
+  return /install.*kampusride|add to home screen|home screen.*notification|enable notifications?/i.test(request);
+}
+
+function buildInstallTutorialResult(data: CampaignInput, targetPhase: string): GenerationResult {
+  const hook = 'Nak install KampusRide? Senang je 📱';
+  const cta = 'Install KampusRide, add to Home Screen dan enable notifications supaya tak terlepas ride updates.';
+  const script = [
+    'SLIDE 1 — HOW TO INSTALL KAMPUSRIDE 📱',
+    'Tak perlu cari dekat App Store atau Play Store. Install terus dari browser.',
+    '',
+    'SLIDE 2 — ANDROID: OPEN IN CHROME',
+    'Buka KampusRide menggunakan Google Chrome.',
+    '',
+    'SLIDE 3 — ANDROID: INSTALL APP',
+    'Tap ⋮ → Install app → Install. KampusRide akan muncul dekat Home Screen.',
+    '',
+    'SLIDE 4 — iPHONE: ADD TO HOME SCREEN',
+    'Buka KampusRide dalam Safari → Share → Add to Home Screen → Open as Web App → Add.',
+    '',
+    'SLIDE 5 — ENABLE NOTIFICATIONS 🔔',
+    'Buka KampusRide dan tap Allow bila notification permission keluar. Ini penting untuk driver offer, ride updates dan trip status.',
+    '',
+    'SLIDE 6 — DONE ✅',
+    'KampusRide dah ready dekat Home Screen. From Campus, For You.',
+  ].join('\n');
+  const caption = [
+    'Nak letak KampusRide dekat Home Screen? Senang je 👇',
+    '',
+    'Android: Chrome → ⋮ → Install app → Install ✅',
+    'iPhone: Safari → Share → Add to Home Screen → Open as Web App → Add ✅',
+    '',
+    'Lepas install, buka KampusRide dan tap Allow bila notification permission keluar 🔔',
+    '',
+    'Supaya tak terlepas driver offer, ride updates dan trip status.',
+    '',
+    cta,
+  ].join('\n');
+
+  return {
+    strategy: `${targetPhase || 'Pre-Launch'} public onboarding tutorial. Follow the requested installation flow exactly. This is a utility/tutorial asset, not a general KampusRide introduction and not a Telegram pain-point post.`,
+    variants: Array.from({ length: data.brief.count }, () => ({
+      hook,
+      angle: 'Public onboarding · Install + notifications',
+      script,
+      caption,
+      cta,
+      creative_prompt: `Create a clean 6-slide ${data.brief.format} for ${data.brief.platform}. Follow these exact slides: 1) How to Install KampusRide, 2) Android open KampusRide in Chrome, 3) Android tap three-dot menu → Install app → Install, 4) iPhone Safari → Share → Add to Home Screen → Open as Web App → Add, 5) Enable Notifications → tap Allow, 6) Done → show the approved KR app icon on the Home Screen with “From Campus, For You.” Use the approved KampusRide brand system and real/approved UI references where available. Keep text short, highly legible and instructional. Do not turn this into a general app introduction, Telegram comparison, launch announcement or ride-booking ad. Do not invent unsupported UI, official IIUM endorsement, safety claims, fares or availability.`,
+    })),
+    mode: 'demo',
+  };
+}
+
+function buildExplicitRequestResult(data: CampaignInput, request: string, targetPhase: string, fallback: GenerationResult): GenerationResult {
+  if (isInstallTutorial(request)) return buildInstallTutorialResult(data, targetPhase);
+
+  // When a paid/live model is configured it already receives the user's exact request.
+  // Preserve that result instead of replacing it with the canned pre-launch campaign bank.
+  if (fallback.mode === 'ai') {
+    return {
+      ...fallback,
+      strategy: `${targetPhase || 'Unscheduled'} Quick Create · ${fallback.strategy}`,
+      variants: fallback.variants.map((variant) => ({
+        ...variant,
+        creative_prompt: `${variant.creative_prompt} QUICK CREATE RULE: follow the user's explicit content request exactly and do not substitute a generic KampusRide topic.`,
+      })),
+    };
+  }
+
+  const firstLine = request.split(/\n|\./).map((part) => part.trim()).find(Boolean) || 'KampusRide content';
+  const hook = firstLine.length > 90 ? `${firstLine.slice(0, 87)}…` : firstLine;
+  const cta = /question|feedback|ask/i.test(request)
+    ? 'Share pendapat korang.'
+    : 'Follow KampusRide untuk updates.';
+  return {
+    strategy: `${targetPhase || 'Unscheduled'} Quick Create. The explicit user request is the source of truth; do not replace it with the generic content bank.`,
+    variants: Array.from({ length: data.brief.count }, () => ({
+      hook,
+      angle: `${targetPhase || 'Quick Create'} · explicit request`,
+      script: `${hook}\n\n${request}\n\n${cta}`,
+      caption: `${hook}\n\n${request}\n\n${cta}`,
+      cta,
+      creative_prompt: `Create a ${data.brief.format} for ${data.brief.platform} for KampusRide. USER REQUEST — FOLLOW EXACTLY: ${request} Target content phase: ${targetPhase || 'unscheduled'}. Use approved brand assets and visual rules. Do not substitute a different KampusRide topic. Do not invent official IIUM endorsement, safety guarantees, fares, ratings, user counts, availability or regulatory approval.`,
+    })),
+    mode: 'demo',
+  };
+}
+
 const prelaunchIdeas: PrelaunchIdea[] = [
   ['App Intro', 'KampusRide ni sebenarnya apa?', 'Introduce KampusRide simply: it organises the existing IIUM transporter behaviour into request → offers → compare → choose → in-app chat → ride → rate. Be transparent that KampusRide is still pre-launch.'],
   ['Why We Built It', 'Kalau Telegram dah ada, kenapa nak buat KampusRide?', 'Respect Telegram for creating the community, then explain the structural gaps KampusRide is designed to fix: scattered DMs, unclear confirmation, negotiation chaos, privacy and weak ride-specific accountability.'],
@@ -179,6 +277,10 @@ export function buildKampusRidePreLaunchCampaignResult(
   knowledge: PlanKnowledgeItem[],
   fallback: GenerationResult,
 ): GenerationResult {
+  const explicitRequest = extractContentRequest(data.brief.extra || '');
+  const targetPhase = extractTargetPhase(data.brief.extra || '');
+  if (explicitRequest) return buildExplicitRequestResult(data, explicitRequest, targetPhase, fallback);
+
   if (!isKampusRidePreLaunch(knowledge)) return fallback;
   const threads = isThreads(data.brief.platform);
   const variants = Array.from({ length: data.brief.count }, (_, index) => {
