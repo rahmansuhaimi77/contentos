@@ -111,11 +111,11 @@ export default function CreatePage() {
   if (!user) return <section className={styles.page}><div className={styles.empty}>Sign in first through ContentOS.</div></section>;
 
   if (!context) return <section className={styles.page}>
-    <header className={styles.hero}><div><span className={styles.eyebrow}>CREATE</span><h1>Make the actual content.</h1><p>Most of the time, start from Calendar so the strategy, timing and platform are already decided. Use Quick Create only for something spontaneous.</p></div></header>
+    <header className={styles.hero}><div><span className={styles.eyebrow}>CREATE</span><h1>Make the actual content.</h1><p>Most of the time, start from Calendar so the strategy, timing and platform are already decided. Use Quick Create for assets you want to make now and schedule later.</p></div></header>
     {error && <div className={styles.error}>{error}</div>}
     <div className={styles.entryGrid}>
       <Link href="/calendar" className={styles.entryCard}><span>RECOMMENDED</span><strong>Create from Calendar →</strong><p>Choose a planned item. ContentOS carries the brief into Create automatically, so you only focus on making the asset.</p></Link>
-      <Link href="/" className={styles.entryCard}><span>QUICK CREATE</span><strong>Create something unplanned →</strong><p>Use the existing Campaign Studio for a spontaneous post or campaign that is not already in Calendar.</p></Link>
+      <Link href="/quick-create" className={styles.entryCard}><span>QUICK CREATE</span><strong>Create something unplanned →</strong><p>Create a marketing asset now without forcing it into today’s Calendar. Send it to Review and schedule it when the timing is right.</p></Link>
     </div>
   </section>;
 
