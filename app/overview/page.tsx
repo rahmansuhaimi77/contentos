@@ -127,7 +127,7 @@ export default function OverviewPage() {
   const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
 
   if (loading) return <section className="overviewPage"><div className="dashboardSkeleton">Loading overview…</div></section>;
-  if (!user) return <section className="overviewPage"><div className="dashboardEmpty"><div className="logo">CO</div><h1>Welcome to ContentOS</h1><p>Sign in through Quick Create to open your workspace.</p><Link className="appPrimary" href="/">Sign in</Link></div></section>;
+  if (!user) return <section className="overviewPage"><div className="dashboardEmpty"><div className="logo">CO</div><h1>Welcome to ContentOS</h1><p>Sign in to open your workspace.</p><Link className="appPrimary" href="/login">Sign in</Link></div></section>;
 
   return (
     <section className="overviewPage">
