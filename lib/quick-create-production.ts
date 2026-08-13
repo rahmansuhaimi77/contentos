@@ -15,7 +15,7 @@ type QuickCreateInput = {
   targetPhase: string;
 };
 
-function visualRules(context: ProductionVisualContext) {
+function visualRules(brandName: string, context: ProductionVisualContext) {
   const rules: string[] = [];
   if (context.primary_color) rules.push(`Primary colour ${context.primary_color}.`);
   if (context.secondary_color) rules.push(`Secondary colour ${context.secondary_color}.`);
@@ -23,7 +23,7 @@ function visualRules(context: ProductionVisualContext) {
   if (context.font_notes) rules.push(`Typography: ${context.font_notes}.`);
   if (context.visual_style) rules.push(`Visual style: ${context.visual_style}.`);
   if (context.image_rules) rules.push(`Image rules: ${context.image_rules}.`);
-  if (context.asset_kinds?.includes('logo')) rules.push(`Use the supplied official ${'brand'} logo exactly; never redraw or reinterpret it.`);
+  if (context.asset_kinds?.includes('logo')) rules.push(`Use the supplied official ${brandName} logo exactly; never redraw or reinterpret it.`);
   if (context.asset_kinds?.includes('screenshot')) rules.push('Use approved screenshots as the UI source of truth; do not invent unsupported screens.');
   return rules.join(' ');
 }
@@ -33,7 +33,7 @@ function isInstallTutorial(input: QuickCreateInput) {
 }
 
 function installStoryboard(input: QuickCreateInput, context: ProductionVisualContext): StoryboardScene[] {
-  const base = `Public KampusRide onboarding carousel. Mobile-first, clean instructional layout, authentic Malaysian student context, approved KampusRide branding only. ${visualRules(context)} No official IIUM endorsement, no ride availability/fare/safety claims, and no invented app screens.`;
+  const base = `Public KampusRide onboarding carousel. Mobile-first, clean instructional layout, authentic Malaysian student context, approved KampusRide branding only. ${visualRules(input.brandName, context)} No official IIUM endorsement, no ride availability/fare/safety claims, and no invented app screens.`;
   const scenes: Array<Omit<StoryboardScene, 'image_prompt'>> = [
     {
       scene: 1,
@@ -85,7 +85,7 @@ function installStoryboard(input: QuickCreateInput, context: ProductionVisualCon
 }
 
 function genericStoryboard(input: QuickCreateInput, context: ProductionVisualContext): StoryboardScene[] {
-  const base = `Create ${input.format} content for ${input.brandName} on ${input.platform}. Follow the user's explicit request exactly: ${input.request}. Target phase: ${input.targetPhase || 'Unscheduled'}. ${visualRules(context)} Do not substitute a different campaign topic.`;
+  const base = `Create ${input.format} content for ${input.brandName} on ${input.platform}. Follow the user's explicit request exactly: ${input.request}. Target phase: ${input.targetPhase || 'Unscheduled'}. ${visualRules(input.brandName, context)} Do not substitute a different campaign topic.`;
   const scenes = [
     { scene: 1, duration: 'Frame 1', visual: 'Strong request-led opening visual.', on_screen_text: input.hook, voiceover: input.hook },
     { scene: 2, duration: 'Frame 2', visual: 'Explain or demonstrate the main requested idea clearly.', on_screen_text: input.objective, voiceover: input.script },
