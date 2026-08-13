@@ -1,6 +1,5 @@
 'use client';
 
-// Deployment retry marker: 2026-08-10 19:21 MYT
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
@@ -85,12 +84,11 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   function active(href: string) {
     if (href === '/overview') return pathname === '/overview';
     if (href === '/brand') return ['/brand', '/knowledge', '/assets'].some((route) => pathname === route || pathname.startsWith(`${route}/`));
-    if (href === '/create') return ['/create', '/quick-create', '/storyboards'].some((route) => pathname === route || pathname.startsWith(`${route}/`));
+    if (href === '/create') return ['/create', '/quick-create', '/creative', '/storyboards'].some((route) => pathname === route || pathname.startsWith(`${route}/`));
     if (href === '/calendar') return ['/calendar', '/planner'].some((route) => pathname === route || pathname.startsWith(`${route}/`));
     return pathname === href || pathname.startsWith(`${href}/`);
   }
 
-  // Keep the old Studio usable as a fallback route. All new product routes use the shared shell.
   if (pathname === '/') return children;
   if (loading) return <div className="appBoot"><div className="logo">CO</div><span>Loading ContentOS…</span></div>;
   if (!user) return children;
