@@ -75,6 +75,8 @@ async function loadProductionContext(supabase: any, brandId: string) {
 }
 
 function extractQuickCreateRequest(brief: any) {
+  const direct = typeof brief?.assistant_request === 'string' ? brief.assistant_request.trim() : '';
+  if (direct) return direct;
   const extra = typeof brief?.extra === 'string' ? brief.extra : '';
   const match = extra.match(/CONTENT REQUEST:\s*([\s\S]*)$/i);
   return match?.[1]?.trim() || extra.trim();
