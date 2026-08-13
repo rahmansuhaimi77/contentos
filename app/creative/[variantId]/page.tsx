@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { getSupabaseBrowserClient } from '@/lib/supabase-client';
 import styles from '@/components/workflow.module.css';
+import creative from './creative.module.css';
 
 const FLOW_URL = 'https://labs.google/fx/tools/flow';
 const GENERATED_BUCKET = 'contentos-storyboards';
@@ -252,17 +253,17 @@ export default function CreativeWorkspacePage() {
           <button className={styles.primary} type="button" onClick={generateVisual} disabled={generating}>{generating ? 'Generating…' : generatedAssets.length ? 'Regenerate' : '✦ Generate visual'}</button>
         </div>
 
-        {generating && <div className={styles.visualGenerating}><strong>Creating poster…</strong><span>This can take a little while. Keep this page open.</span></div>}
+        {generating && <div className={creative.visualGenerating}><strong>Creating poster…</strong><span>This can take a little while. Keep this page open.</span></div>}
 
-        {!generating && generatedAssets.length === 0 && <div className={styles.visualEmpty}>No rendered visual yet. Tap <b>Generate visual</b>.</div>}
+        {!generating && generatedAssets.length === 0 && <div className={creative.visualEmpty}>No rendered visual yet. Tap <b>Generate visual</b>.</div>}
 
-        <div className={styles.visualPreviewGrid}>
-          {generatedAssets.map((asset, index) => <article className={styles.visualPreviewCard} key={asset.id}>
-            <div className={styles.visualImageWrap}>
-              {assetUrls[asset.id] ? <img src={assetUrls[asset.id]} alt={`${brandName} generated poster ${index + 1}`} /> : <div className={styles.visualEmpty}>Loading preview…</div>}
-              {index === 0 && <span className={styles.latestBadge}>LATEST</span>}
+        <div className={creative.visualPreviewGrid}>
+          {generatedAssets.map((asset, index) => <article className={creative.visualPreviewCard} key={asset.id}>
+            <div className={creative.visualImageWrap}>
+              {assetUrls[asset.id] ? <img src={assetUrls[asset.id]} alt={`${brandName} generated poster ${index + 1}`} /> : <div className={creative.visualEmpty}>Loading preview…</div>}
+              {index === 0 && <span className={creative.latestBadge}>LATEST</span>}
             </div>
-            <div className={styles.visualMeta}>
+            <div className={creative.visualMeta}>
               <div><strong>Static poster</strong><span>{new Date(asset.created_at).toLocaleString('en-MY')}</span></div>
               <small>{asset.model} · {asset.quality} · {asset.size}</small>
               {assetUrls[asset.id] && <a href={assetUrls[asset.id]} target="_blank" rel="noreferrer">Open full image ↗</a>}
