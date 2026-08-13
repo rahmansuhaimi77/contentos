@@ -39,6 +39,15 @@ const platformOptions = ['Instagram carousel', 'TikTok / Reels', 'Threads', 'Fac
 const formatOptions = ['Carousel', '15-30 second short-form video', 'UGC / POV video', 'Static ad', 'Threads text post', 'Long-form post'];
 const phaseOptions = ['Pre-Launch', 'Launch Week', 'Early Growth', 'Evergreen'];
 
+const installTutorialPreset = {
+  idea: 'Create a public 6-slide tutorial teaching students how to install KampusRide on Android and iPhone as a web app, then enable push notifications. Slide 1: How to Install KampusRide. Slide 2: Android — open KampusRide in Google Chrome. Slide 3: Android — tap the three-dot menu, choose Install app, then Install. Slide 4: iPhone — open KampusRide in Safari, tap Share, choose Add to Home Screen, enable Open as Web App, then Add. Slide 5: Enable Notifications — open KampusRide and tap Allow when the notification permission appears. Slide 6: Done — show the KR app icon on the Home Screen with “From Campus, For You.” Keep the content simple, highly visual, student-friendly and consistent with the approved KampusRide branding. This is a public-facing asset created now for future use, so do not imply it must be posted today. Do not tell users to search the App Store or Play Store.',
+  objective: 'Public product education / onboarding — teach students how to install KampusRide and enable notifications before they start using the app.',
+  platform: 'Instagram carousel',
+  format: 'Carousel',
+  phase: 'Pre-Launch',
+  language: 'Bahasa Melayu / natural Manglish, simple student-friendly instructions',
+};
+
 export default function QuickCreatePage() {
   const supabase = useMemo(() => getSupabaseBrowserClient(), []);
   const [user, setUser] = useState<User | null>(null);
@@ -98,6 +107,16 @@ export default function QuickCreatePage() {
       if (!mounted) return;
       setUser(authData.user ?? null);
       if (!authData.user) { setLoading(false); return; }
+
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('preset') === 'install') {
+        setIdea(installTutorialPreset.idea);
+        setObjective(installTutorialPreset.objective);
+        setPlatform(installTutorialPreset.platform);
+        setFormat(installTutorialPreset.format);
+        setPhase(installTutorialPreset.phase);
+        setLanguage(installTutorialPreset.language);
+      }
 
       const selected = window.localStorage.getItem('contentos:selectedBrandId');
       await loadBrand(selected);
