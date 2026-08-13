@@ -6,6 +6,7 @@ import { buildDemoResult } from '@/lib/demo-generator';
 import { buildThreadsDemoResult } from '@/lib/threads-generator';
 import { buildKampusRideCampaignResult, isKampusRide } from '@/lib/kampusride-strategy';
 import { buildKampusRidePreLaunchCampaignResult } from '@/lib/kampusride-launch-context';
+import { sanitizeGenerationResultForAudience } from '@/lib/audience-copy-safety';
 
 export const runtime = 'nodejs';
 
@@ -110,13 +111,14 @@ export async function POST(req: Request) {
     const kampusRide = isKampusRide(parsed.data.brand.name);
 
     if (!process.env.OPENAI_API_KEY || !process.env.OPENAI_MODEL) {
-      if (kampusRide) {
-        const fallback = buildKampusRideCampaignResult(parsed.data);
-        return Response.json(buildKampusRidePreLaunchCampaignResult(parsed.data, knowledge, fallback));
-      }
-      return Response.json(isThreads
-        ? buildThreadsDemoResult(parsed.data, knowledge)
-        : buildDemoResult(parsed.data, knowledge));
+      let generated = kampusRide
+        ? buildKampusRidePreLaunchCampaignResult(parsed.data, knowledge, buildKampusRideCampaignResult(parsed.data))
+        : isThreads
+          ? buildThreadsDemoResult(parsed.data, knowledge)
+          : buildDemoResult(parsed.data, knowledge);
+
+      generated = sanitizeGenerationResultForAudience(generated, parsed.data.brand, parsed.data.brief);
+      return Response.json(generated);
     }
 
     const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -134,9 +136,10 @@ export async function POST(req: Request) {
     }
 
     const aiResult = { ...validated, mode: 'ai' as const };
-    return Response.json(kampusRide
+    const contextual = kampusRide
       ? buildKampusRidePreLaunchCampaignResult(parsed.data, knowledge, aiResult)
-      : aiResult);
+      : aiResult;
+    return Response.json(sanitizeGenerationResultForAudience(contextual, parsed.data.brand, parsed.data.brief));
   } catch (error) {
     console.error(error);
     return Response.json(
