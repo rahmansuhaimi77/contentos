@@ -62,8 +62,11 @@ export default function ConnectionsPage() {
       const requestedBrand = params.get('brand');
       const saved = window.localStorage.getItem('contentos:selectedBrandId');
       const initial = next.find((item) => item.id === requestedBrand) || next.find((item) => item.id === saved) || next[0];
-      if (initial) { setBrandId(initial.id); await loadBrandSettings(initial); }
-      await loadProviderStatus();
+      if (initial) {
+        setBrandId(initial.id);
+        await loadBrandSettings(initial);
+        await loadProviderStatus(initial.id);
+      }
       if (params.get('threads') === 'connected') setMessage('Threads connected successfully.');
       if (params.get('threads') === 'error') setError(params.get('message') || 'Threads connection failed.');
       setLoading(false);
@@ -73,7 +76,10 @@ export default function ConnectionsPage() {
       const nextId = (event as CustomEvent<{ brandId: string }>).detail.brandId;
       setBrandId(nextId); setMessage(''); setError('');
       const { data } = await supabase.from('contentos_brands').select('id,name,workspace_id').eq('id', nextId).single();
-      if (data) await loadBrandSettings(data as Brand);
+      if (data) {
+        await loadBrandSettings(data as Brand);
+        await loadProviderStatus(nextId);
+      }
     }
 
     void init();
@@ -88,9 +94,10 @@ export default function ConnectionsPage() {
     return { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` };
   }
 
-  async function loadProviderStatus() {
+  async function loadProviderStatus(targetBrandId?: string) {
     try {
-      const response = await fetch('/api/providers/status', { headers: await authHeaders() });
+      const suffix = targetBrandId ? `?brandId=${encodeURIComponent(targetBrandId)}` : '';
+      const response = await fetch(`/api/providers/status${suffix}`, { headers: await authHeaders() });
       const data = await response.json();
       if (response.ok && data.providers) setProviders(data.providers as ProviderStatus);
     } catch {
@@ -166,9 +173,13 @@ export default function ConnectionsPage() {
     {error && <div className="error globalError">{error}</div>}
 
     <section className="panel" style={{ marginBottom: 14 }}>
-      <div className="dashboardPanelHead"><div><span className="eyebrow">AI PROVIDERS</span><h2>Generation engines</h2><p>API credentials remain server-side. This screen only shows whether ContentOS can use them.</p></div></div>
+      <div className="dashboardPanelHead"><div><span className="eyebrow">AI PROVIDERS</span><h2>Generation engines</h2><p>Connect a provider once. Secret keys are stored in Supabase Vault and are never shown again after saving.</p></div></div>
       <div className="connectionGrid">
-        <article className="connectionCard"><div className="connectionHead"><div className="platformIcon">AI</div><div><span className="eyebrow">COPY + IMAGE</span><h2>ChatGPT / OpenAI</h2></div><span className={`connectionStatus ${providers.openai.configured ? 'isConnected' : ''}`}>{providerBadge(providers.openai.configured)}</span></div><p>Default for copy, captions, scripts and static visual generation when connected.</p></article>
+        <article className="connectionCard">
+          <div className="connectionHead"><div className="platformIcon">AI</div><div><span className="eyebrow">COPY + IMAGE</span><h2>ChatGPT / OpenAI</h2></div><span className={`connectionStatus ${providers.openai.configured ? 'isConnected' : ''}`}>{providerBadge(providers.openai.configured)}</span></div>
+          <p>Default for copy, captions, scripts and static visual generation.</p>
+          <Link className="connectButton" href="/connections/openai">{providers.openai.configured ? 'Manage OpenAI connection' : 'Connect OpenAI'}</Link>
+        </article>
         <article className="connectionCard"><div className="connectionHead"><div className="platformIcon">C</div><div><span className="eyebrow">OPTIONAL SUPPORT</span><h2>Claude</h2></div><span className={`connectionStatus ${providers.claude.configured ? 'isConnected' : ''}`}>{providerBadge(providers.claude.configured)}</span></div><p>Optional copy, creative planning and review. For final images, ContentOS still routes to an image renderer.</p></article>
         <article className="connectionCard"><div className="connectionHead"><div className="platformIcon">▶</div><div><span className="eyebrow">VIDEO</span><h2>Google Veo</h2></div><span className={`connectionStatus ${providers.google.configured ? 'isConnected' : ''}`}>{providerBadge(providers.google.configured)}</span></div><p>Programmatic video route when connected. Flow handoff remains available without an API connection.</p></article>
       </div>
