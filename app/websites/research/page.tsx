@@ -49,10 +49,11 @@ export default function WebsiteResearchPage() {
       const brief = briefByWebsite.get(site.id);
       return { id: site.id, business_name: site.business_name, slug: site.slug, brand_id: brief?.brand_id ?? null, brief_status: brief?.status ?? 'missing' } as Site;
     });
-    setSites(next);
     const activeBrandId = window.localStorage.getItem('contentos:selectedBrandId');
-    const preferred = next.find((site) => site.brand_id === activeBrandId)?.id || next[0]?.id || '';
-    setActiveId((current) => next.some((site) => site.id === current) ? current : preferred);
+    const visible = next.filter((site) => site.brand_id === activeBrandId);
+    setSites(visible);
+    const preferred = visible[0]?.id || '';
+    setActiveId((current) => visible.some((site) => site.id === current) ? current : preferred);
   }
 
   const activeSite = sites.find((site) => site.id === activeId) ?? null;

@@ -172,6 +172,17 @@ export default function WebsiteStudioPage() {
     void loadSiteDetail(activeWebsiteId);
   }, [activeWebsiteId]);
 
+  useEffect(() => {
+    const activeBrand = brands.find((brand) => brand.id === brandId);
+    if (!activeBrand) {
+      setBusinessName('');
+      setSlug('');
+      return;
+    }
+    setBusinessName(activeBrand.name);
+    setSlug(slugify(activeBrand.name));
+  }, [brandId, brands]);
+
   async function loadWorkspace(targetBrandId: string) {
     const [websiteRes, briefRes, recipeRes] = await Promise.all([
       supabase.from('growth_websites').select('id,business_name,slug,status,template_version,live_url,created_at').order('created_at', { ascending: false }),
@@ -185,7 +196,7 @@ export default function WebsiteStudioPage() {
       return;
     }
 
-    const nextWebsites = (websiteRes.data ?? []) as Website[];
+    const allWebsites = (websiteRes.data ?? []) as Website[];
     const nextBriefs: Record<string, Brief> = {};
     for (const row of briefRes.data ?? []) {
       nextBriefs[row.website_id] = {
@@ -201,11 +212,12 @@ export default function WebsiteStudioPage() {
       } as Brief;
     }
 
+    const nextWebsites = allWebsites.filter((site) => nextBriefs[site.id]?.brand_id === targetBrandId);
     setWebsites(nextWebsites);
     setBriefs(nextBriefs);
     setRecipes((recipeRes.data ?? []) as Recipe[]);
 
-    const preferred = nextWebsites.find((site) => nextBriefs[site.id]?.brand_id === targetBrandId)?.id || nextWebsites[0]?.id || '';
+    const preferred = nextWebsites[0]?.id || '';
     setActiveWebsiteId((current) => nextWebsites.some((site) => site.id === current) ? current : preferred);
   }
 
@@ -277,7 +289,8 @@ export default function WebsiteStudioPage() {
         slug: cleanSlug,
         status: 'draft',
         template_version: 'production_v2',
-        config: { businessName: cleanName, slug: cleanSlug },
+        brand_id: brand.id,
+        config: { businessName: cleanName, slug: cleanSlug, brandId: brand.id },
       })
       .select('id,business_name,slug,status,template_version,live_url,created_at')
       .single();
@@ -446,7 +459,7 @@ export default function WebsiteStudioPage() {
       <div className={styles.metrics}>
         <article><span>ACTIVE BRAND</span><b>{selectedBrand?.name || 'No Brand Brain'}</b><small>{linkedSites} linked website project{linkedSites === 1 ? '' : 's'}</small></article>
         <article><span>DESIGN SYSTEMS</span><b>{recipes.length}</b><small>Reusable art directions, not fixed templates</small></article>
-        <article><span>ALL WEBSITE RECORDS</span><b>{websites.length}</b><small>Legacy + production v2</small></article>
+        <article><span>ACTIVE BRAND PROJECTS</span><b>{websites.length}</b><small>Only projects linked to this Brand Brain</small></article>
         <article className={detail.qa.blockers ? styles.metricRisk : styles.metricGood}><span>ACTIVE BLOCKERS</span><b>{activeSite ? detail.qa.blockers : '—'}</b><small>{detail.qa.blockers ? 'Release must remain blocked' : 'No high/blocker QA failures recorded'}</small></article>
       </div>
 
@@ -472,10 +485,11 @@ export default function WebsiteStudioPage() {
 
           <div className={styles.newSite}>
             <span className={styles.eyebrow}>NEW PROJECT</span>
-            <label>Business name<input value={businessName} onChange={(event) => { setBusinessName(event.target.value); if (!slug) setSlug(slugify(event.target.value)); }} placeholder="e.g. ABC Aircond" /></label>
+            <div style={{ fontSize: 11, fontWeight: 800, color: '#355246' }}>Creating website for: {selectedBrand?.name || 'Select a Brand Brain'}</div>
+            <label>Business name<input value={businessName} readOnly aria-readonly="true" placeholder="Select a Brand Brain first" /></label>
             <label>Slug<input value={slug} onChange={(event) => setSlug(slugify(event.target.value))} placeholder="abc-aircond" /></label>
-            <button disabled={creating || !selectedBrand} onClick={() => void createWebsite()}>{creating ? 'Creating…' : 'Create from Brand Brain'}</button>
-            <small>Creates a private production record only. Nothing is published.</small>
+            <button disabled={creating || !selectedBrand} onClick={() => void createWebsite()}>{creating ? 'Creating…' : `Create under ${selectedBrand?.name || 'Brand Brain'}`}</button>
+            <small>Projects are brand-isolated. To build for another business, create or select that business's Brand Brain first. Nothing is published.</small>
           </div>
         </aside>
 

@@ -85,10 +85,11 @@ export default function WebsiteQaPage() {
     if (firstError) { setError(firstError.message); return; }
     const brandBySite = new Map((briefRes.data ?? []).map((row) => [row.website_id, row.brand_id]));
     const next = (siteRes.data ?? []).map((site) => ({ id: site.id, business_name: site.business_name, slug: site.slug, brand_id: brandBySite.get(site.id) ?? null } as Site));
-    setSites(next);
     const activeBrandId = window.localStorage.getItem('contentos:selectedBrandId');
-    const preferred = next.find((site) => site.brand_id === activeBrandId)?.id || next[0]?.id || '';
-    setActiveSiteId((current) => next.some((site) => site.id === current) ? current : preferred);
+    const visible = next.filter((site) => site.brand_id === activeBrandId);
+    setSites(visible);
+    const preferred = visible[0]?.id || '';
+    setActiveSiteId((current) => visible.some((site) => site.id === current) ? current : preferred);
   }
 
   async function loadVersions(websiteId: string) {
