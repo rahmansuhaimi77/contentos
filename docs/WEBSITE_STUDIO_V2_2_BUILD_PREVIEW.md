@@ -93,11 +93,11 @@ VERCEL_TEAM_ID
 
 If either variable is absent, the preview endpoint stops with `vercel_not_configured` and creates nothing.
 
-## Current account state
+The currently connected Vercel team is the user's Hobby workspace. Website Studio intentionally does not reuse the existing KampusRide project in that workspace.
 
-At v2.2 implementation time, the connected Vercel team contains only the existing KampusRide project. Website Studio does not reuse or modify that project.
+## Current deployment limitation
 
-ContentOS still needs its own Vercel deployment/configuration before the v2.2 preview route can be exercised from the live operator UI.
+The connected Vercel app can inspect existing projects and deployments but does not expose project creation or environment-secret mutation as an authenticated chat action. Therefore v2.2 implements the project/deployment write path inside ContentOS using Vercel's documented REST APIs, but exercising that path requires the server-only Vercel credentials above to be configured on a dedicated ContentOS deployment.
 
 ## Release boundary
 
