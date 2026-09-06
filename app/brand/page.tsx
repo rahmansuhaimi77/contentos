@@ -42,6 +42,7 @@ export default function BrandPage() {
   const [saving, setSaving] = useState(false);
   const [knowledgeCount, setKnowledgeCount] = useState(0);
   const [assetCount, setAssetCount] = useState(0);
+  const [websiteCount, setWebsiteCount] = useState(0);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
@@ -71,21 +72,23 @@ export default function BrandPage() {
   }, [supabase]);
 
   async function load(brandId: string) {
-    if (!brandId) { setBrand(null); setKnowledgeCount(0); setAssetCount(0); return; }
-    const [brandRes, knowledgeRes, assetsRes] = await Promise.all([
+    if (!brandId) { setBrand(null); setKnowledgeCount(0); setAssetCount(0); setWebsiteCount(0); return; }
+    const [brandRes, knowledgeRes, assetsRes, websiteBriefsRes] = await Promise.all([
       supabase.from('contentos_brands').select('id,workspace_id,name,product,audience,positioning,voice,offer,proof,preferred_cta,avoid').eq('id', brandId).maybeSingle(),
       supabase.from('contentos_knowledge_items').select('id', { count: 'exact', head: true }).eq('brand_id', brandId),
       supabase.from('contentos_brand_assets').select('id', { count: 'exact', head: true }).eq('brand_id', brandId),
+      supabase.from('growth_website_briefs').select('id', { count: 'exact', head: true }).eq('brand_id', brandId),
     ]);
     if (brandRes.error) setError(brandRes.error.message);
     setBrand((brandRes.data as Brand | null) ?? null);
     setKnowledgeCount(knowledgeRes.count ?? 0);
     setAssetCount(assetsRes.count ?? 0);
+    setWebsiteCount(websiteBriefsRes.count ?? 0);
   }
 
   function startNewBrand() {
     setBrand({ ...emptyBrand, workspace_id: workspaceId });
-    setKnowledgeCount(0); setAssetCount(0); setMessage('New Brand Brain started.'); setError('');
+    setKnowledgeCount(0); setAssetCount(0); setWebsiteCount(0); setMessage('New Brand Brain started.'); setError('');
   }
 
   async function saveBrand() {
@@ -154,6 +157,7 @@ export default function BrandPage() {
         <div className="brandResourceStack">
           <Link href="/knowledge" className="resourceCard"><span>KNOWLEDGE</span><strong>{knowledgeCount}</strong><h3>Knowledge Base</h3><p>Product facts, guidelines, FAQs, strategy and verified context.</p><em>Open Knowledge →</em></Link>
           <Link href="/assets" className="resourceCard"><span>ASSETS</span><strong>{assetCount}</strong><h3>Brand Assets</h3><p>Logos, visual profile, screenshots and approved source materials.</p><em>Open Assets →</em></Link>
+          <Link href="/websites" className="resourceCard"><span>WEBSITES</span><strong>{websiteCount}</strong><h3>Website Studio</h3><p>Reference-led website production with creative direction, QA and release gates.</p><em>Open Website Studio →</em></Link>
         </div>
       </div>}
     </section>
