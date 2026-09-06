@@ -103,7 +103,9 @@ ContentOS still needs its own Vercel deployment/configuration before the v2.2 pr
 
 There is intentionally no production deployment endpoint in v2.2.
 
-A future production promotion endpoint must require, at minimum:
+In addition, the Supabase `growth_website_deployments` table now has a database trigger that rejects `environment = 'production'`. This prevents a client/API/manual-write bypass while the rendered QA and release workflow is still under construction.
+
+A future migration must replace that temporary hard block with a real production release gate requiring, at minimum:
 
 - no pending visual assets
 - completed rendered desktop/mobile QA
