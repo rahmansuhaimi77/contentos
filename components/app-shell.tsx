@@ -13,6 +13,7 @@ const primaryNav = [
   { href: '/growth-calendar', icon: '◎', label: 'Strategy' },
   { href: '/calendar', icon: '▦', label: 'Calendar' },
   { href: '/create', icon: '✦', label: 'Create' },
+  { href: '/websites', icon: '◇', label: 'Websites' },
   { href: '/review', icon: '✓', label: 'Review' },
   { href: '/publishing', icon: '↗', label: 'Publish' },
 ];
@@ -86,6 +87,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     if (href === '/brand') return ['/brand', '/knowledge', '/assets'].some((route) => pathname === route || pathname.startsWith(`${route}/`));
     if (href === '/create') return ['/create', '/quick-create', '/creative', '/storyboards'].some((route) => pathname === route || pathname.startsWith(`${route}/`));
     if (href === '/calendar') return ['/calendar', '/planner'].some((route) => pathname === route || pathname.startsWith(`${route}/`));
+    if (href === '/websites') return pathname === '/websites' || pathname.startsWith('/websites/');
     return pathname === href || pathname.startsWith(`${href}/`);
   }
 
