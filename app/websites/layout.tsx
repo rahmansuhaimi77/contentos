@@ -20,6 +20,7 @@ export default function WebsitesLayout({ children }: { children: ReactNode }) {
         <Link href="/websites/research" style={linkStyle}>Research + Plan</Link>
         <Link href="/websites/build" style={linkStyle}>Build + Preview</Link>
         <Link href="/websites/qa" style={linkStyle}>Rendered QA</Link>
+        <Link href="/websites/release" style={linkStyle}>Release + Rollback</Link>
       </nav>
       {children}
     </div>
