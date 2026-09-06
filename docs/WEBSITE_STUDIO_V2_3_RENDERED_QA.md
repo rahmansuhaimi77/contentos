@@ -54,7 +54,7 @@ AND zero high/blocker QA failures
 AND zero pending visual assets
 ```
 
-An automated pass is **not** permission to publish. It only unlocks the future human release stage.
+An automated pass is **not** permission to publish. It only unlocks the human release stage.
 
 ## Visual review categories
 
@@ -141,10 +141,10 @@ The database prevents a website version from being marked `approved` unless:
 
 This is independent of UI logic.
 
-## Production remains locked
+## Handoff to v2.4
 
-The v2.2 temporary database hard block on Website Studio production deployment remains active.
+v2.3 itself still does not publish anything. Website Studio v2.4 adds the explicit human approval, exact-preview promotion, production source-hash smoke test and verified rollback workflow.
 
-v2.3 does not add a production deployment endpoint.
+The production database gate in v2.4 only accepts a deployment ID that was already recorded as the preview deployment for the same approved version. Production therefore cannot silently rebuild or substitute another artifact after QA.
 
-The next stage must implement explicit human approval and promotion of the **exact preview artifact that passed QA**, with rollback data recorded before production is allowed.
+See `docs/WEBSITE_STUDIO_V2_4_RELEASE_ROLLBACK.md` for the release contract.
