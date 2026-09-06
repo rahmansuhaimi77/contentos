@@ -69,12 +69,14 @@ export function normalizeUrl(raw: string) {
   return /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
 }
 
-export function productionAliases(payload: any, projectName: string) {
-  const values = Array.isArray(payload?.alias) ? payload.alias : [];
-  const aliases = values.map((value: unknown) => typeof value === 'string' ? normalizeUrl(value) : '').filter(Boolean);
+export function productionAliases(payload: any, projectName: string): string[] {
+  const values: unknown[] = Array.isArray(payload?.alias) ? payload.alias : [];
+  const aliases: string[] = values
+    .filter((value): value is string => typeof value === 'string' && value.length > 0)
+    .map((value) => normalizeUrl(value));
   const defaultUrl = `https://${projectName}.vercel.app`;
   if (!aliases.includes(defaultUrl)) aliases.unshift(defaultUrl);
-  return Array.from(new Set(aliases));
+  return Array.from(new Set<string>(aliases));
 }
 
 export async function verifyLiveSnapshot(baseUrl: string, snapshot: ReleaseSnapshot) {
