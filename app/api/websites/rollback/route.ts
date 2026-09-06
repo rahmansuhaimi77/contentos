@@ -24,25 +24,23 @@ export async function POST(req: Request) {
     if (!vercelToken || !teamId) return Response.json({ error: 'Vercel release credentials are not configured. Nothing was rolled back.' }, { status: 503 });
 
     const { data: release, error: releaseError } = await supabase.from('growth_website_releases')
-      .select('id,website_id,version_id,status,project_id,project_name,production_url,production_deployment_id,previous_production_deployment_id')
+      .select('id,website_id,version_id,status,project_id,project_name,production_url,production_deployment_id,previous_release_id,previous_production_deployment_id')
       .eq('id', releaseId).maybeSingle();
     if (releaseError) throw new Error(releaseError.message);
     if (!release) return Response.json({ error: 'Release not found.' }, { status: 404 });
     if (!['live', 'smoke_failed'].includes(release.status)) return Response.json({ error: `Rollback is not available from status ${release.status}.` }, { status: 409 });
-    if (!release.project_id || !release.previous_production_deployment_id) {
-      return Response.json({ error: 'No previous production deployment was captured for this release, so automated rollback is unavailable.' }, { status: 409 });
+    if (!release.project_id || !release.previous_release_id || !release.previous_production_deployment_id) {
+      return Response.json({ error: 'Automated rollback is unavailable because there is no prior Website Studio release snapshot that can be verified.' }, { status: 409 });
     }
 
     const { data: previousRelease, error: previousReleaseError } = await supabase.from('growth_website_releases')
-      .select('id,version_id,production_deployment_id,production_url,status')
+      .select('id,website_id,version_id,production_deployment_id,production_url,status')
+      .eq('id', release.previous_release_id)
       .eq('website_id', release.website_id)
-      .eq('production_deployment_id', release.previous_production_deployment_id)
-      .order('created_at', { ascending: false })
-      .limit(1)
       .maybeSingle();
     if (previousReleaseError) throw new Error(previousReleaseError.message);
-    if (!previousRelease?.version_id) {
-      return Response.json({ error: 'The previous Vercel deployment exists, but it predates Website Studio release records. Automated rollback is intentionally blocked because the restored artifact cannot be verified.' }, { status: 409 });
+    if (!previousRelease?.version_id || previousRelease.production_deployment_id !== release.previous_production_deployment_id) {
+      return Response.json({ error: 'Recorded rollback lineage is inconsistent, so automated rollback is blocked.' }, { status: 409 });
     }
 
     const { data: previousVersion, error: previousVersionError } = await supabase.from('growth_website_versions')
@@ -82,11 +80,12 @@ export async function POST(req: Request) {
         status: 'failed',
         rolled_back_at: now,
         smoke_status: 'fail',
-        smoke_details: { stage: 'rollback_verification', target_deployment_id: release.previous_production_deployment_id, files: smoke.files },
+        smoke_details: { stage: 'rollback_verification', target_release_id: previousRelease.id, target_deployment_id: release.previous_production_deployment_id, files: smoke.files },
       }).eq('id', release.id);
       return Response.json({
         status: 'rollback_verification_failed',
         production_url: productionUrl,
+        target_release_id: previousRelease.id,
         target_deployment_id: release.previous_production_deployment_id,
         smoke,
         message: 'Vercel accepted the rollback, but the restored production files could not be verified against the previous Website Studio snapshot. Manual inspection is required.',
@@ -97,7 +96,7 @@ export async function POST(req: Request) {
       status: 'rolled_back',
       rolled_back_at: now,
       smoke_status: 'pass',
-      smoke_details: { stage: 'rollback_verified', target_deployment_id: release.previous_production_deployment_id, files: smoke.files },
+      smoke_details: { stage: 'rollback_verified', target_release_id: previousRelease.id, target_deployment_id: release.previous_production_deployment_id, files: smoke.files },
     }).eq('id', release.id);
     if (currentReleaseError) throw new Error(currentReleaseError.message);
 
