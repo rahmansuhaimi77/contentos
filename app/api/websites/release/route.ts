@@ -101,10 +101,17 @@ export async function POST(req: Request) {
       if (currentId && currentId !== release.preview_deployment_id) previousProductionDeploymentId = currentId;
     }
 
+    const { data: oldLive, error: oldLiveError } = await supabase.from('growth_website_releases')
+      .select('id,version_id,production_deployment_id')
+      .eq('website_id', release.website_id).eq('status', 'live').neq('id', release.id).limit(1).maybeSingle();
+    if (oldLiveError) throw new Error(oldLiveError.message);
+    const previousReleaseId = oldLive?.production_deployment_id && oldLive.production_deployment_id === previousProductionDeploymentId ? oldLive.id : null;
+
     const { error: promotingError } = await supabase.from('growth_website_releases').update({
       status: 'promoting',
       project_id: projectId,
       project_name: projectName,
+      previous_release_id: previousReleaseId,
       previous_production_deployment_id: previousProductionDeploymentId,
       production_deployment_id: release.preview_deployment_id,
     }).eq('id', release.id);
@@ -123,9 +130,10 @@ export async function POST(req: Request) {
     const customAlias = aliases.find((url) => !url.endsWith('.vercel.app'));
     const productionUrl = normalizeUrl(customAlias || defaultProductionUrl);
 
-    const { data: oldLive } = await supabase.from('growth_website_releases')
-      .select('id').eq('website_id', release.website_id).eq('status', 'live').neq('id', release.id).limit(1).maybeSingle();
-    if (oldLive?.id) await supabase.from('growth_website_releases').update({ status: 'superseded' }).eq('id', oldLive.id);
+    if (oldLive?.id) {
+      await supabase.from('growth_website_releases').update({ status: 'superseded' }).eq('id', oldLive.id);
+      if (oldLive.version_id) await supabase.from('growth_website_versions').update({ status: 'approved' }).eq('id', oldLive.version_id);
+    }
 
     const { error: prodRecordError } = await supabase.from('growth_website_deployments').insert({
       website_id: release.website_id,
@@ -153,7 +161,7 @@ export async function POST(req: Request) {
         production_aliases: aliases,
         promoted_at: now,
         smoke_status: 'fail',
-        smoke_details: { exact_source_match: false, files: smoke.files },
+        smoke_details: { exact_source_match: false, files: smoke.files, rollback_verified_target: Boolean(previousReleaseId) },
         smoke_checked_at: now,
       }).eq('id', release.id);
       await supabase.from('growth_website_deployments').update({ status: 'smoke_failed' })
@@ -162,7 +170,8 @@ export async function POST(req: Request) {
         status: 'smoke_failed',
         production_url: productionUrl,
         aliases,
-        rollback_available: Boolean(previousProductionDeploymentId),
+        rollback_available: Boolean(previousReleaseId),
+        previous_release_id: previousReleaseId,
         previous_production_deployment_id: previousProductionDeploymentId,
         smoke,
         message: 'Vercel promotion completed, but the live files did not match the QA-tested snapshot. Production is flagged and rollback is recommended.',
@@ -175,7 +184,7 @@ export async function POST(req: Request) {
       production_aliases: aliases,
       promoted_at: now,
       smoke_status: 'pass',
-      smoke_details: { exact_source_match: true, files: smoke.files },
+      smoke_details: { exact_source_match: true, files: smoke.files, rollback_verified_target: Boolean(previousReleaseId) },
       smoke_checked_at: now,
     }).eq('id', release.id);
     if (liveError) throw new Error(liveError.message);
@@ -192,7 +201,8 @@ export async function POST(req: Request) {
       deployment_id: release.preview_deployment_id,
       source_fingerprint: fingerprint,
       smoke,
-      rollback_available: Boolean(previousProductionDeploymentId),
+      rollback_available: Boolean(previousReleaseId),
+      previous_release_id: previousReleaseId,
       previous_production_deployment_id: previousProductionDeploymentId,
       message: 'Exact QA-tested preview artifact promoted and verified in production. No rebuild occurred.',
     });
