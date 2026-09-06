@@ -26,6 +26,7 @@ type Release = {
   preview_deployment_id: string;
   project_id: string | null;
   project_name: string | null;
+  previous_release_id: string | null;
   previous_production_deployment_id: string | null;
   production_deployment_id: string | null;
   production_url: string | null;
@@ -105,7 +106,7 @@ export default function WebsiteReleasePage() {
         .select('id,website_id,version_no,label,status,preview_url,qa_status,qa_score,qa_completed_at,approved_at,source_snapshot')
         .eq('website_id', websiteId).order('version_no', { ascending: false }),
       supabase.from('growth_website_releases')
-        .select('id,website_id,version_id,preview_deployment_id,project_id,project_name,previous_production_deployment_id,production_deployment_id,production_url,production_aliases,source_fingerprint,status,approval_note,smoke_status,smoke_details,approved_at,promoted_at,smoke_checked_at,rolled_back_at,created_at')
+        .select('id,website_id,version_id,preview_deployment_id,project_id,project_name,previous_release_id,previous_production_deployment_id,production_deployment_id,production_url,production_aliases,source_fingerprint,status,approval_note,smoke_status,smoke_details,approved_at,promoted_at,smoke_checked_at,rolled_back_at,created_at')
         .eq('website_id', websiteId).order('created_at', { ascending: false }),
     ]);
     const firstError = versionRes.error || releaseRes.error;
@@ -183,6 +184,7 @@ export default function WebsiteReleasePage() {
   const liveVersion = liveRelease ? versions.find((version) => version.id === liveRelease.version_id) ?? null : null;
   const pendingAssets = Number(activeVersion?.source_snapshot?.pending_asset_count || 0);
   const releaseReady = Boolean(activeVersion && activeVersion.qa_status === 'pass' && Number(activeVersion.qa_score || 0) >= 85 && activeVersion.qa_completed_at && activeVersion.preview_url && pendingAssets === 0 && activeVersion.status !== 'production');
+  const rollbackVerified = Boolean(rollbackTarget?.previous_release_id && rollbackTarget?.previous_production_deployment_id);
 
   if (loading) return <section><div className="dashboardSkeleton">Loading release control…</div></section>;
   if (!user) return <section><div className="dashboardEmpty"><h1>Sign in first</h1><p>Production release control is available inside your authenticated ContentOS workspace.</p></div></section>;
@@ -221,7 +223,7 @@ export default function WebsiteReleasePage() {
             <div className={styles.approval}>
               <span>OPTIONAL APPROVAL NOTE</span>
               <textarea value={approvalNote} onChange={(event) => setApprovalNote(event.target.value)} placeholder="What did you review before approving this version?" />
-              <button disabled={Boolean(working) || !releaseReady || Boolean(candidate && candidate.version_id !== activeVersion.id)} onClick={() => void approveRelease()}>{working === 'approval' ? 'Approving…' : candidate?.version_id === activeVersion.id ? 'Already approved as candidate' : `Approve v${activeVersion.version_no} for release`}</button>
+              <button disabled={Boolean(working) || !releaseReady || Boolean(candidate)} onClick={() => void approveRelease()}>{working === 'approval' ? 'Approving…' : candidate?.version_id === activeVersion.id ? 'Already approved as candidate' : candidate ? 'Another candidate is open' : `Approve v${activeVersion.version_no} for release`}</button>
             </div>
           </section>
 
@@ -232,7 +234,7 @@ export default function WebsiteReleasePage() {
                 <article><span>Candidate</span><b>v{candidateVersion?.version_no ?? '?'} · {pretty(candidate.status)}</b></article>
                 <article><span>Preview deployment</span><b>{candidate.preview_deployment_id}</b></article>
                 <article><span>Source fingerprint</span><b className={styles.fingerprint}>{candidate.source_fingerprint}</b></article>
-                <article><span>Previous production</span><b>{candidate.previous_production_deployment_id || 'Captured at promotion time'}</b></article>
+                <article><span>Previous production</span><b>{candidate.previous_release_id ? `${candidate.previous_production_deployment_id} · verified Website Studio release` : candidate.previous_production_deployment_id ? `${candidate.previous_production_deployment_id} · legacy/unverified rollback` : 'Captured at promotion time'}</b></article>
               </div>
               {candidate.status === 'approved' && <div className={styles.confirm}>
                 <span>PRODUCTION CONFIRMATION</span>
@@ -241,7 +243,7 @@ export default function WebsiteReleasePage() {
                 <input value={releaseConfirm} onChange={(event) => setReleaseConfirm(event.target.value.toUpperCase())} placeholder="RELEASE" />
                 <button disabled={Boolean(working) || releaseConfirm !== 'RELEASE'} onClick={() => void releaseProduction()}>{working === 'release' ? 'Promoting + verifying…' : 'Release to production'}</button>
               </div>}
-              {candidate.status === 'smoke_failed' && <div className={styles.error}>Production promotion occurred, but exact-source smoke verification failed. Roll back rather than treating this version as live.</div>}
+              {candidate.status === 'smoke_failed' && <div className={styles.error}>Production promotion occurred, but exact-source smoke verification failed. {candidate.previous_release_id ? 'Verified rollback is available below.' : 'No verifiable Website Studio rollback target exists; inspect production manually.'}</div>}
             </>}
           </section>
         </div>
@@ -252,14 +254,14 @@ export default function WebsiteReleasePage() {
             <article><span>Production URL</span><b>{liveRelease.production_url || 'Not recorded'}</b></article>
             <article><span>Deployment ID</span><b>{liveRelease.production_deployment_id || liveRelease.preview_deployment_id}</b></article>
             <article><span>Smoke test</span><b>{pretty(liveRelease.smoke_status)} · exact source match</b></article>
-            <article><span>Rollback target</span><b>{liveRelease.previous_production_deployment_id || 'None — first Website Studio release'}</b></article>
+            <article><span>Rollback target</span><b>{liveRelease.previous_release_id ? `${liveRelease.previous_production_deployment_id} · source snapshot available` : liveRelease.previous_production_deployment_id ? 'Prior deployment exists but cannot be automatically verified' : 'None — first Website Studio release'}</b></article>
           </div>
           {liveRelease.production_url && <a href={liveRelease.production_url} target="_blank" rel="noreferrer" style={{ color: '#355246', fontSize: 10, fontWeight: 850, textDecoration: 'none' }}>Open production ↗</a>}
         </section>}
 
-        {rollbackTarget?.previous_production_deployment_id && <section className={styles.rollback}>
+        {rollbackVerified && rollbackTarget && <section className={styles.rollback}>
           <h4>Rollback control</h4>
-          <p>Rollback will target the recorded previous deployment ID only. Website Studio will verify the restored live files against the previous release snapshot before declaring success.</p>
+          <p>Rollback will target the recorded previous Website Studio release only. The restored live files must match that previous source snapshot before Website Studio declares rollback successful.</p>
           <input value={rollbackConfirm} onChange={(event) => setRollbackConfirm(event.target.value.toUpperCase())} placeholder="Type ROLLBACK" />
           <button disabled={Boolean(working) || rollbackConfirm !== 'ROLLBACK'} onClick={() => void rollbackProduction()}>{working === 'rollback' ? 'Rolling back + verifying…' : 'Rollback production'}</button>
         </section>}
