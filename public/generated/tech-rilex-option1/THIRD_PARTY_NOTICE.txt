@@ -7,6 +7,8 @@ https://github.com/sanidhyy/apple-clone
 The original repository is licensed under the MIT License.
 No Apple logos, Apple product models, Apple videos, Apple photographs, or Apple-owned marketing copy are included in this Tech Rilex preview.
 
+Preview revision: option1-v1
+
 MIT License
 
 Copyright (c) 2024 Sanidhya Kumar Verma
