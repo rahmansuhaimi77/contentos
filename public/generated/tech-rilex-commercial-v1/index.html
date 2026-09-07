@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#f4efe6" />
+  <title>Tech Rilex | Find Your Next Phone</title>
+  <meta name="description" content="Tell Tech Rilex the phone you want and check the current unit details before you decide." />
+  <meta property="og:title" content="Tech Rilex | Find Your Next Phone" />
+  <meta property="og:description" content="Start with the model you want. Check the current unit details before you decide." />
+  <meta property="og:type" content="website" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="commercial.css" />
+  <script defer src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-nav">
+    <a class="brand" href="#top" aria-label="Tech Rilex home"><span class="brand-mark">TR</span><span>Tech Rilex</span></a>
+    <nav class="nav-links" aria-label="Primary navigation">
+      <a href="#experience">Why Tech Rilex</a>
+      <a href="#details">What to check</a>
+      <a href="#how">How it works</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+    <button class="nav-action" data-enquire>Check a phone</button>
+  </header>
+
+  <main id="main">
+    <section class="product-hero" id="top">
+      <div class="hero-copy reveal-up">
+        <p class="eyebrow">TECH RILEX / SMARTPHONE SHOPPING</p>
+        <h1>Find the phone you want.<br><em>Know what you're getting.</em></h1>
+        <p class="hero-lede">Start with the model you are looking for. We help you check the current unit details that are available before you decide.</p>
+        <div class="availability-row"><span class="availability-dot"></span><span>Unit details vary and should be confirmed before purchase</span></div>
+        <div class="hero-actions"><button class="primary-button" data-enquire>Check current options <span>↗</span></button><a class="secondary-link" href="#experience">See how it works ↓</a></div>
+        <dl class="hero-meta"><div><dt>MODEL</dt><dd>Start with what you want</dd></div><div><dt>DETAILS</dt><dd>Check the current unit</dd></div><div><dt>DECISION</dt><dd>Ask before you buy</dd></div></dl>
+      </div>
+      <div class="viewer-panel reveal-scale" aria-label="Interactive generic smartphone preview">
+        <div class="viewer-topline"><span>INTERACTIVE PHONE PREVIEW</span><span>DRAG TO ROTATE</span></div>
+        <canvas id="product-canvas"></canvas>
+        <div class="viewer-bottom"><div><small>PREVIEW FINISH</small><strong id="finish-name">Graphite</strong></div><div class="swatches" aria-label="Preview finishes"><button class="swatch active" data-color="#22262a" data-name="Graphite" aria-label="Graphite preview"></button><button class="swatch" data-color="#c7c7c2" data-name="Silver" aria-label="Silver preview"></button><button class="swatch" data-color="#5b7384" data-name="Blue" aria-label="Blue preview"></button><button class="swatch" data-color="#b5a487" data-name="Natural" aria-label="Natural preview"></button></div></div>
+      </div>
+    </section>
+
+    <section class="assurance-strip" aria-label="Useful phone details"><span>MODEL + STORAGE</span><i></i><span>COLOUR</span><i></i><span>CONDITION</span><i></i><span>BATTERY</span><i></i><span>WARRANTY</span><i></i><span>CURRENT PRICE</span></section>
+
+    <section class="experience section-space" id="experience">
+      <div class="section-heading reveal-up"><p class="eyebrow">A CLEARER WAY TO SHOP</p><h2>Less browsing around.<br><em>More useful information.</em></h2></div>
+      <div class="editorial-grid">
+        <article class="editorial-card editorial-large reveal-card"><div class="card-copy"><span>01 / MODEL FIRST</span><h3>Start with the phone you actually want.</h3><p>Tell us the model, preferred storage or budget first so the conversation starts with something relevant to you.</p></div><div class="phone-poster poster-dark" aria-hidden="true"><div class="poster-phone"></div><b>MODEL<br>FIRST.</b></div></article>
+        <article class="editorial-card reveal-card"><div class="card-copy"><span>02 / CURRENT DETAILS</span><h3>Check what can change from one unit to another.</h3></div><div class="detail-board" aria-hidden="true"><div><small>STORAGE</small><strong>CONFIRM</strong></div><div><small>CONDITION</small><strong>CONFIRM</strong></div><div><small>BATTERY</small><strong>WHEN AVAILABLE</strong></div><div><small>PRICE</small><strong>CURRENT UNIT</strong></div></div></article>
+        <article class="editorial-card editorial-gold reveal-card"><div class="card-copy"><span>03 / LESS GUESSING</span><h3>If a detail is not confirmed, don't treat it as final.</h3><p>Useful information matters more than decorative certainty.</p></div><div class="verified-seal" aria-hidden="true"><span>CHECK</span><i></i><strong>FIRST</strong></div></article>
+      </div>
+    </section>
+
+    <section class="product-story section-space" id="details">
+      <div class="story-intro reveal-up"><p class="eyebrow">WHAT TO CHECK</p><h2>Small details can change<br>the whole deal.</h2><p>Use these details to compare the actual option in front of you rather than relying on a generic listing.</p></div>
+      <div class="story-lines">
+        <article class="story-line reveal-up"><span>01</span><h3>Model + storage</h3><p>Start with the exact configuration you are looking for.</p><b>ESSENTIAL</b></article><article class="story-line reveal-up"><span>02</span><h3>Colour</h3><p>Confirm the colour of the available unit.</p><b>PER UNIT</b></article><article class="story-line reveal-up"><span>03</span><h3>Condition</h3><p>Ask for the actual condition before deciding.</p><b>CHECK</b></article><article class="story-line reveal-up"><span>04</span><h3>Battery health</h3><p>Check it when the information is available for the unit.</p><b>WHEN AVAILABLE</b></article><article class="story-line reveal-up"><span>05</span><h3>Warranty + accessories</h3><p>Confirm exactly what is included with that unit.</p><b>CONFIRM</b></article><article class="story-line reveal-up"><span>06</span><h3>Current price</h3><p>Confirm the current price before treating it as final.</p><b>CURRENT</b></article>
+      </div>
+    </section>
+
+    <section class="gallery-section section-space"><div class="gallery-heading reveal-up"><p class="eyebrow">SHOP WITH CONTEXT</p><h2>The phone should be the hero.<br>The details should stay easy to read.</h2></div><div class="gallery-shell"><button class="gallery-arrow prev" aria-label="Previous visual">←</button><div class="gallery-track" id="gallery-track"><article class="gallery-slide slide-one"><div class="slide-copy"><span>01</span><h3>Start with the product.</h3><p>Focus on the phone you are actually considering instead of getting lost in unrelated listings.</p></div><div class="gallery-phone tilt-a" aria-hidden="true"><div class="gallery-screen">TECH<br>RILEX</div></div></article><article class="gallery-slide slide-two"><div class="slide-copy"><span>02</span><h3>Compare the details that matter.</h3><p>Model, storage, condition, battery, warranty and current price can all affect the decision.</p></div><div class="spec-matrix" aria-hidden="true"><b>MODEL</b><b>STORAGE</b><b>CONDITION</b><b>BATTERY</b><b>PRICE</b><b>WARRANTY</b></div></article><article class="gallery-slide slide-three"><div class="slide-copy"><span>03</span><h3>Move naturally into a conversation.</h3><p>Tell Tech Rilex what you want and use the response to compare the current options.</p></div><div class="message-card" aria-hidden="true"><small>TECH RILEX</small><strong>Which phone are you looking for?</strong><span>Model · Storage · Colour · Budget</span></div></article></div><button class="gallery-arrow next" aria-label="Next visual">→</button></div><div class="gallery-dots" aria-hidden="true"><span class="active"></span><span></span><span></span></div></section>
+
+    <section class="manifesto"><div class="manifesto-inner"><p class="eyebrow reveal-up">TECH RILEX APPROACH</p><blockquote class="reveal-up">Phone shopping should feel <em>clear, calm and confident.</em></blockquote><p class="manifesto-copy reveal-up">A good product page should help you understand what you are looking at, what still needs to be confirmed, and what to ask next.</p></div></section>
+
+    <section class="process section-space" id="how"><div class="process-heading reveal-up"><p class="eyebrow">HOW IT WORKS</p><h2>Three simple steps.</h2></div><ol><li class="reveal-up"><span>01</span><div><h3>Tell us the phone</h3><p>Share the model, preferred storage, colour or budget.</p></div></li><li class="reveal-up"><span>02</span><div><h3>Check the current option</h3><p>Review the information that is currently available for the unit.</p></div></li><li class="reveal-up"><span>03</span><div><h3>Ask and decide</h3><p>Use the confirmed details to ask follow-up questions and make your decision.</p></div></li></ol></section>
+
+    <section class="faq section-space" id="faq"><div class="faq-heading reveal-up"><p class="eyebrow">COMMON QUESTIONS</p><h2>Before you enquire.</h2></div><div class="faq-list"><details class="reveal-up"><summary>Can I ask for a specific model?</summary><p>Yes. Start with the exact model you are looking for and add any storage, colour or budget preference you already know.</p></details><details class="reveal-up"><summary>Why are prices not fixed on every section?</summary><p>Current price and availability can depend on the specific unit. Confirm the current option before treating a price as final.</p></details><details class="reveal-up"><summary>What details should I ask about?</summary><p>Model, storage, colour, condition, battery health when available, warranty or accessories when applicable, and the current price.</p></details><details class="reveal-up"><summary>Can I enquire even if I am still comparing?</summary><p>Yes. Tell us what you are considering and your budget so the conversation starts from the right place.</p></details></div></section>
+
+    <section class="final-cta section-space" id="contact"><div class="cta-copy reveal-up"><p class="eyebrow">READY WHEN YOU ARE</p><h2>Already know the phone you want?</h2><p>Share the model and any preference you already know. Tech Rilex can use that to check the current options with you.</p></div><button class="cta-button reveal-up" data-enquire>Start your phone request <span>↗</span></button></section>
+  </main>
+
+  <div class="sticky-bar" id="sticky-bar" aria-hidden="true"><div><small>TECH RILEX</small><strong>Know the phone you want?</strong></div><button data-enquire>Check current options <span>↗</span></button></div>
+
+  <div class="enquiry-backdrop" id="enquiry-backdrop" hidden><section class="enquiry-sheet" role="dialog" aria-modal="true" aria-labelledby="enquiry-title"><button class="sheet-close" id="sheet-close" aria-label="Close enquiry">×</button><p class="eyebrow">START WITH YOUR PHONE</p><h2 id="enquiry-title">What are you looking for?</h2><p class="sheet-intro">Add whatever you already know. You can leave optional fields blank.</p><form id="phone-request-form"><label><span>Phone model *</span><input id="request-model" name="model" placeholder="e.g. iPhone 15 Pro / Galaxy S24" required /></label><div class="form-grid"><label><span>Storage</span><input id="request-storage" name="storage" placeholder="e.g. 256GB" /></label><label><span>Colour</span><input id="request-colour" name="colour" placeholder="e.g. Black" /></label></div><label><span>Budget</span><input id="request-budget" name="budget" placeholder="e.g. Around RM2,500" /></label><label><span>Anything else?</span><textarea id="request-notes" name="notes" rows="3" placeholder="Condition preference, battery health, warranty, accessories, etc."></textarea></label><div class="message-preview"><span>Your enquiry message</span><strong id="generated-message">Tell us the phone model above and we will prepare your enquiry message.</strong></div><button class="sheet-action" type="submit">Copy enquiry message</button><small id="copy-status" aria-live="polite"></small></form></section></div>
+
+  <footer><a class="brand" href="#top"><span class="brand-mark">TR</span><span>Tech Rilex</span></a><p>Smartphone shopping, made clearer.</p><a href="#top">Back to top ↑</a></footer>
+  <script type="module" src="script.js"></script>
+</body>
+</html>
