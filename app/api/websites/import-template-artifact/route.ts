@@ -25,6 +25,16 @@ function safeRelativePath(path: string) {
   return path.split('/').every((part) => part && part !== '.' && part !== '..');
 }
 
+function normalizeFrozenFile(path: string, content: string) {
+  if (path !== 'index.html') return { content, normalization: null as string | null };
+  const normalized = content.replace(/<base\s+href=["']\/generated\/[^"']+\/["']\s*\/?>/i, '<base href="./" />');
+  if (normalized === content) return { content, normalization: null as string | null };
+  return {
+    content: normalized,
+    normalization: 'Replaced ContentOS-internal /generated/... base href with ./ so the frozen bundle is standalone-deployable.',
+  };
+}
+
 async function authenticated(req: Request) {
   const token = req.headers.get('authorization')?.replace(/^Bearer\s+/i, '');
   if (!token) return null;
@@ -95,7 +105,7 @@ export async function POST(req: Request) {
       stage: 'template_artifact_import',
       provider: 'github',
       model: 'git-artifact',
-      prompt_version: 'template_artifact_v1',
+      prompt_version: 'template_artifact_v1_1',
       input_json: {
         selection_id: input.selectionId,
         template_id: template.id,
@@ -110,7 +120,13 @@ export async function POST(req: Request) {
     if (runError) throw new Error(runError.message);
     runId = run.id;
 
-    const fetched = await Promise.all(uniqueFiles.map(async (path) => ({ path, content: await fetchSource(input.commitSha, input.basePath, path) })));
+    const fetchedRaw = await Promise.all(uniqueFiles.map(async (path) => ({ path, content: await fetchSource(input.commitSha, input.basePath, path) })));
+    const normalizations: string[] = [];
+    const fetched = fetchedRaw.map((file) => {
+      const normalized = normalizeFrozenFile(file.path, file.content);
+      if (normalized.normalization) normalizations.push(`${file.path}: ${normalized.normalization}`);
+      return { path: file.path, content: normalized.content };
+    });
     const totalBytes = fetched.reduce((sum, file) => sum + Buffer.byteLength(file.content, 'utf8'), 0);
     if (totalBytes > 2_500_000) throw new Error('Adapted artifact exceeds the total source size limit.');
 
@@ -127,6 +143,7 @@ export async function POST(req: Request) {
       adaptation_repository: ARTIFACT_REPOSITORY,
       adaptation_commit_sha: input.commitSha,
       adaptation_base_path: input.basePath,
+      import_normalizations: normalizations,
       pending_asset_count: input.pendingAssetCount,
       file_count: fetched.length,
       files: fetched,
@@ -150,6 +167,7 @@ export async function POST(req: Request) {
         commit_sha: input.commitSha,
         base_path: input.basePath,
         files: uniqueFiles,
+        normalizations,
         version_id: version.id,
         version_no: version.version_no,
       },
@@ -160,14 +178,14 @@ export async function POST(req: Request) {
 
     await supabase.from('growth_website_runs').update({
       status: 'completed',
-      output_json: { version_id: version.id, version_no: version.version_no, file_count: fetched.length, total_bytes: totalBytes },
+      output_json: { version_id: version.id, version_no: version.version_no, file_count: fetched.length, total_bytes: totalBytes, normalizations },
       completed_at: new Date().toISOString(),
     }).eq('id', runId);
 
     return Response.json({
       version,
       template: { id: template.id, key: template.template_key, name: template.name, license: template.license_name },
-      artifact: { repository: ARTIFACT_REPOSITORY, commit_sha: input.commitSha, base_path: input.basePath, file_count: fetched.length, total_bytes: totalBytes },
+      artifact: { repository: ARTIFACT_REPOSITORY, commit_sha: input.commitSha, base_path: input.basePath, file_count: fetched.length, total_bytes: totalBytes, normalizations },
       pending_asset_count: input.pendingAssetCount,
       message: 'Exact adapted template source frozen as an immutable Website Studio version. Preview deployment comes next.',
     });
