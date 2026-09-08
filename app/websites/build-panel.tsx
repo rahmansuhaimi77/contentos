@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { getSupabaseBrowserClient } from '@/lib/supabase-client';
+import ArtifactImportForm from './artifact-import-form';
 import styles from './build-panel.module.css';
 
 type Version = {
@@ -43,7 +44,15 @@ type TemplateSelection = {
   fit_score: number | null;
   rationale: string;
   adaptation_notes: string;
-  source_snapshot: Record<string, unknown> | null;
+  source_snapshot: {
+    repository?: string;
+    commit_sha?: string;
+    base_path?: string;
+    files?: string[];
+    version_id?: string;
+    version_no?: number;
+    normalizations?: string[];
+  } | null;
 };
 
 type Template = {
@@ -153,7 +162,6 @@ export default function BuildPanel({ websiteId, onChanged }: { websiteId: string
 
   const latest = versions[0] ?? null;
   const pendingAssets = assets.filter((asset) => !['selected', 'approved'].includes(asset.status) || !asset.source_url);
-  const selectedAssets = assets.length - pendingAssets.length;
   const templateMode = Boolean(selection && template);
   const imported = selection?.status === 'imported';
 
@@ -166,15 +174,15 @@ export default function BuildPanel({ websiteId, onChanged }: { websiteId: string
 
       <div className={styles.gates}>
         <article className={templateMode ? styles.done : styles.warn}><span>APPROVED TEMPLATE</span><b>{template?.name || '—'}</b><small>{templateMode ? `${template?.license_name || 'License'}${template?.license_verified ? ' verified' : ''}` : 'Choose a verified template first'}</small></article>
-        <article className={imported || latest?.source_snapshot?.mode === 'template_adaptation' ? styles.done : ''}><span>ADAPTED ARTIFACT</span><b>{imported ? 'Imported' : latest ? `v${latest.version_no}` : '—'}</b><small>{imported ? 'Template source has an implementation record' : 'Adapt approved code before QA'}</small></article>
+        <article className={imported || latest?.source_snapshot?.mode === 'template_adaptation' ? styles.done : ''}><span>ADAPTED ARTIFACT</span><b>{imported ? 'Imported' : latest ? `v${latest.version_no}` : '—'}</b><small>{imported ? 'Template source has an immutable implementation record' : 'Adapt approved code before QA'}</small></article>
         <article className={latest?.preview_url ? styles.done : ''}><span>PREVIEW</span><b>{latest?.preview_url ? 'Created' : '—'}</b><small>{latest?.preview_url ? 'Rendered QA comes next' : 'Preview the exact adapted artifact'}</small></article>
       </div>
 
       {templateMode ? (
         <div className={styles.actionsCard}>
           <div><span>01 · TEMPLATE ADAPTATION</span><h3>{template?.name}</h3><p>{imported
-            ? 'This project already has an imported template implementation. Preserve the approved visual DNA, adapt the business content and functionality, then create immutable versions for preview and QA. Blank-canvas generation is disabled for this project.'
-            : 'The template is approved. The next step is to import its licensed source and adapt it to the verified brief. Website Studio will not replace it with an AI-generated blank-canvas design.'}</p></div>
+            ? 'This project already has an imported template implementation. Preserve the approved visual DNA, adapt the business content and functionality, then freeze each meaningful change as a new immutable version before preview and QA. Blank-canvas generation is disabled for this project.'
+            : 'The template is approved. Adapt its licensed source to the verified brief, then freeze the exact Git artifact below. Website Studio will not replace it with an AI-generated blank-canvas design.'}</p></div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
             {template?.live_demo_url && <a href={template.live_demo_url} target="_blank" rel="noreferrer" style={{ color: '#d6e7de', fontSize: 11, fontWeight: 800, textDecoration: 'none' }}>Original demo ↗</a>}
             {template?.preview_url && <a href={template.preview_url} target="_blank" rel="noreferrer" style={{ color: '#d6e7de', fontSize: 11, fontWeight: 800, textDecoration: 'none' }}>Current adaptation ↗</a>}
@@ -189,6 +197,17 @@ export default function BuildPanel({ websiteId, onChanged }: { websiteId: string
             <button disabled={Boolean(working)} onClick={() => void generateLegacyBuild()}>{working === 'legacy-build' ? 'Generating legacy source…' : 'Legacy fallback'}</button>
           </div>
         </div>
+      )}
+
+      {templateMode && selection && template && (
+        <ArtifactImportForm
+          websiteId={websiteId}
+          selectionId={selection.id}
+          selectionStatus={selection.status}
+          templateName={template.name}
+          sourceSnapshot={selection.source_snapshot}
+          onImported={() => { void load(); onChanged(); }}
+        />
       )}
 
       {templateMode && template && <section className={styles.assetPanel}>
@@ -206,8 +225,8 @@ export default function BuildPanel({ websiteId, onChanged }: { websiteId: string
       </section>}
 
       <section className={styles.versionPanel}>
-        <div className={styles.sectionHead}><div><span>02 · VERSION HISTORY</span><h3>Every adapted release stays immutable and auditable.</h3></div><small>{versions.length} recent</small></div>
-        {versions.length === 0 ? <p className={styles.empty}>No immutable versions recorded yet. For template-first projects, create a version only after the approved source has actually been imported and adapted.</p> : <div className={styles.versionList}>{versions.map((version) => {
+        <div className={styles.sectionHead}><div><span>03 · VERSION HISTORY</span><h3>Every adapted release stays immutable and auditable.</h3></div><small>{versions.length} recent</small></div>
+        {versions.length === 0 ? <p className={styles.empty}>No source versions recorded yet. For template-first projects, freeze a version only after the approved source has actually been adapted.</p> : <div className={styles.versionList}>{versions.map((version) => {
           const pending = Number(version.source_snapshot?.pending_asset_count || 0);
           return <article key={version.id} className={version.preview_url ? styles.versionPreview : ''}>
             <div className={styles.versionTop}><span>v{version.version_no}</span><div><b>{version.label}</b><small>{pretty(version.status)} · {new Date(version.created_at).toLocaleString('en-MY')}</small></div></div>
@@ -222,7 +241,7 @@ export default function BuildPanel({ websiteId, onChanged }: { websiteId: string
       </section>
 
       <section className={styles.deployPanel}>
-        <div className={styles.sectionHead}><div><span>03 · DEPLOYMENT LOG</span><h3>Preview the exact artifact before release.</h3></div><small>Production remains separately gated</small></div>
+        <div className={styles.sectionHead}><div><span>04 · DEPLOYMENT LOG</span><h3>Preview the exact artifact before release.</h3></div><small>Production remains separately gated</small></div>
         {deployments.length === 0 ? <p className={styles.empty}>No preview deployments recorded yet.</p> : <div className={styles.deployList}>{deployments.map((deployment) => <article key={deployment.id}><span>{pretty(deployment.environment)}</span><div><b>{pretty(deployment.status)}</b><small>{new Date(deployment.created_at).toLocaleString('en-MY')}</small></div><a href={deployment.url} target="_blank" rel="noreferrer">Open ↗</a></article>)}</div>}
       </section>
     </section>
