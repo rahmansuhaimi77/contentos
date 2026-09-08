@@ -16,11 +16,11 @@ export default function WebsitesLayout({ children }: { children: ReactNode }) {
   return (
     <div>
       <nav style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }} aria-label="Website Studio">
-        <Link href="/websites" style={linkStyle}>Studio</Link>
-        <Link href="/websites/research" style={linkStyle}>Research + Plan</Link>
-        <Link href="/websites/build" style={linkStyle}>Build + Preview</Link>
-        <Link href="/websites/qa" style={linkStyle}>Rendered QA</Link>
-        <Link href="/websites/release" style={linkStyle}>Release + Rollback</Link>
+        <Link href="/websites" style={linkStyle}>Brief + Projects</Link>
+        <Link href="/websites/templates" style={linkStyle}>Template Library</Link>
+        <Link href="/websites/build" style={linkStyle}>Adapt + Build</Link>
+        <Link href="/websites/qa" style={linkStyle}>Preview + QA</Link>
+        <Link href="/websites/release" style={linkStyle}>Release</Link>
       </nav>
       {children}
     </div>
