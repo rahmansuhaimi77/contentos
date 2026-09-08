@@ -127,11 +127,14 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           <nav className="appNav appNavSecondary" aria-label="Secondary">
             {selectedBrand?.name === 'Tech Rilex' && (
               <>
-                <Link className={active('/tech-rilex-admin') && !pathname.startsWith('/tech-rilex-admin/tools') ? 'active' : ''} href="/tech-rilex-admin">
+                <Link className={pathname === '/tech-rilex-admin' ? 'active' : ''} href="/tech-rilex-admin">
                   <span>▣</span><b>Inventory</b>
                 </Link>
                 <Link className={pathname.startsWith('/tech-rilex-admin/tools') ? 'active' : ''} href="/tech-rilex-admin/tools">
                   <span>◫</span><b>Store Ops</b>
+                </Link>
+                <Link className={pathname.startsWith('/tech-rilex-admin/media') ? 'active' : ''} href="/tech-rilex-admin/media">
+                  <span>▧</span><b>Media</b>
                 </Link>
               </>
             )}
