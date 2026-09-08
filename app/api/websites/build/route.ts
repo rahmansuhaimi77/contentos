@@ -7,7 +7,7 @@ export const runtime = 'nodejs';
 const FALLBACK_SUPABASE_URL = 'https://xqlfytlknhazusowiiug.supabase.co';
 const FALLBACK_SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_BjTjAlbEe74g3PLYu6akVg_tjruki1i';
 
-const InputSchema = z.object({ websiteId: z.string().uuid() });
+const InputSchema = z.object({ websiteId: z.string().uuid(), legacyMode: z.boolean().optional().default(false) });
 const FileSchema = z.object({
   path: z.enum(['index.html', 'styles.css', 'script.js']),
   content: z.string().min(1),
@@ -88,7 +88,7 @@ function buildPrompt(site: any, brief: any, direction: any, references: any[], s
     metadata: asset.metadata,
   }));
 
-  return `You are the build agent for a premium, reference-led website studio. Convert the approved production plan into a polished STATIC preview using exactly three files: index.html, styles.css and script.js.
+  return `You are the LEGACY blank-canvas build agent for Website Studio. This route is used only when the operator explicitly chooses the legacy fallback because no approved template is available. Convert the approved production plan into a polished STATIC preview using exactly three files: index.html, styles.css and script.js.
 
 BUSINESS TRUTH
 ${JSON.stringify({
@@ -105,7 +105,7 @@ ${JSON.stringify({
     constraints: brief.constraints,
   })}
 
-APPROVED CREATIVE DIRECTION
+APPROVED LEGACY CREATIVE DIRECTION
 ${JSON.stringify(direction)}
 
 APPROVED REFERENCES — PRINCIPLES ONLY, NEVER COPY THEIR TEXT/IMAGES/WHOLE COMPOSITION
@@ -134,7 +134,7 @@ BUILD RULES
 
 Return ONLY valid JSON:
 {
-  "build_summary":"short explanation of how the approved direction was translated",
+  "build_summary":"short explanation of how the approved legacy direction was translated",
   "files":[
     {"path":"index.html","content":"..."},
     {"path":"styles.css","content":"..."},
@@ -155,9 +155,10 @@ export async function POST(req: Request) {
     if (!parsed.success) return Response.json({ error: 'Invalid request', details: parsed.error.flatten() }, { status: 400 });
     const websiteId = parsed.data.websiteId;
 
-    const [siteRes, briefRes, directionRes, referenceRes, sectionRes, assetRes, versionRes] = await Promise.all([
+    const [siteRes, briefRes, templateSelectionRes, directionRes, referenceRes, sectionRes, assetRes, versionRes] = await Promise.all([
       supabase.from('growth_websites').select('id,business_name,slug,status').eq('id', websiteId).maybeSingle(),
       supabase.from('growth_website_briefs').select('id,business_summary,primary_goal,audience,offer,proof,voice,avoid,verified_facts,constraints,status').eq('website_id', websiteId).maybeSingle(),
+      supabase.from('growth_website_template_selections').select('id,template_id,status').eq('website_id', websiteId).in('status', ['approved','imported']).limit(1).maybeSingle(),
       supabase.from('growth_website_directions').select('id,style_name,creative_concept,rationale,mood,palette,typography,visual_language,motion_language,composition_rules,anti_patterns,status').eq('website_id', websiteId).eq('status', 'approved').limit(1).maybeSingle(),
       supabase.from('growth_website_references').select('id,source_url,title,inspiration_role,notes,inspiration_tags').eq('website_id', websiteId).eq('approved', true).order('created_at'),
       supabase.from('growth_website_sections').select('id,section_key,section_type,sort_order,objective,copy,layout,visual_brief,motion,conversion_role,status').eq('website_id', websiteId).order('sort_order'),
@@ -165,14 +166,32 @@ export async function POST(req: Request) {
       supabase.from('growth_website_versions').select('version_no').eq('website_id', websiteId).order('version_no', { ascending: false }).limit(1).maybeSingle(),
     ]);
 
-    const firstError = siteRes.error || briefRes.error || directionRes.error || referenceRes.error || sectionRes.error || assetRes.error || versionRes.error;
+    const firstError = siteRes.error || briefRes.error || templateSelectionRes.error || directionRes.error || referenceRes.error || sectionRes.error || assetRes.error || versionRes.error;
     if (firstError) throw new Error(firstError.message);
     if (!siteRes.data || !briefRes.data) return Response.json({ error: 'Website or production brief not found.' }, { status: 404 });
+
+    if (templateSelectionRes.data) {
+      return Response.json({
+        error: templateSelectionRes.data.status === 'imported'
+          ? 'Template-first mode is active and an imported template artifact already exists. Blank-canvas generation is disabled; adapt/version the imported source instead.'
+          : 'Template-first mode is active. Import and adapt the approved template source before creating a version. Blank-canvas generation is disabled.',
+        code: 'TEMPLATE_FIRST_ACTIVE',
+        templateSelection: templateSelectionRes.data,
+      }, { status: 409 });
+    }
+
+    if (!parsed.data.legacyMode) {
+      return Response.json({
+        error: 'Blank-canvas generation is a legacy fallback. Choose a verified template first, or explicitly confirm legacy mode when no suitable template exists.',
+        code: 'LEGACY_CONFIRM_REQUIRED',
+      }, { status: 409 });
+    }
+
     if (!['verified', 'approved'].includes(briefRes.data.status)) return Response.json({ error: 'Verify the business brief before building.' }, { status: 409 });
-    if (!directionRes.data) return Response.json({ error: 'Approve a creative direction before building.' }, { status: 409 });
-    if ((referenceRes.data ?? []).length < 3) return Response.json({ error: 'At least three approved references are required before building.' }, { status: 409 });
+    if (!directionRes.data) return Response.json({ error: 'Legacy mode still requires an approved creative direction.' }, { status: 409 });
+    if ((referenceRes.data ?? []).length < 3) return Response.json({ error: 'Legacy mode requires at least three approved references before building.' }, { status: 409 });
     if ((sectionRes.data ?? []).length < 5) return Response.json({ error: 'Generate and review the production plan before building.' }, { status: 409 });
-    if (!process.env.OPENAI_API_KEY) return Response.json({ error: 'Build generation requires an OpenAI API connection. A generic local template fallback is intentionally disabled.' }, { status: 503 });
+    if (!process.env.OPENAI_API_KEY) return Response.json({ error: 'Legacy build generation requires an OpenAI API connection. A generic local template fallback is intentionally disabled.' }, { status: 503 });
 
     const model = process.env.OPENAI_MODEL || 'gpt-5.6-luna';
     const pendingAssets = ((assetRes.data ?? []) as AssetRow[]).filter((asset) => !['selected', 'approved'].includes(asset.status) || !asset.source_url).length;
@@ -180,11 +199,12 @@ export async function POST(req: Request) {
 
     const { data: run, error: runError } = await supabase.from('growth_website_runs').insert({
       website_id: websiteId,
-      stage: 'source_build',
+      stage: 'legacy_source_build',
       provider: 'openai',
       model,
-      prompt_version: 'website_build_v2_2',
+      prompt_version: 'website_legacy_build_v1',
       input_json: {
+        legacy_mode: true,
         direction_id: directionRes.data.id,
         reference_ids: (referenceRes.data ?? []).map((row: any) => row.id),
         section_ids: (sectionRes.data ?? []).map((row: any) => row.id),
@@ -205,6 +225,7 @@ export async function POST(req: Request) {
 
     const snapshot = {
       format: 'static_v1',
+      mode: 'legacy_blank_canvas',
       build_summary: result.build_summary,
       pending_asset_count: pendingAssets,
       files: result.files,
@@ -217,7 +238,7 @@ export async function POST(req: Request) {
     const { data: version, error: versionError } = await supabase.from('growth_website_versions').insert({
       website_id: websiteId,
       version_no: nextVersion,
-      label: pendingAssets ? `v${nextVersion} layout preview · ${pendingAssets} visual asset${pendingAssets === 1 ? '' : 's'} pending` : `v${nextVersion} complete source preview`,
+      label: pendingAssets ? `v${nextVersion} legacy layout preview · ${pendingAssets} visual asset${pendingAssets === 1 ? '' : 's'} pending` : `v${nextVersion} legacy source preview`,
       source_snapshot: snapshot,
       change_summary: result.build_summary,
       status: pendingAssets ? 'draft_incomplete' : 'draft',
@@ -226,11 +247,11 @@ export async function POST(req: Request) {
 
     await supabase.from('growth_website_runs').update({
       status: 'completed',
-      output_json: { version_id: version.id, version_no: version.version_no, pending_asset_count: pendingAssets, build_summary: result.build_summary },
+      output_json: { version_id: version.id, version_no: version.version_no, pending_asset_count: pendingAssets, build_summary: result.build_summary, legacy_mode: true },
       completed_at: new Date().toISOString(),
     }).eq('id', runId);
 
-    return Response.json({ version, pending_asset_count: pendingAssets, build_summary: result.build_summary });
+    return Response.json({ version, pending_asset_count: pendingAssets, build_summary: result.build_summary, legacy_mode: true });
   } catch (error) {
     console.error(error);
     if (supabase && runId) {
