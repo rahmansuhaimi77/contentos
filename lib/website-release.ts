@@ -5,16 +5,47 @@ import { z } from 'zod';
 const FALLBACK_SUPABASE_URL = 'https://xqlfytlknhazusowiiug.supabase.co';
 const FALLBACK_SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_BjTjAlbEe74g3PLYu6akVg_tjruki1i';
 
+function safeRelativePath(path: string) {
+  if (!/^[A-Za-z0-9][A-Za-z0-9._/-]*$/.test(path)) return false;
+  if (path.startsWith('/') || path.includes('..') || path.includes('\\') || path.includes('//')) return false;
+  return path.split('/').every((segment) => segment.length > 0 && segment !== '.' && segment !== '..');
+}
+
 export const ReleaseFileSchema = z.object({
-  path: z.enum(['index.html', 'styles.css', 'script.js']),
+  path: z.string().min(1).max(180).refine(safeRelativePath, 'Unsafe artifact path.'),
   content: z.string(),
 });
 
-export const ReleaseSnapshotSchema = z.object({
+const StaticV1ReleaseSchema = z.object({
   format: z.literal('static_v1'),
   files: z.array(ReleaseFileSchema).length(3),
   pending_asset_count: z.number().int().min(0).default(0),
 }).passthrough();
+
+const StaticBundleV2ReleaseSchema = z.object({
+  format: z.literal('static_bundle_v2'),
+  files: z.array(ReleaseFileSchema).min(1).max(64),
+  pending_asset_count: z.number().int().min(0).default(0),
+}).passthrough();
+
+export const ReleaseSnapshotSchema = z.union([StaticV1ReleaseSchema, StaticBundleV2ReleaseSchema]).superRefine((snapshot, ctx) => {
+  const paths = new Set<string>();
+  let totalBytes = 0;
+  for (const file of snapshot.files) {
+    if (paths.has(file.path)) ctx.addIssue({ code: z.ZodIssueCode.custom, message: `Duplicate artifact path: ${file.path}` });
+    paths.add(file.path);
+    const size = Buffer.byteLength(file.content, 'utf8');
+    if (size > 350_000) ctx.addIssue({ code: z.ZodIssueCode.custom, message: `${file.path} exceeds the per-file release limit.` });
+    totalBytes += size;
+  }
+  if (!paths.has('index.html')) ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Artifact must contain root index.html.' });
+  if (totalBytes > 2_500_000) ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Artifact exceeds the total release size limit.' });
+  if (snapshot.format === 'static_v1') {
+    for (const required of ['index.html', 'styles.css', 'script.js']) {
+      if (!paths.has(required)) ctx.addIssue({ code: z.ZodIssueCode.custom, message: `Legacy artifact is missing ${required}.` });
+    }
+  }
+});
 
 export type ReleaseSnapshot = z.infer<typeof ReleaseSnapshotSchema>;
 
@@ -41,7 +72,7 @@ export function snapshotFingerprint(snapshot: ReleaseSnapshot) {
     .sort((a, b) => a.path.localeCompare(b.path))
     .map((file) => `${file.path}\n${file.content}`)
     .join('\n---website-studio-file---\n');
-  return createHash('sha256').update(canonical, 'utf8').digest('hex');
+  return createHash('sha256').update(`${snapshot.format}\n${canonical}`, 'utf8').digest('hex');
 }
 
 export function fileHash(content: string) {
@@ -92,7 +123,7 @@ export async function verifyLiveSnapshot(baseUrl: string, snapshot: ReleaseSnaps
         cache: 'no-store',
         redirect: 'follow',
         signal: controller.signal,
-        headers: { 'Cache-Control': 'no-cache', 'User-Agent': 'ContentOS-Website-Studio-Smoke/1.0' },
+        headers: { 'Cache-Control': 'no-cache', 'User-Agent': 'ContentOS-Website-Studio-Smoke/2.0' },
       });
       const body = await response.text();
       const actual = fileHash(body);
@@ -105,7 +136,7 @@ export async function verifyLiveSnapshot(baseUrl: string, snapshot: ReleaseSnaps
     }
   }
 
-  return { pass: results.every((row) => row.ok), files: results };
+  return { pass: results.every((row) => row.ok), files: results, format: snapshot.format, file_count: snapshot.files.length };
 }
 
 export async function sleep(ms: number) {
