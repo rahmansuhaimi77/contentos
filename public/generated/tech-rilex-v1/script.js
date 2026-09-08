@@ -1,0 +1,1 @@
+/* Website Studio static preview: runtime interactions are intentionally inlined in index.html. */

@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#000000" />
+  <title>Tech Rilex — Premium smartphone preview</title>
+  <meta name="description" content="Tech Rilex premium product-site experiment based on an MIT-licensed Apple-style landing page architecture." />
+  <link rel="stylesheet" href="styles.css" />
+  <script defer src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+</head>
+<body>
+  <div class="noise" aria-hidden="true"></div>
+  <header class="nav" id="nav">
+    <a class="brand" href="#top" aria-label="Tech Rilex home"><span class="brand-dot">TR</span><span>Tech Rilex</span></a>
+    <nav class="nav-links" aria-label="Primary navigation">
+      <a href="#highlights">Highlights</a>
+      <a href="#closer">Closer look</a>
+      <a href="#details">What to check</a>
+    </nav>
+    <a class="nav-cta" href="#contact">Check a phone</a>
+  </header>
+
+  <main>
+    <section class="hero" id="top">
+      <div class="hero-glow" aria-hidden="true"></div>
+      <div class="hero-copy">
+        <p class="kicker hero-kicker">TECH RILEX / SMARTPHONE SHOPPING</p>
+        <h1 class="hero-title">The phone you want.<br><span>The details you need.</span></h1>
+        <p class="hero-lede">Tell us the model you are looking for. Tech Rilex checks the current unit details that are available before you decide.</p>
+        <div class="hero-actions">
+          <a class="button primary" href="#contact">Check a phone <span>↗</span></a>
+          <a class="text-link" href="#closer">Explore the experience ↓</a>
+        </div>
+      </div>
+      <div class="hero-product" aria-label="Interactive generic smartphone render">
+        <canvas id="hero-canvas"></canvas>
+        <div class="hero-tag tag-one">MODEL</div>
+        <div class="hero-tag tag-two">SPEC</div>
+        <div class="hero-tag tag-three">CONDITION</div>
+      </div>
+      <div class="scroll-cue"><span></span><small>SCROLL TO EXPLORE</small></div>
+    </section>
+
+    <section class="statement light-section">
+      <div class="statement-inner">
+        <p class="kicker reveal-up">PHONE SHOPPING, WITHOUT THE MYSTERY.</p>
+        <h2 class="statement-title reveal-up">A better phone page should help you decide, <em>not make you guess.</em></h2>
+        <p class="statement-copy reveal-up">Stock, price, condition, battery health, warranty and accessories can change from unit to unit. Tech Rilex only presents those details when they are confirmed.</p>
+      </div>
+    </section>
+
+    <section class="highlights" id="highlights">
+      <div class="section-head">
+        <p class="kicker reveal-up">GET THE HIGHLIGHTS</p>
+        <h2 class="reveal-up">Less noise.<br>More useful information.</h2>
+      </div>
+      <div class="highlight-track">
+        <article class="highlight-card card-lime reveal-card">
+          <span class="card-index">01</span>
+          <p>Ask by model</p>
+          <h3>Start with the phone you actually want.</h3>
+          <div class="mini-phone"><span>MODEL</span><strong>YOUR PICK</strong></div>
+        </article>
+        <article class="highlight-card card-silver reveal-card">
+          <span class="card-index">02</span>
+          <p>Check the unit</p>
+          <h3>See the details that can change from one unit to another.</h3>
+          <div class="detail-lines"><span>STORAGE</span><span>CONDITION</span><span>BATTERY</span><span>PRICE</span></div>
+        </article>
+        <article class="highlight-card card-deep reveal-card">
+          <span class="card-index">03</span>
+          <p>Decide with context</p>
+          <h3>Confirmed information first. Sales pressure second.</h3>
+          <div class="status-orbit"><i></i><strong>CONFIRMED</strong></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="closer" id="closer">
+      <div class="closer-head">
+        <p class="kicker reveal-up">TAKE A CLOSER LOOK</p>
+        <h2 class="reveal-up">A product experience,<br>not a catalogue wall.</h2>
+      </div>
+      <div class="viewer-shell">
+        <div class="viewer-copy viewer-copy-a">
+          <span>01</span><h3>Rotate it.</h3><p>Drag the phone or move your pointer. The object is generated in code — no Apple model or Apple artwork is used.</p>
+        </div>
+        <div class="viewer-stage"><canvas id="viewer-canvas"></canvas></div>
+        <div class="viewer-copy viewer-copy-b">
+          <span>02</span><h3>Choose a finish.</h3><p>This is a visual demo only. Actual unit colours appear only when confirmed.</p>
+          <div class="swatches" aria-label="Preview finishes">
+            <button class="swatch active" data-color="#202428" aria-label="Graphite preview"></button>
+            <button class="swatch" data-color="#c7c8c6" aria-label="Silver preview"></button>
+            <button class="swatch" data-color="#35556d" aria-label="Blue preview"></button>
+            <button class="swatch" data-color="#b8a98c" aria-label="Natural preview"></button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="story" id="details">
+      <div class="story-label"><span>WHAT TO CHECK</span><span>BEFORE YOU DECIDE</span></div>
+      <div class="story-line"><span>01</span><h3>Model + storage</h3><p>Start with exactly what you need.</p></div>
+      <div class="story-line"><span>02</span><h3>Condition</h3><p>Only when confirmed for the unit.</p></div>
+      <div class="story-line"><span>03</span><h3>Battery health</h3><p>Shown when that information is available and verified.</p></div>
+      <div class="story-line"><span>04</span><h3>Warranty + accessories</h3><p>Included only when confirmed.</p></div>
+      <div class="story-line"><span>05</span><h3>Current price</h3><p>Confirm the current unit before treating a price as final.</p></div>
+    </section>
+
+    <section class="cinema">
+      <div class="cinema-copy">
+        <p class="kicker reveal-up">LESS HYPE. MORE USEFUL INFO.</p>
+        <h2 class="reveal-up">Know what is known.<br><em>Leave out what is not.</em></h2>
+      </div>
+      <div class="cinema-frame reveal-scale">
+        <div class="scan-grid"></div>
+        <div class="cinema-phone"><span>TECH RILEX</span><strong>CHECK<br>BEFORE<br>YOU BUY.</strong><small>MODEL / SPEC / CONDITION</small></div>
+      </div>
+    </section>
+
+    <section class="process light-section">
+      <div class="process-head"><p class="kicker reveal-up">HOW IT WORKS</p><h2 class="reveal-up">Three steps. No complicated funnel.</h2></div>
+      <ol>
+        <li class="reveal-up"><span>01</span><div><h3>Tell us the model</h3><p>Share the phone and preferred specs or budget.</p></div></li>
+        <li class="reveal-up"><span>02</span><div><h3>Check the current details</h3><p>Tech Rilex checks the information that is currently available.</p></div></li>
+        <li class="reveal-up"><span>03</span><div><h3>Continue the conversation</h3><p>Ask questions and decide based on the confirmed details shared with you.</p></div></li>
+      </ol>
+    </section>
+
+    <section class="contact" id="contact">
+      <p class="kicker reveal-up">READY WHEN YOU ARE</p>
+      <h2 class="reveal-up">Already know the phone you want?</h2>
+      <p class="contact-copy reveal-up">Send the model and preferred specs. Tech Rilex can check what is currently available and share the confirmed details with you.</p>
+      <a class="button contact-button reveal-up" href="#top">Start with your phone model <span>↗</span></a>
+      <small>Include your preferred model, storage or budget if you already know them.</small>
+    </section>
+  </main>
+
+  <footer><div class="brand"><span class="brand-dot">TR</span><span>Tech Rilex</span></div><p>Premium template experiment · Option 1</p><a href="#top">Back to top ↑</a></footer>
+
+  <script type="module" src="script.js"></script>
+</body>
+</html>
