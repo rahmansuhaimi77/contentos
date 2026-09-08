@@ -127,7 +127,7 @@ export async function POST(req: Request) {
     if (runError) throw new Error(runError.message);
     runId = run.id;
 
-    const checks = scoreEntries.map(([checkpoint, score]) => ({
+    const checks: any[] = scoreEntries.map(([checkpoint, score]) => ({
       website_id: input.websiteId,
       version_id: input.versionId,
       category: categoryFor(checkpoint),
