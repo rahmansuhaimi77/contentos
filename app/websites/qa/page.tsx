@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { getSupabaseBrowserClient } from '@/lib/supabase-client';
+import ManualQaForm from './manual-qa-form';
 import styles from './qa.module.css';
 
 type Site = { id: string; business_name: string; slug: string; brand_id: string | null };
@@ -140,8 +141,8 @@ export default function WebsiteQaPage() {
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error || 'Rendered QA failed.');
       setNotice(payload.status === 'pass'
-        ? `Rendered QA passed at ${payload.overall_score}/100. This still requires explicit human release approval.`
-        : `Rendered QA completed at ${payload.overall_score}/100. Fix the recorded defects before release.`);
+        ? `Automated rendered QA passed at ${payload.overall_score}/100. This still requires explicit human release approval.`
+        : `Automated rendered QA completed at ${payload.overall_score}/100. Fix the recorded defects before release.`);
       await loadVersions(activeSite.id);
       await loadChecks(activeVersion.id);
     } catch (caught) {
@@ -151,14 +152,29 @@ export default function WebsiteQaPage() {
     }
   }
 
+  async function manualCompleted(message: string) {
+    if (!activeSite || !activeVersion) return;
+    setNotice(message);
+    setError('');
+    await loadVersions(activeSite.id);
+    await loadChecks(activeVersion.id);
+  }
+
   const activeSite = sites.find((site) => site.id === activeSiteId) ?? null;
   const activeVersion = versions.find((version) => version.id === activeVersionId) ?? null;
   const summary = activeVersion?.qa_summary || {};
   const visualChecks = checks.filter((check) => check.category === 'visual');
   const lighthouseChecks = checks.filter((check) => check.category === 'lighthouse');
-  const findings = checks.filter((check) => ['visual_finding', 'technical_finding', 'release_gate'].includes(check.category) && check.status === 'fail');
+  const findings = checks.filter((check) => ['visual_finding', 'technical_finding', 'release_gate', 'release'].includes(check.category) && check.status === 'fail');
   const blockers = findings.filter((check) => ['high', 'blocker'].includes(check.severity)).length;
   const pendingAssets = Number(activeVersion?.source_snapshot?.pending_asset_count || summary.pending_asset_count || 0);
+  const manualScores = summary.mode === 'manual_operator' ? summary.scores || {} : {};
+  const visualSummaryScore = summary.visual_score ?? (summary.mode === 'manual_operator'
+    ? Math.round((Number(manualScores.visual_hierarchy || 0) + Number(manualScores.composition_spacing || 0) + Number(manualScores.crop_overflow || 0) + Number(manualScores.typography_readability || 0) + Number(manualScores.brand_specificity || 0) + Number(manualScores.mobile_quality || 0)) / 6)
+    : '—');
+  const copySummaryScore = summary.content_conversion_score ?? (summary.mode === 'manual_operator'
+    ? Math.round((Number(manualScores.copy_authenticity || 0) + Number(manualScores.conversion_clarity || 0)) / 2)
+    : '—');
 
   if (loading) return <section><div className="dashboardSkeleton">Loading rendered QA…</div></section>;
   if (!user) return <section><div className="dashboardEmpty"><h1>Sign in first</h1><p>Rendered QA is available inside your authenticated ContentOS workspace.</p></div></section>;
@@ -166,7 +182,7 @@ export default function WebsiteQaPage() {
   return (
     <section className={styles.page}>
       <header className="pageHero compactHero">
-        <div><span className="eyebrow">WEBSITE STUDIO · V2.3</span><h1>Rendered visual QA</h1><p>Real mobile + desktop render evidence → visual review → Lighthouse → defects → score → release decision.</p></div>
+        <div><span className="eyebrow">WEBSITE STUDIO · QUALITY GATE</span><h1>Rendered visual QA</h1><p>Review the exact mobile + desktop preview using automated AI QA when connected, or the strict manual RM0 path when it is not.</p></div>
       </header>
 
       <div className={styles.picker}>
@@ -180,17 +196,26 @@ export default function WebsiteQaPage() {
       {!activeVersion ? <div className={styles.empty}>Build a version first, then deploy it to a Vercel preview before rendered QA can run.</div> : (
         <>
           <div className={styles.summary}>
-            <article><span>QA STATUS</span><b>{activeVersion.qa_status ? pretty(activeVersion.qa_status) : 'Not run'}</b><small>{activeVersion.qa_completed_at ? new Date(activeVersion.qa_completed_at).toLocaleString() : 'No rendered evidence recorded yet'}</small></article>
+            <article><span>QA STATUS</span><b>{activeVersion.qa_status ? pretty(activeVersion.qa_status) : 'Not run'}</b><small>{activeVersion.qa_completed_at ? `${summary.mode === 'manual_operator' ? 'Manual' : 'Automated'} · ${new Date(activeVersion.qa_completed_at).toLocaleString()}` : 'No rendered evidence recorded yet'}</small></article>
             <article className={activeVersion.qa_status === 'pass' ? styles.pass : activeVersion.qa_status ? styles.fail : ''}><span>OVERALL</span><b>{activeVersion.qa_score ?? '—'}</b><small>Pass threshold: 85/100</small></article>
-            <article><span>VISUAL</span><b>{summary.visual_score ?? '—'}</b><small>Hierarchy · composition · crop · type · specificity · mobile</small></article>
-            <article><span>COPY + CTA</span><b>{summary.content_conversion_score ?? '—'}</b><small>Authenticity and conversion clarity</small></article>
+            <article><span>VISUAL</span><b>{visualSummaryScore}</b><small>Hierarchy · composition · crop · type · specificity · mobile</small></article>
+            <article><span>COPY + CTA</span><b>{copySummaryScore}</b><small>Authenticity and conversion clarity</small></article>
             <article className={blockers ? styles.fail : ''}><span>HIGH/BLOCKERS</span><b>{blockers || 0}</b><small>{blockers ? 'Release remains blocked' : 'None recorded'}</small></article>
           </div>
 
           <div className={styles.actions}>
-            <div><b>Evidence source: {activeVersion.preview_url ? 'Vercel preview' : 'Missing preview'}</b><span>{activeVersion.preview_url ? 'PageSpeed/Lighthouse renders the exact saved preview on mobile and desktop, then visual QA reviews those screenshots.' : 'QA will not run against plans, source code or a guessed URL.'}</span></div>
-            <button disabled={working || !activeVersion.preview_url} onClick={() => void runQa()}>{working ? 'Rendering + reviewing…' : activeVersion.qa_completed_at ? 'Re-run rendered QA' : 'Run rendered QA'}</button>
+            <div><b>Automated evidence: {activeVersion.preview_url ? 'exact Vercel preview' : 'missing preview'}</b><span>When OpenAI API is connected, PageSpeed/Lighthouse renders the exact saved preview on mobile and desktop and the vision model reviews those screenshots.</span></div>
+            <button disabled={working || !activeVersion.preview_url} onClick={() => void runQa()}>{working ? 'Rendering + reviewing…' : activeVersion.qa_completed_at && summary.mode !== 'manual_operator' ? 'Re-run automated QA' : 'Run automated QA'}</button>
           </div>
+
+          {activeVersion.preview_url && activeSite && (
+            <ManualQaForm
+              websiteId={activeSite.id}
+              versionId={activeVersion.id}
+              previewUrl={activeVersion.preview_url}
+              onCompleted={(message) => { void manualCompleted(message); }}
+            />
+          )}
 
           {activeVersion.preview_url && <div style={{ fontSize: 10 }}><a href={activeVersion.preview_url} target="_blank" rel="noreferrer" style={{ color: '#355246', fontWeight: 850, textDecoration: 'none' }}>Open exact preview ↗</a></div>}
 
@@ -198,7 +223,7 @@ export default function WebsiteQaPage() {
             <section className={styles.card}>
               <div className={styles.cardHead}><div><span>VISUAL REVIEW</span><h3>Designed quality</h3></div></div>
               <div className={styles.visualList}>
-                {visualChecks.length === 0 && <div className={styles.empty}>Run rendered QA to score hierarchy, composition, crop safety, typography, brand specificity, copy, CTA clarity and mobile quality.</div>}
+                {visualChecks.length === 0 && <div className={styles.empty}>Run automated QA or record manual rendered QA to score hierarchy, composition, crop safety, typography and brand specificity.</div>}
                 {visualChecks.map((check) => <article className={styles.visualItem} key={check.id}><div><b>{pretty(check.checkpoint)}</b><strong>{check.score ?? '—'}</strong></div><p>{check.notes}</p></article>)}
               </div>
             </section>
@@ -208,6 +233,7 @@ export default function WebsiteQaPage() {
               <div className={styles.lighthouse}>
                 {(['mobile', 'desktop'] as const).map((device) => <div className={styles.device} key={device}><span>{device.toUpperCase()}</span>{['performance', 'accessibility', 'seo', 'best_practices'].map((metric) => { const row = lighthouseChecks.find((check) => check.device === device && check.checkpoint === metric); return <div className={styles.metric} key={metric}><span>{pretty(metric)}</span><b>{row?.score ?? '—'}</b></div>; })}</div>)}
               </div>
+              {summary.mode === 'manual_operator' && <p style={{ fontSize: 9, color: '#7b7f79', marginTop: 10 }}>Manual RM0 QA does not fabricate Lighthouse scores. Run automated QA later if you want those technical measurements recorded.</p>}
             </section>
           </div>
 
@@ -220,7 +246,7 @@ export default function WebsiteQaPage() {
           </section>
 
           <section className={styles.release}>
-            <div><span>RELEASE BOUNDARY</span><h3>{activeVersion.qa_status === 'pass' && pendingAssets === 0 ? 'QA passed — human release gate is next.' : 'Production remains locked.'}</h3><p>{activeVersion.qa_status === 'pass' && pendingAssets === 0 ? 'This version has passed the automated rendered gate, but v2.3 does not promote anything to production. The next stage will approve and promote this exact preview artifact without rebuilding it.' : `This version cannot proceed while QA needs fixes${pendingAssets ? ` or ${pendingAssets} visual asset${pendingAssets === 1 ? '' : 's'} remain pending` : ''}.`}</p></div>
+            <div><span>RELEASE BOUNDARY</span><h3>{activeVersion.qa_status === 'pass' && pendingAssets === 0 ? 'QA passed — human release gate is next.' : 'Production remains locked.'}</h3><p>{activeVersion.qa_status === 'pass' && pendingAssets === 0 ? 'This exact preview has passed the rendered quality gate. Production still requires a separate explicit approval and RELEASE confirmation; no QA action publishes anything.' : `This version cannot proceed while QA needs fixes${pendingAssets ? ` or ${pendingAssets} visual asset${pendingAssets === 1 ? '' : 's'} remain pending` : ''}.`}</p></div>
             <div className={styles.badge}><b>{activeVersion.qa_score ?? '—'}/100</b><small>{activeVersion.qa_status ? pretty(activeVersion.qa_status) : 'QA not run'}</small></div>
           </section>
         </>
