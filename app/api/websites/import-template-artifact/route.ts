@@ -94,7 +94,7 @@ export async function POST(req: Request) {
       website_id: input.websiteId,
       stage: 'template_artifact_import',
       provider: 'github',
-      model: null,
+      model: 'git-artifact',
       prompt_version: 'template_artifact_v1',
       input_json: {
         selection_id: input.selectionId,
