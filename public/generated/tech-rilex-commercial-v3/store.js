@@ -26,6 +26,11 @@ const esc = (value) => String(value ?? '').replace(/[&<>'"]/g, (ch) => ({ '&': '
 const safeImage = (value) => { try { const u = new URL(value); return ['http:', 'https:'].includes(u.protocol) ? u.href : ''; } catch { return ''; } };
 const statusLabel = (status) => ({ available: 'Available', reserved: 'Reserved', sold: 'Sold', unavailable: 'Unavailable' }[status] || status);
 
+function track(eventType, productId = null) {
+  const source = `${location.pathname}${location.search}`.slice(0, 180);
+  supabase.from('tech_rilex_events').insert({ brand_id: BRAND_ID, product_id: productId, event_type: eventType, source_path: source }).then(() => {}).catch(() => {});
+}
+
 function mediaMarkup(product, large = false) {
   const image = safeImage(product.image_urls?.[0]);
   if (image) return `<img src="${esc(image)}" alt="${esc(`${product.brand} ${product.model}`)}" loading="lazy">`;
@@ -111,6 +116,7 @@ function buildProductMessage(product) {
 function openWhatsApp(product) {
   const number = String(settings?.whatsapp_number || document.body.dataset.whatsappNumber || '').replace(/\D/g, '');
   if (!number) return;
+  track('whatsapp_click', product.id);
   window.open(`https://wa.me/${number}?text=${encodeURIComponent(buildProductMessage(product))}`, '_blank', 'noopener,noreferrer');
 }
 
@@ -145,6 +151,7 @@ function openProduct(product, updateUrl = true) {
     </div>`;
   dialog.hidden = false;
   document.body.style.overflow = 'hidden';
+  track('product_view', product.id);
   document.getElementById('product-close-inner')?.addEventListener('click', closeProduct);
   document.getElementById('product-whatsapp')?.addEventListener('click', () => openWhatsApp(product));
   if (updateUrl) {
@@ -198,6 +205,7 @@ async function loadStore() {
   products = productData || [];
   populateFilters();
   renderCatalog();
+  track('catalog_view');
   const slug = initialSlug();
   if (slug) {
     const product = products.find((item) => item.slug === slug);
@@ -211,5 +219,9 @@ closeButton?.addEventListener('click', closeProduct);
 dialog?.addEventListener('click', (event) => { if (event.target === dialog) closeProduct(); });
 document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && dialog && !dialog.hidden) closeProduct(); });
 window.addEventListener('popstate', () => { if (dialog && !dialog.hidden) dialog.hidden = true; });
+document.addEventListener('click', (event) => {
+  const target = event.target instanceof Element ? event.target.closest('[data-enquire]') : null;
+  if (target) track('generic_enquiry_open');
+}, true);
 
 loadStore();
