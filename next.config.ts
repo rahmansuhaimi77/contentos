@@ -11,6 +11,18 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  async rewrites() {
+    return [
+      {
+        source: '/tech-rilex',
+        destination: '/generated/tech-rilex-commercial-v3/index.html',
+      },
+      {
+        source: '/tech-rilex/:slug',
+        destination: '/generated/tech-rilex-commercial-v3/index.html?phone=:slug',
+      },
+    ];
+  },
 };
 
 export default nextConfig;
