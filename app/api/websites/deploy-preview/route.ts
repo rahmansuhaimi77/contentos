@@ -7,12 +7,26 @@ const FALLBACK_SUPABASE_URL = 'https://xqlfytlknhazusowiiug.supabase.co';
 const FALLBACK_SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_BjTjAlbEe74g3PLYu6akVg_tjruki1i';
 
 const InputSchema = z.object({ websiteId: z.string().uuid(), versionId: z.string().uuid() });
-const AllowedFileSchema = z.object({ path: z.enum(['index.html', 'styles.css', 'script.js']), content: z.string().min(1) });
-const SnapshotSchema = z.object({
+const FileSchema = z.object({ path: z.string().min(1).max(180), content: z.string().min(1) });
+const StaticV1Schema = z.object({
   format: z.literal('static_v1'),
-  files: z.array(AllowedFileSchema).length(3),
+  files: z.array(FileSchema).length(3),
   pending_asset_count: z.number().int().min(0).default(0),
 }).passthrough();
+const StaticBundleV2Schema = z.object({
+  format: z.literal('static_bundle_v2'),
+  files: z.array(FileSchema).min(1).max(64),
+  pending_asset_count: z.number().int().min(0).default(0),
+}).passthrough();
+
+type PreviewFile = z.infer<typeof FileSchema>;
+
+type PreviewSnapshot = {
+  format: 'static_v1' | 'static_bundle_v2';
+  files: PreviewFile[];
+  pending_asset_count: number;
+  [key: string]: unknown;
+};
 
 async function getAuthenticatedClient(req: Request) {
   const token = req.headers.get('authorization')?.replace(/^Bearer\s+/i, '');
@@ -25,6 +39,34 @@ async function getAuthenticatedClient(req: Request) {
   const { data, error } = await supabase.auth.getUser(token);
   if (error || !data.user) return null;
   return { supabase, user: data.user };
+}
+
+function safeRelativePath(path: string) {
+  if (!/^[A-Za-z0-9][A-Za-z0-9._/-]*$/.test(path)) return false;
+  if (path.startsWith('/') || path.includes('..') || path.includes('\\') || path.includes('//')) return false;
+  return path.split('/').every((segment) => segment.length > 0 && segment !== '.' && segment !== '..');
+}
+
+function normalizeSnapshot(value: unknown): PreviewSnapshot {
+  const format = (value as any)?.format;
+  const parsed = format === 'static_bundle_v2' ? StaticBundleV2Schema.parse(value) : StaticV1Schema.parse(value);
+  const paths = new Set<string>();
+  let totalBytes = 0;
+  for (const file of parsed.files) {
+    if (!safeRelativePath(file.path)) throw new Error(`Unsafe preview file path: ${file.path}`);
+    if (paths.has(file.path)) throw new Error(`Duplicate preview file path: ${file.path}`);
+    paths.add(file.path);
+    const bytes = Buffer.byteLength(file.content, 'utf8');
+    if (bytes > 350_000) throw new Error(`${file.path} exceeded the per-file preview size limit.`);
+    totalBytes += bytes;
+  }
+  if (!paths.has('index.html')) throw new Error('Preview artifact must contain a root index.html.');
+  if (totalBytes > 2_500_000) throw new Error('Preview artifact exceeded the total source size limit.');
+  if (parsed.format === 'static_v1') {
+    const required = new Set(['index.html', 'styles.css', 'script.js']);
+    if (paths.size !== 3 || [...required].some((path) => !paths.has(path))) throw new Error('Legacy static_v1 preview is incomplete.');
+  }
+  return parsed as PreviewSnapshot;
 }
 
 function projectName(slug: string) {
@@ -73,12 +115,9 @@ export async function POST(req: Request) {
     const firstError = siteRes.error || versionRes.error;
     if (firstError) throw new Error(firstError.message);
     if (!siteRes.data || !versionRes.data) return Response.json({ error: 'Website or source version not found.' }, { status: 404 });
-    if (['approved', 'production'].includes(versionRes.data.status)) return Response.json({ error: 'Approved/production versions cannot be redeployed through the preview-only runner.' }, { status: 409 });
+    if (['approved', 'production', 'released'].includes(versionRes.data.status)) return Response.json({ error: 'Approved/production versions cannot be redeployed through the preview-only runner.' }, { status: 409 });
 
-    const snapshot = SnapshotSchema.parse(versionRes.data.source_snapshot);
-    const paths = new Set(snapshot.files.map((file) => file.path));
-    if (paths.size !== 3) return Response.json({ error: 'Preview source snapshot is incomplete.' }, { status: 409 });
-
+    const snapshot = normalizeSnapshot(versionRes.data.source_snapshot);
     const name = projectName(siteRes.data.slug);
     const teamQuery = `teamId=${encodeURIComponent(teamId)}`;
 
@@ -111,6 +150,8 @@ export async function POST(req: Request) {
           website_id: websiteId,
           version_id: versionId,
           version_no: String(versionRes.data.version_no),
+          artifact_format: snapshot.format,
+          file_count: String(snapshot.files.length),
           pending_asset_count: String(snapshot.pending_asset_count),
         },
       }),
@@ -148,11 +189,13 @@ export async function POST(req: Request) {
       preview_url: previewUrl,
       status: deploymentStatus,
       project_name: name,
+      artifact_format: snapshot.format,
+      file_count: snapshot.files.length,
       pending_asset_count: snapshot.pending_asset_count,
       release_eligible: false,
       message: snapshot.pending_asset_count > 0
-        ? 'Layout preview deployed. Visual assets are still pending, so this version is not release-eligible.'
-        : 'Preview deployed. It still requires rendered QA and explicit release approval before production.',
+        ? 'Preview deployed. Visual assets are still pending, so this version is not release-eligible.'
+        : 'Preview deployed from the exact immutable artifact. It still requires rendered QA and explicit release approval before production.',
     });
   } catch (error) {
     console.error(error);
