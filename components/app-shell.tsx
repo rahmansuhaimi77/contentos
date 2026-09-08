@@ -126,9 +126,14 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         <div className="appSidebarBottom">
           <nav className="appNav appNavSecondary" aria-label="Secondary">
             {selectedBrand?.name === 'Tech Rilex' && (
-              <Link className={active('/tech-rilex-admin') ? 'active' : ''} href="/tech-rilex-admin">
-                <span>▣</span><b>Inventory</b>
-              </Link>
+              <>
+                <Link className={active('/tech-rilex-admin') && !pathname.startsWith('/tech-rilex-admin/tools') ? 'active' : ''} href="/tech-rilex-admin">
+                  <span>▣</span><b>Inventory</b>
+                </Link>
+                <Link className={pathname.startsWith('/tech-rilex-admin/tools') ? 'active' : ''} href="/tech-rilex-admin/tools">
+                  <span>◫</span><b>Store Ops</b>
+                </Link>
+              </>
             )}
             {secondaryNav.map((item) => (
               <Link className={active(item.href) ? 'active' : ''} href={item.href} key={item.href}>
