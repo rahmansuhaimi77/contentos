@@ -57,7 +57,7 @@ globalThis.fetch = (async (url: string, init?: any) => {
     { name: 'models/text-embedding', supportedGenerationMethods: ['embedContent'] } ] }));
   if (String(url).includes('gemini-9-flash:generateContent')) return new Response('quota', { status: 429 });
   const body = JSON.parse(init.body); const prompt = body.contents[0].parts[0].text as string;
-  const n = Number(prompt.match(/Plan (\d+) days/)?.[1] || 0);
+  const n = /TASK: Plan/.test(prompt) ? Number(prompt.match(/with exactly (\d+) items/)?.[1] || 0) : 0;
   const out = n ? { items: Array.from({ length: n }, (_, i) => ({ day_number: i + 1, pillar: 'Save-worthy tips', platform: 'Instagram', format: 'Carousel', hook: `Hook baru ${i + 1}`, concept: 'Concept', cta: 'Post ride anda dalam KampusRide.' })) }
     : { strategy: 's', variants: [{ hook: 'h', angle: 'a', script: 's', caption: 'c', cta: 'Post ride anda dalam KampusRide.', creative_prompt: 'p' }] };
   return new Response(JSON.stringify({ candidates: [{ content: { parts: [{ text: '```json\n' + JSON.stringify(out) + '\n```' }] } }] }));

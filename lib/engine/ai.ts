@@ -66,9 +66,13 @@ async function geminiModels(apiKey: string): Promise<string[]> {
   return models;
 }
 
+const CALL_TIMEOUT_MS = Number(process.env.AI_CALL_TIMEOUT_MS || 50000);
+
 async function callGemini(apiKey: string, model: string, system: string, prompt: string) {
+  const started = Date.now();
   const res = await fetch(`${GEMINI_BASE}/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`, {
     method: 'POST',
+    signal: AbortSignal.timeout(CALL_TIMEOUT_MS),
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       systemInstruction: { parts: [{ text: system }] },
@@ -83,6 +87,7 @@ async function callGemini(apiKey: string, model: string, system: string, prompt:
     throw error;
   }
   const body = await res.json() as { candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }> };
+  console.info(`[contentos ai] gemini ${model} ok in ${Date.now() - started}ms`);
   return body.candidates?.[0]?.content?.parts?.map((p) => p.text || '').join('') || '';
 }
 
@@ -100,8 +105,9 @@ export async function generateJson<T>(schema: z.ZodType<T>, system: string, prom
           errors.push(`${model}: output did not match the expected shape`);
         } catch (error) {
           const status = (error as { status?: number }).status;
-          errors.push(error instanceof Error ? error.message : String(error));
-          if (status && ![429, 404, 500, 503].includes(status)) break;
+          const timedOut = error instanceof Error && (error.name === 'TimeoutError' || error.name === 'AbortError');
+          errors.push(timedOut ? `${model}: timed out after ${CALL_TIMEOUT_MS}ms` : error instanceof Error ? error.message : String(error));
+          if (!timedOut && status && ![429, 404, 500, 503].includes(status)) break;
         }
       }
     } catch (error) {

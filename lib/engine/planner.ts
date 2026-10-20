@@ -154,20 +154,40 @@ export async function buildPlan(ctx: BrandEngineContext, req: PlannerRequest): P
     `Return JSON: {"items":[{"day_number":1,"pillar":"","platform":"","format":"","hook":"","concept":"","cta":""}]} with exactly ${days} items.`,
   ].filter(Boolean).join('\n');
 
-  const ai = await generateJson(AiPlanSchema, SYSTEM_PROMPT, prompt);
-  if (ai && ai.data.items.length >= Math.min(days, 7)) {
-    const items = ai.data.items.slice(0, days).map((item, index) => ({
-      day_number: index + 1,
-      planned_date: addDaysIso(req.startDate, index),
-      pillar: item.pillar,
-      objective: req.objective,
-      platform: item.platform || req.platforms[index % req.platforms.length],
-      format: item.format || formatFor(ctx.profile, item.platform, index),
-      hook: item.hook,
-      concept: item.concept,
-      cta: item.cta,
-    }));
-    return { items: finish(items), mode: 'ai', model: ai.model };
+  // A 30-day plan in one request can outlast the function time limit, so the month is
+  // written as parallel chunks. Each chunk that fails falls back to the zero-cost planner.
+  const CHUNK = 10;
+  const demo = demoPlan(ctx, req, days);
+  const chunks = Array.from({ length: Math.ceil(days / CHUNK) }, (_, i) => ({ from: i * CHUNK, size: Math.min(CHUNK, days - i * CHUNK) }));
+  const results = await Promise.all(chunks.map(async ({ from, size }) => {
+    const chunkStart = addDaysIso(req.startDate, from);
+    const chunkPrompt = prompt
+      .replace(`TASK: Plan ${days} days of content starting ${req.startDate}, one item per day.`, `TASK: Plan days ${from + 1}-${from + size} of a ${days}-day plan: ${size} days starting ${chunkStart}, one item per day. Other writers cover the remaining days, so make these ${size} distinct from each other and from the recent hooks.`)
+      .replace(`with exactly ${days} items.`, `with exactly ${size} items, day_number ${from + 1} to ${from + size}.`);
+    const ai = await generateJson(AiPlanSchema, SYSTEM_PROMPT, chunkPrompt);
+    if (!ai || ai.data.items.length < Math.ceil(size / 2)) return { items: demo.slice(from, from + size), model: null as string | null };
+    const items = Array.from({ length: size }, (_, k) => {
+      const item = ai.data.items[k];
+      const index = from + k;
+      if (!item) return demo[index];
+      return {
+        day_number: index + 1,
+        planned_date: addDaysIso(req.startDate, index),
+        pillar: item.pillar,
+        objective: req.objective,
+        platform: item.platform || req.platforms[index % req.platforms.length],
+        format: item.format || formatFor(ctx.profile, item.platform, index),
+        hook: item.hook,
+        concept: item.concept,
+        cta: item.cta,
+      };
+    });
+    return { items, model: ai.model };
+  }));
+
+  const models = results.map((r) => r.model).filter(Boolean) as string[];
+  if (models.length) {
+    return { items: finish(results.flatMap((r) => r.items)), mode: 'ai', model: [...new Set(models)].join(', ') };
   }
 
   return { items: finish(demoPlan(ctx, req, days)), mode: 'demo' };
