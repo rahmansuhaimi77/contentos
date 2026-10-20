@@ -40,7 +40,7 @@ function headlineSize(text: string, base: number) {
 
 function Logo({ data, size = 120 }: { data: PosterData; size?: number }) {
   if (data.logo) {
-    return <img src={data.logo} alt="" style={{ height: size, maxWidth: size * 3, objectFit: 'contain', borderRadius: 12 }} />;
+    return <img src={data.logo} alt="" style={{ height: size, maxWidth: size * 3.6, objectFit: 'contain' }} />;
   }
   return <div style={{ display: 'flex', fontFamily: 'Poppins', fontWeight: 800, fontSize: size * 0.42, letterSpacing: -1 }}>{data.brandName}</div>;
 }
@@ -64,7 +64,7 @@ function PhotoTemplate(data: PosterData, size: PosterSize): ReactElement {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', width, height, background: data.colors.light, fontFamily: 'Inter' }}>
       <div style={{ display: 'flex', flexDirection: 'column', padding: story ? '96px 64px 48px' : '64px 64px 36px', background: data.colors.primary, color: '#ffffff' }}>
-        <div style={{ display: 'flex', marginBottom: 36, background: '#ffffff', alignSelf: 'flex-start', padding: '10px 18px', borderRadius: 16 }}><Logo data={data} size={story ? 96 : 80} /></div>
+        <div style={{ display: 'flex', marginBottom: 36, background: '#ffffff', alignSelf: 'flex-start', padding: '10px 18px', borderRadius: 16 }}><Logo data={data} size={story ? 120 : 104} /></div>
         <div style={{ display: 'flex', fontFamily: 'Poppins', fontWeight: 800, fontSize: headlineSize(data.headline, story ? 92 : 84), lineHeight: 1.08, letterSpacing: -1.5 }}>{data.headline}</div>
         {data.support && <div style={{ display: 'flex', marginTop: 24, fontSize: story ? 38 : 34, lineHeight: 1.35, opacity: 0.9 }}>{data.support}</div>}
       </div>
@@ -85,7 +85,7 @@ function BoldTemplate(data: PosterData, size: PosterSize): ReactElement {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', width, height, background: data.colors.primary, color: '#ffffff', fontFamily: 'Inter' }}>
       <div style={{ display: 'flex', padding: story ? '96px 64px 0' : '64px 64px 0' }}>
-        <div style={{ display: 'flex', background: '#ffffff', padding: '10px 18px', borderRadius: 16 }}><Logo data={data} size={story ? 96 : 80} /></div>
+        <div style={{ display: 'flex', background: '#ffffff', padding: '10px 18px', borderRadius: 16 }}><Logo data={data} size={story ? 120 : 104} /></div>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', flex: 1, justifyContent: 'center', padding: '0 64px' }}>
         <div style={{ display: 'flex', width: 120, height: 12, background: data.colors.secondary, borderRadius: 6, marginBottom: 40 }} />
@@ -107,7 +107,7 @@ function SceneTemplate(data: PosterData, size: PosterSize): ReactElement {
       <div style={{ display: 'flex', position: 'absolute', top: 0, left: 0, width, height, backgroundImage: 'linear-gradient(180deg, rgba(8,12,36,0.88) 0%, rgba(8,12,36,0.55) 38%, rgba(8,12,36,0.05) 62%, rgba(8,12,36,0.0) 100%)' }} />
       <div style={{ display: 'flex', flexDirection: 'column', position: 'absolute', top: 0, left: 0, width, height }}>
         <div style={{ display: 'flex', flexDirection: 'column', padding: story ? '96px 64px 0' : '64px 64px 0', color: '#ffffff' }}>
-          <div style={{ display: 'flex', alignSelf: 'flex-start', background: '#ffffff', padding: '10px 18px', borderRadius: 16, marginBottom: 36 }}><Logo data={data} size={story ? 96 : 80} /></div>
+          <div style={{ display: 'flex', alignSelf: 'flex-start', background: '#ffffff', padding: '10px 18px', borderRadius: 16, marginBottom: 36 }}><Logo data={data} size={story ? 120 : 104} /></div>
           <div style={{ display: 'flex', fontFamily: 'Poppins', fontWeight: 800, fontSize: headlineSize(data.headline, story ? 96 : 86), lineHeight: 1.06, letterSpacing: -1.5 }}>{data.headline}</div>
           {data.support && <div style={{ display: 'flex', marginTop: 24, fontSize: story ? 38 : 34, lineHeight: 1.35 }}>{data.support}</div>}
         </div>

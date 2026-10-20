@@ -1,3 +1,4 @@
+import sharp from 'sharp';
 import { loadBrandEngine } from '@/lib/engine/load';
 import type { BrandProfile } from '@/lib/engine/profile';
 import type { PosterData } from './templates';
@@ -8,11 +9,30 @@ const ASSET_BUCKET = 'contentos-assets';
 type Asset = { kind: string; title: string; storage_path: string; mime_type: string | null };
 type GeneratedAsset = { id: string; kind: string; storage_path: string; created_at: string; [key: string]: unknown };
 
-async function dataUrl(supabase: any, bucket: string, path: string, mime?: string | null) {
+type Prep = 'logo' | 'photo' | 'background';
+
+/**
+ * Downloads an image and prepares it for the poster:
+ * - logo: trims the empty margin around the mark (uploads are often phone screenshots
+ *   with the logo floating in a tall blank canvas), then caps the height.
+ * - photo: applies EXIF rotation and shrinks 12MP phone photos to 1200px.
+ * - background: shrinks to poster width.
+ * Falls back to the original bytes if processing fails.
+ */
+async function dataUrl(supabase: any, bucket: string, path: string, mime: string | null | undefined, prep: Prep) {
   const { data, error } = await supabase.storage.from(bucket).download(path);
   if (error || !data) return null;
-  const bytes = Buffer.from(await data.arrayBuffer());
-  return `data:${mime || data.type || 'image/png'};base64,${bytes.toString('base64')}`;
+  const original = Buffer.from(await data.arrayBuffer());
+  try {
+    let image = sharp(original, { failOn: 'none' }).rotate();
+    if (prep === 'logo') image = sharp(await image.trim({ threshold: 30 }).toBuffer()).resize({ height: 360, withoutEnlargement: true });
+    else if (prep === 'photo') image = image.resize({ width: 1200, height: 1200, fit: 'inside', withoutEnlargement: true });
+    else image = image.resize({ width: 1080, withoutEnlargement: true });
+    const out = prep === 'logo' ? await image.png().toBuffer() : await image.jpeg({ quality: 84 }).toBuffer();
+    return `data:${prep === 'logo' ? 'image/png' : 'image/jpeg'};base64,${out.toString('base64')}`;
+  } catch {
+    return `data:${mime || data.type || 'image/png'};base64,${original.toString('base64')}`;
+  }
 }
 
 function firstSentence(text: string, max = 110) {
@@ -78,9 +98,9 @@ export async function buildPosterData(
   const photo = opts.withPhoto ? choosePhoto(ctx.profile, photos, `${headline} ${script}`, variant.id) : null;
 
   const [logo, photoData, background] = await Promise.all([
-    logoAsset ? dataUrl(supabase, ASSET_BUCKET, logoAsset.storage_path, logoAsset.mime_type) : Promise.resolve(null),
-    photo ? dataUrl(supabase, ASSET_BUCKET, photo.storage_path, photo.mime_type) : Promise.resolve(null),
-    opts.backgroundPath ? dataUrl(supabase, POSTER_BUCKET, opts.backgroundPath, 'image/png') : Promise.resolve(null),
+    logoAsset ? dataUrl(supabase, ASSET_BUCKET, logoAsset.storage_path, logoAsset.mime_type, 'logo') : Promise.resolve(null),
+    photo ? dataUrl(supabase, ASSET_BUCKET, photo.storage_path, photo.mime_type, 'photo') : Promise.resolve(null),
+    opts.backgroundPath ? dataUrl(supabase, POSTER_BUCKET, opts.backgroundPath, 'image/png', 'background') : Promise.resolve(null),
   ]);
 
   return {
@@ -89,7 +109,7 @@ export async function buildPosterData(
       brandName: ctx.brand.name,
       headline,
       support: supportLine(headline, script),
-      cta: (pack.cta || variant.cta || '').trim(),
+      cta: dedupeCta((pack.cta || variant.cta || '').trim(), ctx.profile.poster.contact),
       contact: ctx.profile.poster.contact,
       website: ctx.profile.poster.website,
       colors: {
@@ -102,6 +122,17 @@ export async function buildPosterData(
       background,
     },
   };
+}
+
+/** Drops the CTA line when it only repeats the contact number already printed above it. */
+function dedupeCta(cta: string, contact: string) {
+  const digits = (value: string) => value.replace(/\D/g, '');
+  const contactDigits = digits(contact);
+  if (contactDigits.length >= 7 && digits(cta).includes(contactDigits)) {
+    const rest = cta.replace(/whatsapp|wa\.me\/?|\+?6?0[\d\s-]{8,}/gi, '').replace(/\s+/g, ' ').trim();
+    return rest.length > 8 ? rest.charAt(0).toUpperCase() + rest.slice(1) : '';
+  }
+  return cta;
 }
 
 export function latestBackground(pack: { generated_assets?: GeneratedAsset[] } | null) {
