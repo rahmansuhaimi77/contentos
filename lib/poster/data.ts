@@ -12,6 +12,37 @@ type GeneratedAsset = { id: string; kind: string; storage_path: string; created_
 type Prep = 'logo' | 'photo' | 'background';
 
 /**
+ * Finds the logo inside an upload that may be a phone screenshot: ignores the top and
+ * bottom 8% (status and navigation bars), takes the most common colour as background,
+ * and crops to the box around pixels that differ from it, with a small margin.
+ */
+export async function cropToMark(input: Buffer) {
+  const { data, info } = await sharp(input).removeAlpha().raw().toBuffer({ resolveWithObject: true });
+  const { width, height, channels } = info;
+  const counts = new Map<number, number>();
+  for (let i = 0; i < data.length; i += channels * 16) {
+    const key = ((data[i] >> 4) << 8) | ((data[i + 1] >> 4) << 4) | (data[i + 2] >> 4);
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  }
+  const bgKey = [...counts.entries()].sort((a, b) => b[1] - a[1])[0][0];
+  const bg = [((bgKey >> 8) & 15) * 16 + 8, ((bgKey >> 4) & 15) * 16 + 8, (bgKey & 15) * 16 + 8];
+  const top0 = Math.floor(height * 0.08), bottom0 = Math.ceil(height * 0.92);
+  let minX = width, minY = height, maxX = -1, maxY = -1;
+  for (let y = top0; y < bottom0; y += 2) {
+    for (let x = 0; x < width; x += 2) {
+      const i = (y * width + x) * channels;
+      if (Math.abs(data[i] - bg[0]) + Math.abs(data[i + 1] - bg[1]) + Math.abs(data[i + 2] - bg[2]) > 60) {
+        if (x < minX) minX = x; if (x > maxX) maxX = x; if (y < minY) minY = y; if (y > maxY) maxY = y;
+      }
+    }
+  }
+  if (maxX < 0 || (maxX - minX) * (maxY - minY) > width * height * 0.9) return input;
+  const pad = Math.round(Math.max(maxX - minX, maxY - minY) * 0.04);
+  const left = Math.max(0, minX - pad), top = Math.max(0, minY - pad);
+  return sharp(input).extract({ left, top, width: Math.min(width - left, maxX - minX + pad * 2), height: Math.min(height - top, maxY - minY + pad * 2) }).toBuffer();
+}
+
+/**
  * Downloads an image and prepares it for the poster:
  * - logo: trims the empty margin around the mark (uploads are often phone screenshots
  *   with the logo floating in a tall blank canvas), then caps the height.
@@ -25,7 +56,7 @@ async function dataUrl(supabase: any, bucket: string, path: string, mime: string
   const original = Buffer.from(await data.arrayBuffer());
   try {
     let image = sharp(original, { failOn: 'none' }).rotate();
-    if (prep === 'logo') image = sharp(await image.trim({ threshold: 30 }).toBuffer()).resize({ height: 360, withoutEnlargement: true });
+    if (prep === 'logo') image = sharp(await cropToMark(await image.toBuffer())).resize({ height: 360, withoutEnlargement: true });
     else if (prep === 'photo') image = image.resize({ width: 1200, height: 1200, fit: 'inside', withoutEnlargement: true });
     else image = image.resize({ width: 1080, withoutEnlargement: true });
     const out = prep === 'logo' ? await image.png().toBuffer() : await image.jpeg({ quality: 84 }).toBuffer();
