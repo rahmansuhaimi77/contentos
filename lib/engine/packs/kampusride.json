@@ -1,0 +1,2330 @@
+{
+ "version": 1,
+ "slug": "kampusride",
+ "summary": "KampusRide is a campus-made ride marketplace for the IIUM Gombak community. It keeps the existing peer-to-peer transporter culture but structures it: passenger posts one request → drivers send offers → passenger compares and chooses → in-app chat → ride → two-sided rating. Fares are paid directly to the driver; KampusRide does not process fares or take a per-ride commission.",
+ "language": {
+  "default": "Bahasa Melayu / natural Manglish",
+  "guidance": "Write like an IIUM student talking to friends: natural BM with Manglish where it sounds human. Campus-native references (mahallah, kulliyyah, LRT Gombak, class 8AM, rain). Never corporate."
+ },
+ "audiences": [
+  {
+   "key": "passenger",
+   "name": "Passengers",
+   "description": "IIUM Gombak students who need rides around campus, to LRT Gombak, balik kampung or events.",
+   "ctas": [
+    "Post ride anda dalam KampusRide.",
+    "Compare offer dalam satu tempat.",
+    "Cuba KampusRide untuk ride seterusnya.",
+    "Check KampusRide bila perlukan transporter."
+   ]
+  },
+  {
+   "key": "driver",
+   "name": "Student drivers",
+   "description": "Students with a car who offer rides when free. Never promise jobs or earnings.",
+   "ctas": [
+    "Switch ke Driver mode bila anda selamat berhenti dan free.",
+    "Check ride feed bila anda available.",
+    "Offer ride bila route dan masa sesuai."
+   ]
+  }
+ ],
+ "pillars": [
+  {
+   "name": "Telegram reality",
+   "goal": "One specific real pain in the current Telegram transporter workflow, then the structural KampusRide advantage. Telegram is the old workflow, not the enemy.",
+   "weight": 3
+  },
+  {
+   "name": "IIUM life",
+   "goal": "A recognisable campus situation (class, rain, LRT, exams, events, balik kampung).",
+   "weight": 3
+  },
+  {
+   "name": "How it works",
+   "goal": "Teach one step of the passenger or driver flow clearly.",
+   "weight": 2
+  },
+  {
+   "name": "Trust & accountability",
+   "goal": "Explain ratings, privacy, female preference or rules honestly, including limits.",
+   "weight": 2
+  },
+  {
+   "name": "Community",
+   "goal": "Build in public, listen, ask genuine questions.",
+   "weight": 1
+  }
+ ],
+ "exemplars": [
+  {
+   "pillar": "App Intro",
+   "hook": "KampusRide ni sebenarnya apa?",
+   "concept": "Introduce KampusRide simply: it organises the existing IIUM transporter behaviour into request → offers → compare → choose → in-app chat → ride → rate. Be transparent that KampusRide is still pre-launch.",
+   "phases": [
+    "controlled_beta",
+    "beta_driver_onboarding",
+    "pre_launch",
+    "stabilisation",
+    "driver_activation_sprint"
+   ]
+  },
+  {
+   "pillar": "Why We Built It",
+   "hook": "Kalau Telegram dah ada, kenapa nak buat KampusRide?",
+   "concept": "Respect Telegram for creating the community, then explain the structural gaps KampusRide is designed to fix: scattered DMs, unclear confirmation, negotiation chaos, privacy and weak ride-specific accountability.",
+   "phases": [
+    "controlled_beta",
+    "beta_driver_onboarding",
+    "pre_launch",
+    "stabilisation",
+    "driver_activation_sprint"
+   ]
+  },
+  {
+   "pillar": "How-To · Passenger",
+   "hook": "Kalau nak ride nanti, flow passenger macam mana?",
+   "concept": "Step-by-step pre-launch passenger education: create one ride request, receive driver offers, compare profile/vehicle/rating/offer, counter where relevant, select one driver, chat in-app, complete ride and rate. Do not imply the service is live today.",
+   "phases": [
+    "controlled_beta",
+    "beta_driver_onboarding",
+    "pre_launch",
+    "stabilisation",
+    "driver_activation_sprint"
+   ]
+  },
+  {
+   "pillar": "How-To · Driver",
+   "hook": "Driver kampus pula guna KampusRide macam mana?",
+   "concept": "Step-by-step driver education: when safely stopped and available, switch to Driver mode, view suitable ride requests, send an offer, respond to counteroffers, wait for passenger selection, then coordinate the selected trip. Never encourage phone interaction while moving.",
+   "phases": [
+    "controlled_beta",
+    "beta_driver_onboarding",
+    "pre_launch",
+    "stabilisation",
+    "driver_activation_sprint"
+   ]
+  },
+  {
+   "pillar": "How-To · Offers",
+   "hook": "Satu request, semua offer — apa beza dia?",
+   "concept": "Explain why one request with multiple structured offers is easier to compare than negotiating across multiple Telegram DMs. Keep fare language as offers/counteroffers, not a guaranteed fixed fare.",
+   "phases": [
+    "controlled_beta",
+    "beta_driver_onboarding",
+    "pre_launch",
+    "stabilisation",
+    "driver_activation_sprint"
+   ]
+  },
+  {
+   "pillar": "How-To · Price",
+   "hook": "KampusRide control harga ke?",
+   "concept": "Explain that KampusRide can show a suggested price guide and structure offers/counteroffers, while the driver and passenger still agree the final fare. Do not imply price fixing or guaranteed cheapest fares.",
+   "phases": [
+    "controlled_beta",
+    "beta_driver_onboarding",
+    "pre_launch",
+    "stabilisation",
+    "driver_activation_sprint"
+   ]
+  },
+  {
+   "pillar": "How-To · Match",
+   "hook": "Dah pilih driver, lepas tu apa jadi?",
+   "concept": "Explain selected-match clarity: one chosen driver, trip context, in-app chat and ride status. Contrast with awkwardly closing several separate DMs without claiming no-shows can never happen.",
+   "phases": [
+    "controlled_beta",
+    "beta_driver_onboarding",
+    "pre_launch",
+    "stabilisation",
+    "driver_activation_sprint"
+   ]
+  },
+  {
+   "pillar": "Trust · Reputation",
+   "hook": "Rating dalam KampusRide untuk apa sebenarnya?",
+   "concept": "Explain two-sided ratings/reputation as context and accountability over time, not a safety certificate. Mention useful behaviour signals such as punctuality/respect without inventing real ratings.",
+   "phases": [
+    "controlled_beta",
+    "beta_driver_onboarding",
+    "pre_launch",
+    "stabilisation",
+    "driver_activation_sprint"
+   ]
+  },
+  {
+   "pillar": "Trust · Female Preference",
+   "hook": "Female preferred driver tu guarantee ke?",
+   "concept": "Explain clearly that it is a preference designed to prioritise a female driver when available, not a guarantee. Keep the tone respectful and practical for the IIUM community.",
+   "phases": [
+    "controlled_beta",
+    "beta_driver_onboarding",
+    "pre_launch",
+    "stabilisation",
+    "driver_activation_sprint"
+   ]
+  },
+  {
+   "pillar": "Trust · Privacy",
+   "hook": "Cari transporter tak semestinya kena bagi nombor dekat ramai orang.",
+   "concept": "Explain the value of in-app chat and trip context before exposing personal contact details. Connect this to unwanted DMs, sexual spam and scam risk without claiming KampusRide prevents all abuse.",
+   "phases": [
+    "controlled_beta",
+    "beta_driver_onboarding",
+    "pre_launch",
+    "stabilisation",
+    "driver_activation_sprint"
+   ]
+  },
+  {
+   "pillar": "Trust · Rules",
+   "hook": "Ada platform rules tak sama dengan “fully regulated”.",
+   "concept": "Explain the difference between KampusRide community/platform rules, moderation and accountability versus legal/regulatory classification. Never claim APAD approval, licensed e-hailing status or official IIUM endorsement without confirmation.",
+   "phases": [
+    "controlled_beta",
+    "beta_driver_onboarding",
+    "pre_launch",
+    "stabilisation",
+    "driver_activation_sprint"
+   ]
+  },
+  {
+   "pillar": "Driver Safety",
+   "hook": "Nak secure job sampai kena type masa drive? Itu bukan benda yang patut normalize.",
+   "concept": "Use the real Telegram driver-pressure problem. Show how a structured ride feed/offer flow is meant to reduce frantic chat pressure, while stating drivers should only review/respond when safely stopped.",
+   "phases": [
+    "controlled_beta",
+    "beta_driver_onboarding",
+    "pre_launch",
+    "stabilisation",
+    "driver_activation_sprint"
+   ]
+  },
+  {
+   "pillar": "Telegram Reality · Driver",
+   "hook": "Passenger dah confirm. Tengah on the way… chat hilang.",
+   "concept": "Show the frustration of deleted Telegram messages after confirmation and why persistent trip context/selected match is useful. Avoid claiming the app can eliminate cancellations.",
+   "phases": [
+    "controlled_beta",
+    "beta_driver_onboarding",
+    "pre_launch",
+    "stabilisation",
+    "driver_activation_sprint"
+   ]
+  },
+  {
+   "pillar": "Telegram Reality · Passenger",
+   "hook": "Driver dah confirm… tapi tak muncul?",
+   "concept": "Talk about no-show frustration. KampusRide can create clearer selected-match history, chat, ride status and ratings; it cannot guarantee no-shows never happen.",
+   "phases": [
+    "controlled_beta",
+    "beta_driver_onboarding",
+    "pre_launch",
+    "stabilisation",
+    "driver_activation_sprint"
+   ]
+  },
+  {
+   "pillar": "Telegram Reality · Passenger",
+   "hook": "Nego 4 driver serentak memang penat.",
+   "concept": "Contrast scattered multi-driver negotiation with one request containing visible offers/counteroffers and one final selection.",
+   "phases": [
+    "controlled_beta",
+    "beta_driver_onboarding",
+    "pre_launch",
+    "stabilisation",
+    "driver_activation_sprint"
+   ]
+  },
+  {
+   "pillar": "Telegram Reality · Driver",
+   "hook": "Satu job belum settle, tiga chat lain dah masuk.",
+   "concept": "Show multi-job chat chaos for drivers and why a structured request/offer/selection state is easier to track. Never promise job volume or earnings.",
+   "phases": [
+    "controlled_beta",
+    "beta_driver_onboarding",
+    "pre_launch",
+    "stabilisation",
+    "driver_activation_sprint"
+   ]
+  },
+  {
+   "pillar": "Current IIUM Context",
+   "hook": "Tengah susun timetable Sem 1? Kami pun tengah susun ride flow.",
+   "concept": "Use the current Semester 1 registration/pre-registration window as a natural build-in-public moment. Connect semester preparation to making campus transport workflow easier, without implying IIUM endorsement.",
+   "phases": [
+    "controlled_beta",
+    "beta_driver_onboarding",
+    "pre_launch",
+    "stabilisation",
+    "driver_activation_sprint"
+   ]
+  },
+  {
+   "pillar": "New Intake",
+   "hook": "New intake season dah dekat — campus route memang ambil masa nak familiar.",
+   "concept": "Speak to new-student route learning: mahallah, kulliyyah, LRT Gombak and common campus movements. KampusRide is still pre-launch, so educate rather than sell a live ride.",
+   "phases": [
+    "controlled_beta",
+    "beta_driver_onboarding",
+    "pre_launch",
+    "stabilisation",
+    "driver_activation_sprint"
+   ]
+  },
+  {
+   "pillar": "IIUM Life",
+   "hook": "Mahallah ke kulliyyah nampak simple… sampai class 8AM.",
+   "concept": "Relatable campus routine. Show why clear pickup/drop-off/request details matter and keep the visual/copy recognisably IIUM without using protected branding as official endorsement.",
+   "phases": [
+    "controlled_beta",
+    "beta_driver_onboarding",
+    "pre_launch",
+    "stabilisation",
+    "driver_activation_sprint"
+   ]
+  },
+  {
+   "pillar": "IIUM Life",
+   "hook": "LRT Gombak ↔ campus: route yang hampir semua student akan kenal.",
+   "concept": "Use LRT Gombak as a familiar mobility context to explain ride requests and clear route information. No fixed fare or availability claims.",
+   "phases": [
+    "controlled_beta",
+    "beta_driver_onboarding",
+    "pre_launch",
+    "stabilisation",
+    "driver_activation_sprint"
+   ]
+  },
+  {
+   "pillar": "IIUM Life",
+   "hook": "Hujan + class jauh = masa semua orang nak benda cepat dan clear.",
+   "concept": "Use Malaysian rain/class-rush context. Focus on clear request and offer information; do not imply guaranteed supply.",
+   "phases": [
+    "controlled_beta",
+    "beta_driver_onboarding",
+    "pre_launch",
+    "stabilisation",
+    "driver_activation_sprint"
+   ]
+  },
+  {
+   "pillar": "IIUM Events",
+   "hook": "Bila event habis serentak, group chat memang boleh jadi laju gila.",
+   "concept": "Explain how event-end demand can make group chat difficult to follow. Keep this evergreen unless a real IIUM event/date has been verified in the Knowledge Base.",
+   "phases": [
+    "controlled_beta",
+    "beta_driver_onboarding",
+    "pre_launch",
+    "stabilisation",
+    "driver_activation_sprint"
+   ]
+  },
+  {
+   "pillar": "IIUM Life",
+   "hook": "Balik kampung weekend: luggage, timing, pickup point — semua kena clear.",
+   "concept": "Use weekend/balik-kampung preparation to teach better ride-request details. Pre-launch education only.",
+   "phases": [
+    "controlled_beta",
+    "beta_driver_onboarding",
+    "pre_launch",
+    "stabilisation",
+    "driver_activation_sprint"
+   ]
+  },
+  {
+   "pillar": "Dual Mode",
+   "hook": "Pagi passenger. Petang ada gap class, mungkin jadi driver.",
+   "concept": "Explain passenger/driver mode switching as a campus-native concept. Never imply every passenger is eligible to drive.",
+   "phases": [
+    "controlled_beta",
+    "beta_driver_onboarding",
+    "pre_launch",
+    "stabilisation",
+    "driver_activation_sprint"
+   ]
+  },
+  {
+   "pillar": "Trust · Spam & Scams",
+   "hook": "Ride group patut bantu cari ride — bukan buka ruang random spam.",
+   "concept": "Acknowledge spam, scam and sexual harassment risks in open-group/random-DM workflows. Explain privacy, trip context, moderation and reputation carefully without promising complete prevention.",
+   "phases": [
+    "controlled_beta",
+    "beta_driver_onboarding",
+    "pre_launch",
+    "stabilisation",
+    "driver_activation_sprint"
+   ]
+  },
+  {
+   "pillar": "Trust · Boundaries",
+   "hook": "Apa yang KampusRide TAK patut promise?",
+   "concept": "Build trust by stating boundaries: no guaranteed safety, no guaranteed female driver, no guaranteed ride, no guaranteed cheapest price, no claim of official IIUM endorsement or settled legal status.",
+   "phases": [
+    "controlled_beta",
+    "beta_driver_onboarding",
+    "pre_launch",
+    "stabilisation",
+    "driver_activation_sprint"
+   ]
+  },
+  {
+   "pillar": "Build in Public",
+   "hook": "Sebelum launch, kita nak fix benda yang betul — bukan tambah feature random.",
+   "concept": "Founder/community post asking passengers and drivers which part of the current transporter flow creates the most friction. Show that feedback shapes launch priorities.",
+   "phases": [
+    "controlled_beta",
+    "beta_driver_onboarding",
+    "pre_launch",
+    "stabilisation",
+    "driver_activation_sprint"
+   ]
+  },
+  {
+   "pillar": "Community Listening",
+   "hook": "Passenger UIA: kalau boleh fix satu benda dalam transporter flow, apa dia?",
+   "concept": "Pure conversation/listening post. Collect real passenger pain before launch rather than hard-selling.",
+   "phases": [
+    "controlled_beta",
+    "beta_driver_onboarding",
+    "pre_launch",
+    "stabilisation",
+    "driver_activation_sprint"
+   ]
+  },
+  {
+   "pillar": "Community Listening",
+   "hook": "Driver kampus: apa satu benda app ni mesti buat supaya betul-betul membantu?",
+   "concept": "Pure driver research post covering attention, negotiation, confirmation, no-show and trip clarity. Never promise jobs or earnings.",
+   "phases": [
+    "controlled_beta",
+    "beta_driver_onboarding",
+    "pre_launch",
+    "stabilisation",
+    "driver_activation_sprint"
+   ]
+  },
+  {
+   "pillar": "Launch Readiness",
+   "hook": "Same IIUM ride community. Less chaos. Itu yang kita nak capai sebelum launch.",
+   "concept": "Pre-launch recap: community stays peer-to-peer, KampusRide structures the workflow. Invite people to follow launch updates and keep expectations transparent.",
+   "phases": [
+    "controlled_beta",
+    "beta_driver_onboarding",
+    "pre_launch",
+    "stabilisation",
+    "driver_activation_sprint"
+   ]
+  },
+  {
+   "pillar": "Trust & reputation",
+   "hook": "Rating bukan jaminan safety — tapi accountability tetap penting.",
+   "concept": "Rating tak boleh certify seseorang “selamat”. Tapi bila behaviour selepas ride boleh carry forward sebagai reputation, passenger dan driver ada lebih banyak context daripada start zero setiap kali masuk DM baru. Itu layer accountability yang KampusRide nak bina.",
+   "phases": [
+    "controlled_beta",
+    "beta_driver_onboarding",
+    "pre_launch",
+    "stabilisation",
+    "driver_activation_sprint"
+   ]
+  },
+  {
+   "pillar": "Build in public · community research",
+   "hook": "Sebelum launch, kita nak fix benda yang betul.",
+   "concept": "Kita boleh tambah macam-macam feature. Tapi kalau benda paling sakit dalam current transporter flow sebenarnya confirmation, nego, no-show atau random DM, itu yang patut diselesaikan dulu. KampusRide masih pre-launch — jadi feedback student dan driver sekarang lagi valuable daripada vanity feature.",
+   "phases": [
+    "controlled_beta",
+    "beta_driver_onboarding",
+    "pre_launch",
+    "stabilisation",
+    "driver_activation_sprint"
+   ]
+  },
+  {
+   "pillar": "Beta · Intro",
+   "hook": "KampusRide beta minggu ni — apa sebenarnya kita nak test?",
+   "concept": "Explain that this is a controlled beta: validate the full ride loop with real students, find friction and fix it before public launch.",
+   "phases": [
+    "controlled_beta"
+   ],
+   "cta": "Beta tester — kalau jumpa benda confusing, bagitahu terus."
+  },
+  {
+   "pillar": "Beta · Passenger",
+   "hook": "Passenger beta: post → offer → pilih. Dekat mana flow paling senang sangkut?",
+   "concept": "Walk through the passenger beta journey and explicitly invite testers to flag unclear steps instead of selling the app as finished.",
+   "phases": [
+    "controlled_beta"
+   ],
+   "cta": "Passenger tester — step mana paling confusing?"
+  },
+  {
+   "pillar": "Beta · Driver",
+   "hook": "Driver beta: request masuk → offer → tunggu passenger pilih. Clear tak?",
+   "concept": "Teach the driver beta flow and reinforce that drivers only review/respond when safely stopped.",
+   "phases": [
+    "controlled_beta"
+   ],
+   "cta": "Driver tester — flow offer ni clear tak?"
+  },
+  {
+   "pillar": "Beta · Learning",
+   "hook": "Beta bukan cari pujian. Kita nak cari benda yang rosak.",
+   "concept": "Build in public: explain that useful beta feedback is bugs, confusion, no-show/cancel friction and missing context, not vanity compliments.",
+   "phases": [
+    "controlled_beta"
+   ],
+   "cta": "Kalau boleh break satu flow, cuba break masa beta."
+  },
+  {
+   "pillar": "Beta · Chat",
+   "hook": "Dah match, chat + trip context cukup clear tak?",
+   "concept": "Test whether selected-match context and in-app chat give both sides enough information to coordinate a real ride.",
+   "phases": [
+    "controlled_beta"
+   ],
+   "cta": "Tester — info apa lagi patut nampak lepas match?"
+  },
+  {
+   "pillar": "Beta · Trust",
+   "hook": "Cancel / no-show masa beta: sistem patut handle macam mana?",
+   "concept": "Use beta to learn what status, record and moderation signals are needed when a driver or passenger cancels or no-shows. Do not promise prevention.",
+   "phases": [
+    "controlled_beta"
+   ],
+   "cta": "Apa response paling fair bila no-show berlaku?"
+  },
+  {
+   "pillar": "Beta · Completion",
+   "hook": "Ride dah habis — rating tu betul-betul useful ke?",
+   "concept": "Test the end of the loop: completion and two-sided reputation. Explain rating as accountability context, not safety certification.",
+   "phases": [
+    "controlled_beta"
+   ],
+   "cta": "Tester — rating/tag apa paling useful?"
+  },
+  {
+   "pillar": "Driver Onboarding",
+   "hook": "KampusRide tengah cari driver beta — bukan kejar angka, kita nak driver yang betul-betul test flow.",
+   "concept": "Invite a controlled driver cohort and explain the purpose: validate supply, offer flow and real campus use cases before launch.",
+   "phases": [
+    "beta_driver_onboarding"
+   ],
+   "cta": "Driver kampus yang nak test — follow update onboarding."
+  },
+  {
+   "pillar": "Driver How-To",
+   "hook": "Bila free dan safely parked, baru check ride request.",
+   "concept": "Show the driver workflow from Driver mode to offer and selection while keeping the no-phone-while-moving rule explicit.",
+   "phases": [
+    "beta_driver_onboarding"
+   ],
+   "cta": "Driver kampus — flow ni lagi practical tak?"
+  },
+  {
+   "pillar": "Driver Value",
+   "hook": "Tak perlu camp group sepanjang masa semata-mata takut terlepas request.",
+   "concept": "Explain the intended structured ride-demand feed without promising job volume or earnings.",
+   "phases": [
+    "beta_driver_onboarding"
+   ],
+   "cta": "Apa part cari job sekarang paling makan attention?"
+  },
+  {
+   "pillar": "Driver Offers",
+   "hook": "Offer satu ride patut ambil berapa banyak step?",
+   "concept": "Ask drivers to pressure-test offer, counteroffer and selected-match friction during beta.",
+   "phases": [
+    "beta_driver_onboarding"
+   ],
+   "cta": "Driver beta — berapa tap masih rasa reasonable?"
+  },
+  {
+   "pillar": "Driver Supply",
+   "hook": "Registered driver ramai tak semestinya ride senang dapat.",
+   "concept": "Educate on active supply: what matters is whether suitable drivers are actually available in the right route/time windows.",
+   "phases": [
+    "beta_driver_onboarding"
+   ],
+   "cta": "Route/time mana driver selalu available?"
+  },
+  {
+   "pillar": "Driver Reputation",
+   "hook": "Rating driver bukan decoration — tapi jangan jadikan fake safety badge.",
+   "concept": "Explain practical reputation signals such as punctuality, respectful behaviour and clear pickup while keeping claims careful.",
+   "phases": [
+    "beta_driver_onboarding"
+   ],
+   "cta": "Tag apa paling fair untuk driver?"
+  },
+  {
+   "pillar": "Beta Learning",
+   "hook": "Minggu kedua beta: benda apa kita patut fix dulu?",
+   "concept": "Share a build-in-public learning loop without publishing invented metrics. Prioritise real tester feedback and blockers.",
+   "phases": [
+    "beta_driver_onboarding"
+   ],
+   "cta": "Tester — satu fix paling urgent apa?"
+  },
+  {
+   "pillar": "Passenger How-To",
+   "hook": "Kalau nak ride nanti, passenger flow macam mana?",
+   "concept": "Teach the future passenger flow without implying public availability before the manual launch phase is advanced.",
+   "phases": [
+    "pre_launch"
+   ],
+   "cta": "Save post ni untuk launch nanti."
+  },
+  {
+   "pillar": "Trust",
+   "hook": "Female preferred driver tu preference, bukan guarantee.",
+   "concept": "Explain the female-driver preference clearly and transparently while acknowledging supply limitations.",
+   "phases": [
+    "pre_launch"
+   ],
+   "cta": "Female passenger — wording macam ni clear tak?"
+  },
+  {
+   "pillar": "Privacy",
+   "hook": "Cari transporter tak semestinya kena expose nombor dekat ramai orang.",
+   "concept": "Explain in-app trip context and reduced random contact exposure without promising complete protection from abuse.",
+   "phases": [
+    "pre_launch"
+   ],
+   "cta": "Apa privacy concern paling besar sekarang?"
+  },
+  {
+   "pillar": "Stabilisation",
+   "hook": "Exam week = kurang hype, lebih banyak fixing.",
+   "concept": "Keep public marketing lighter while the team uses the exam window for QA, bug fixing, support readiness and launch checks.",
+   "phases": [
+    "stabilisation"
+   ],
+   "cta": "Kita tengah kemaskan benda penting sebelum launch."
+  },
+  {
+   "pillar": "Launch QA",
+   "hook": "Sebelum launch, “boleh guna” tak cukup — core flow kena reliable.",
+   "concept": "Explain the go/no-go mindset: request, offer, match, chat, completion, cancellation and support must work reliably.",
+   "phases": [
+    "stabilisation"
+   ],
+   "cta": "Apa satu benda yang korang tak boleh tolerate masa first use?"
+  },
+  {
+   "pillar": "Trust",
+   "hook": "Launch date tak patut menang lawan product readiness.",
+   "concept": "Build trust by saying the team will not force launch if a serious product, safety or privacy blocker remains.",
+   "phases": [
+    "stabilisation"
+   ],
+   "cta": "Reliable dulu, hype kemudian."
+  },
+  {
+   "pillar": "FAQ",
+   "hook": "KampusRide launch nanti — apa yang patut korang expect, dan apa yang tak patut?",
+   "concept": "Set realistic expectations around peer-to-peer supply, fare negotiation, female-driver preference and platform limitations.",
+   "phases": [
+    "stabilisation"
+   ],
+   "cta": "Drop soalan yang korang nak kami jawab sebelum launch."
+  },
+  {
+   "pillar": "Driver Activation",
+   "hook": "Semester nak start. Driver supply kena ready sebelum passenger demand naik.",
+   "concept": "Activate already-onboarded drivers and focus on real route/time availability rather than registration counts.",
+   "phases": [
+    "driver_activation_sprint"
+   ],
+   "cta": "Driver kampus — update bila korang usually available."
+  },
+  {
+   "pillar": "Coverage",
+   "hook": "Mahallah ↔ kulliyyah, LRT Gombak, class rush — route mana perlukan coverage?",
+   "concept": "Use familiar campus movements to identify driver supply gaps before public demand is pushed.",
+   "phases": [
+    "driver_activation_sprint"
+   ],
+   "cta": "Driver — route mana paling ngam dengan routine korang?"
+  },
+  {
+   "pillar": "Driver Refresher",
+   "hook": "Offer → selected → chat → ride. Quick refresher sebelum launch.",
+   "concept": "Give drivers a concise pre-launch workflow refresher and reinforce safe phone use.",
+   "phases": [
+    "driver_activation_sprint"
+   ],
+   "cta": "Readykan Driver mode sebelum semester start."
+  },
+  {
+   "pillar": "Readiness",
+   "hook": "Passenger acquisition boleh tunggu 2 hari. Supply kosong tak boleh.",
+   "concept": "Explain why marketplace supply is being activated first without making claims about guaranteed availability.",
+   "phases": [
+    "driver_activation_sprint"
+   ],
+   "cta": "Driver kampus — follow launch update."
+  },
+  {
+   "pillar": "Launch",
+   "hook": "KampusRide dah dibuka untuk IIUM Gombak.",
+   "concept": "Public-launch announcement only when the manual product phase has actually been advanced to public launch or later. Explain the core flow and set realistic supply expectations.",
+   "phases": [
+    "public_launch"
+   ],
+   "cta": "Open KampusRide dan cuba post ride pertama anda."
+  },
+  {
+   "pillar": "Launch How-To",
+   "hook": "First time guna KampusRide? 20 saat je untuk faham flow.",
+   "concept": "Practical passenger how-to: request, offers, compare, choose and chat. Keep claims factual.",
+   "phases": [
+    "public_launch"
+   ],
+   "cta": "Post ride bila perlukan transporter."
+  },
+  {
+   "pillar": "Return to Campus",
+   "hook": "Balik campus weekend ni? Ride flow tak semestinya kena start dengan 6 DM.",
+   "concept": "Tie launch to return-to-campus mobility without claiming IIUM endorsement or guaranteed supply.",
+   "phases": [
+    "public_launch"
+   ],
+   "cta": "Check KampusRide bila dah kembali campus."
+  },
+  {
+   "pillar": "Driver Launch",
+   "hook": "Driver kampus: Semester 1 nak start — Driver mode dah ready?",
+   "concept": "Activate drivers around real availability and route fit, not income promises.",
+   "phases": [
+    "public_launch"
+   ],
+   "cta": "Offer bila anda free dan safely stopped."
+  },
+  {
+   "pillar": "Week 1",
+   "hook": "Class start. Mahallah jauh. Ride request kena clear.",
+   "concept": "Use first-week class movement to teach clear pickup, drop-off and time details.",
+   "phases": [
+    "launch_week"
+   ],
+   "cta": "Post request yang lengkap supaya driver senang evaluate."
+  },
+  {
+   "pillar": "LRT Gombak",
+   "hook": "LRT Gombak ↔ UIA: one request, compare offer.",
+   "concept": "Use a familiar route to demonstrate the live flow without inventing fares.",
+   "phases": [
+    "launch_week"
+   ],
+   "cta": "Check available offers dalam satu request."
+  },
+  {
+   "pillar": "Rain",
+   "hook": "Hujan + class rush: lagi penting info pickup clear.",
+   "concept": "Practical rainy-day content focused on request quality and realistic availability.",
+   "phases": [
+    "launch_week"
+   ],
+   "cta": "Letak pickup point + masa dengan jelas."
+  },
+  {
+   "pillar": "How-To",
+   "hook": "Driver bagi offer. Passenger tak wajib accept first one.",
+   "concept": "Explain offer comparison and counteroffer mechanics clearly.",
+   "phases": [
+    "launch_week"
+   ],
+   "cta": "Compare dulu, pilih yang sesuai."
+  },
+  {
+   "pillar": "Trust",
+   "hook": "No-show masih boleh berlaku. Bezanya, sekarang ada trip context + reputation.",
+   "concept": "Set realistic accountability expectations after launch without implying the platform eliminates bad behaviour.",
+   "phases": [
+    "launch_week"
+   ],
+   "cta": "Rate dengan fair selepas ride."
+  },
+  {
+   "pillar": "Driver",
+   "hook": "Driver student pun ada class. Availability memang berubah ikut masa.",
+   "concept": "Humanise supply and encourage passengers to plan while avoiding guarantees.",
+   "phases": [
+    "launch_week"
+   ],
+   "cta": "Kalau boleh, post request lebih awal."
+  },
+  {
+   "pillar": "Week 1 Learning",
+   "hook": "Week 1: benda mana KampusRide masih kena improve?",
+   "concept": "Ask for live user feedback and make product iteration visible.",
+   "phases": [
+    "launch_week"
+   ],
+   "cta": "Drop satu feedback paling useful."
+  },
+  {
+   "pillar": "Growth · Liquidity",
+   "hook": "Banyak signup tak guna kalau request tak dapat offer.",
+   "concept": "Teach the marketplace principle: optimise active supply, time-to-first-offer and match quality instead of vanity registrations.",
+   "phases": [
+    "early_growth"
+   ],
+   "cta": "Route/time mana masih susah dapat offer?"
+  },
+  {
+   "pillar": "Growth · Passenger",
+   "hook": "Kalau driver supply okay tapi request kurang, passenger side pula kita push.",
+   "concept": "Build in public around balancing both sides of the marketplace without publishing invented metrics.",
+   "phases": [
+    "early_growth"
+   ],
+   "cta": "Use case apa patut KampusRide cover lebih banyak?"
+  },
+  {
+   "pillar": "Growth · Driver",
+   "hook": "Kalau request banyak tapi driver kurang, marketing driver dulu.",
+   "concept": "Explain the adaptive growth approach: acquire whichever side is constrained.",
+   "phases": [
+    "early_growth"
+   ],
+   "cta": "Driver kampus — route/time mana korang boleh cover?"
+  },
+  {
+   "pillar": "UGC",
+   "hook": "Cerita ride sebenar lagi useful daripada iklan generic.",
+   "concept": "Invite real, permissioned user stories once there is genuine post-launch evidence. Never fabricate testimonials.",
+   "phases": [
+    "early_growth"
+   ],
+   "cta": "Ada experience useful? Share dengan permission."
+  },
+  {
+   "pillar": "Retention",
+   "hook": "First ride bagus. Second ride lagi penting.",
+   "concept": "Shift focus from launch downloads toward repeat use and habit.",
+   "phases": [
+    "early_growth"
+   ],
+   "cta": "Apa yang buat korang guna balik platform yang sama?"
+  },
+  {
+   "pillar": "Community",
+   "hook": "Same IIUM ride community. Sekarang kita optimise flow based on real use.",
+   "concept": "Community-first growth recap grounded in actual feedback and operational learning.",
+   "phases": [
+    "early_growth"
+   ],
+   "cta": "Keep the feedback coming."
+  },
+  {
+   "pillar": "Telegram Reality · Driver",
+   "hook": "Nak close job sampai kena type masa tengah drive?",
+   "concept": "Real driver struggle: pressure to reply, negotiate or secure jobs quickly in Telegram while already driving. Contrast with a structured ride feed and offer flow. Explicitly say drivers should only check/respond when safely stopped.",
+   "phases": [
+    "public_launch",
+    "launch_week",
+    "early_growth",
+    "growth_optimisation",
+    "retention"
+   ]
+  },
+  {
+   "pillar": "Telegram Reality · Passenger",
+   "hook": "Driver dah confirm… lepas tu tak muncul?",
+   "concept": "Passenger no-show pain: driver confirms then goes silent or fails to show. Explain that KampusRide cannot guarantee this never happens, but selected match, ride status, chat and two-sided ratings create clearer accountability.",
+   "phases": [
+    "public_launch",
+    "launch_week",
+    "early_growth",
+    "growth_optimisation",
+    "retention"
+   ]
+  },
+  {
+   "pillar": "Telegram Reality · Driver",
+   "hook": "Satu job belum settle, 3 chat lain dah masuk.",
+   "concept": "Driver trying to manage several potential jobs across private chats can lose track of which passenger is actually confirmed. Show one ride feed, structured offers and a clear selected match.",
+   "phases": [
+    "public_launch",
+    "launch_week",
+    "early_growth",
+    "growth_optimisation",
+    "retention"
+   ]
+  },
+  {
+   "pillar": "Telegram Reality · Price",
+   "hook": "Bila semua nego dalam DM, harga pun jadi blur.",
+   "concept": "Explain uncontrolled negotiation: no shared anchor, offers spread across chats and expectations change. KampusRide uses a suggested price guide plus structured offers/counteroffers. Never call the guide a guaranteed fixed fare.",
+   "phases": [
+    "public_launch",
+    "launch_week",
+    "early_growth",
+    "growth_optimisation",
+    "retention"
+   ]
+  },
+  {
+   "pillar": "Telegram Reality · Both",
+   "hook": "Ride group patut bantu cari ride — bukan bagi ruang spam dan scam.",
+   "concept": "Acknowledge sexual spam, harassment and scam attempts can affect open groups/private DMs. Emphasise privacy, authenticated accounts, in-app chat, trip context and moderation without claiming KampusRide prevents all abuse.",
+   "phases": [
+    "public_launch",
+    "launch_week",
+    "early_growth",
+    "growth_optimisation",
+    "retention"
+   ]
+  },
+  {
+   "pillar": "Telegram Reality · Both",
+   "hook": "Bila ada masalah ride, siapa sebenarnya accountable?",
+   "concept": "Compare weak ride-specific history/rules in scattered Telegram arrangements with selected match, trip context, ratings, reputation and admin moderation. Keep legal regulation separate from platform rules.",
+   "phases": [
+    "public_launch",
+    "launch_week",
+    "early_growth",
+    "growth_optimisation",
+    "retention"
+   ]
+  },
+  {
+   "pillar": "Telegram Reality · Passenger",
+   "hook": "Dah pilih seorang driver, yang lain semua masih DM “still need?”",
+   "concept": "Show confirmation ambiguity and awkwardly closing multiple negotiations. KampusRide keeps offers on one request and resolves the selected match more clearly.",
+   "phases": [
+    "public_launch",
+    "launch_week",
+    "early_growth",
+    "growth_optimisation",
+    "retention"
+   ]
+  },
+  {
+   "pillar": "Telegram Reality · Driver",
+   "hook": "Tak payah camp group sepanjang hari semata-mata takut terlepas job.",
+   "concept": "Driver-side attention fatigue: constantly refreshing the group. Show Driver mode and ride demand feed, but do not promise jobs or earnings.",
+   "phases": [
+    "public_launch",
+    "launch_week",
+    "early_growth",
+    "growth_optimisation",
+    "retention"
+   ]
+  },
+  {
+   "pillar": "Telegram Reality · Privacy",
+   "hook": "Nak cari transporter tak semestinya kena expose nombor dekat ramai orang.",
+   "concept": "Explain that coordination can stay in-app instead of immediately sharing a personal phone number with multiple strangers.",
+   "phases": [
+    "public_launch",
+    "launch_week",
+    "early_growth",
+    "growth_optimisation",
+    "retention"
+   ]
+  },
+  {
+   "pillar": "Telegram Reality · Comparison",
+   "hook": "Telegram works. Tapi ride flow boleh jadi lagi kemas.",
+   "concept": "Founder/community angle: do not attack Telegram. It proved the community demand. KampusRide keeps the same peer-to-peer behaviour but structures request → offers → choose → chat → ride → rate.",
+   "phases": [
+    "public_launch",
+    "launch_week",
+    "early_growth",
+    "growth_optimisation",
+    "retention"
+   ]
+  },
+  {
+   "pillar": "IIUM Life",
+   "hook": "Class 8AM. Hujan. Mahallah jauh. Ride flow jangan tambah stress.",
+   "concept": "Authentic IIUM morning situation. Use mahallah-to-kulliyyah context and show how one structured request reduces the need to juggle chats.",
+   "phases": [
+    "public_launch",
+    "launch_week",
+    "early_growth",
+    "growth_optimisation",
+    "retention"
+   ]
+  },
+  {
+   "pillar": "IIUM Life",
+   "hook": "Nak ke LRT Gombak: post sekali, then compare offer.",
+   "concept": "Common IIUM external-route situation. Keep the product demonstration simple and do not invent a fixed fare.",
+   "phases": [
+    "public_launch",
+    "launch_week",
+    "early_growth",
+    "growth_optimisation",
+    "retention"
+   ]
+  },
+  {
+   "pillar": "IIUM Community",
+   "hook": "KampusRide bukan nak ganti culture transporter UIA.",
+   "concept": "Community-first founder message: the ride-helping culture already exists; KampusRide is organising the workflow around it.",
+   "phases": [
+    "public_launch",
+    "launch_week",
+    "early_growth",
+    "growth_optimisation",
+    "retention"
+   ]
+  },
+  {
+   "pillar": "IIUM Life",
+   "hook": "Pagi passenger. Petang ada gap class, jadi driver.",
+   "concept": "Show dual passenger/driver life naturally within one campus day. Never imply every passenger is automatically eligible as a driver.",
+   "phases": [
+    "public_launch",
+    "launch_week",
+    "early_growth",
+    "growth_optimisation",
+    "retention"
+   ]
+  },
+  {
+   "pillar": "IIUM Life",
+   "hook": "Exam week: otak dah penuh. Ride jangan penuh dengan 6 chat sekali.",
+   "concept": "Relatable exam-period content blending campus stress with the fragmented Telegram pain point.",
+   "phases": [
+    "public_launch",
+    "launch_week",
+    "early_growth",
+    "growth_optimisation",
+    "retention"
+   ]
+  },
+  {
+   "pillar": "IIUM Life",
+   "hook": "Balik kampung weekend: luggage banyak, masa pun tight.",
+   "concept": "Campus weekend/balik-kampung context. Focus on clearer request details, route and driver offers rather than generic e-hailing imagery.",
+   "phases": [
+    "public_launch",
+    "launch_week",
+    "early_growth",
+    "growth_optimisation",
+    "retention"
+   ]
+  },
+  {
+   "pillar": "IIUM Community",
+   "hook": "Komuniti sama. Cara urus ride je lebih tersusun.",
+   "concept": "Warm IIUM community montage: mahallah, kulliyyah, walkway, LRT trip, driver/passenger roles. Avoid official IIUM endorsement.",
+   "phases": [
+    "public_launch",
+    "launch_week",
+    "early_growth",
+    "growth_optimisation",
+    "retention"
+   ]
+  },
+  {
+   "pillar": "IIUM Life",
+   "hook": "Ta’aruf / semester baru: tak kenal semua tempat lagi? Takpe.",
+   "concept": "New-student context using the IIUM-focused place list. Show practical route selection without claiming institutional partnership.",
+   "phases": [
+    "public_launch",
+    "launch_week",
+    "early_growth",
+    "growth_optimisation",
+    "retention"
+   ]
+  },
+  {
+   "pillar": "IIUM Life",
+   "hook": "Habis event malam, ramai orang cari ride serentak.",
+   "concept": "Campus-event scenario showing why structured requests/offers are easier than a fast-moving group chat. Do not guarantee supply.",
+   "phases": [
+    "public_launch",
+    "launch_week",
+    "early_growth",
+    "growth_optimisation",
+    "retention"
+   ]
+  },
+  {
+   "pillar": "IIUM Community",
+   "hook": "Driver student pun ada class, assignment dan hidup sendiri.",
+   "concept": "Humanise drivers as community members. Show flexible participation and respectful passenger expectations, not guaranteed availability.",
+   "phases": [
+    "public_launch",
+    "launch_week",
+    "early_growth",
+    "growth_optimisation",
+    "retention"
+   ]
+  },
+  {
+   "pillar": "Trust & Accountability",
+   "hook": "Rating bukan jaminan safety — tapi accountability memang penting.",
+   "concept": "Explain two-sided reputation carefully: useful context across rides, not a safety certification.",
+   "phases": [
+    "public_launch",
+    "launch_week",
+    "early_growth",
+    "growth_optimisation",
+    "retention"
+   ]
+  },
+  {
+   "pillar": "Trust & Safety",
+   "hook": "Female preferred patut jadi preference, bukan fake guarantee.",
+   "concept": "Explain preference transparently and acknowledge supply can be limited.",
+   "phases": [
+    "public_launch",
+    "launch_week",
+    "early_growth",
+    "growth_optimisation",
+    "retention"
+   ]
+  },
+  {
+   "pillar": "Trust & Rules",
+   "hook": "“Ada rules” dengan “fully regulated” bukan benda yang sama.",
+   "concept": "Educational post: KampusRide can have community rules, moderation and platform controls, while legal/regulatory classification is separate and should never be guessed in marketing.",
+   "phases": [
+    "public_launch",
+    "launch_week",
+    "early_growth",
+    "growth_optimisation",
+    "retention"
+   ]
+  },
+  {
+   "pillar": "Trust & Safety",
+   "hook": "Kalau tengah drive, jangan reply job dulu.",
+   "concept": "Safety-first driver message: never use the app while vehicle is moving. The product should reduce frantic chat pressure, not encourage more phone interaction.",
+   "phases": [
+    "public_launch",
+    "launch_week",
+    "early_growth",
+    "growth_optimisation",
+    "retention"
+   ]
+  },
+  {
+   "pillar": "Trust & Privacy",
+   "hook": "Private chat + trip context > random DM tanpa context.",
+   "concept": "Show why structured in-app coordination and trip context can reduce ambiguity and unwanted exposure. Avoid claiming complete protection from harassment/scams.",
+   "phases": [
+    "public_launch",
+    "launch_week",
+    "early_growth",
+    "growth_optimisation",
+    "retention"
+   ]
+  },
+  {
+   "pillar": "Product",
+   "hook": "Satu request. Semua offer. Pilih satu. Ride.",
+   "concept": "Simple full-flow product demo that contrasts directly with scattered Telegram DMs.",
+   "phases": [
+    "public_launch",
+    "launch_week",
+    "early_growth",
+    "growth_optimisation",
+    "retention"
+   ]
+  },
+  {
+   "pillar": "Driver Growth",
+   "hook": "Ada kereta dan selalu drive sekitar UIA? Offer bila betul-betul free.",
+   "concept": "Driver acquisition grounded in campus life. Keep direct fare proposition but no job/income guarantee.",
+   "phases": [
+    "public_launch",
+    "launch_week",
+    "early_growth",
+    "growth_optimisation",
+    "retention"
+   ]
+  },
+  {
+   "pillar": "Brand",
+   "hook": "Same IIUM ride community. Less chaos.",
+   "concept": "Brand recap tying together Telegram reality, IIUM culture, privacy, accountability and the structured marketplace flow.",
+   "phases": [
+    "public_launch",
+    "launch_week",
+    "early_growth",
+    "growth_optimisation",
+    "retention"
+   ]
+  },
+  {
+   "pillar": "Pain Point",
+   "hook": "Dah post transporter, lepas tu kena buka 6 DM?",
+   "concept": "POV student post ride dalam group, kemudian banyak chat masuk serentak. Contrast dengan KampusRide: post sekali, semua offer duduk satu tempat untuk compare.",
+   "phases": [
+    "public_launch",
+    "launch_week",
+    "early_growth",
+    "growth_optimisation",
+    "retention"
+   ]
+  },
+  {
+   "pillar": "Product Education",
+   "hook": "Post sekali. Compare semua offer satu tempat.",
+   "concept": "Tunjuk flow mudah: post route → driver offer → compare price/reputation → pilih → chat.",
+   "phases": [
+    "public_launch",
+    "launch_week",
+    "early_growth",
+    "growth_optimisation",
+    "retention"
+   ]
+  },
+  {
+   "pillar": "Driver Growth",
+   "hook": "Driver kampus: tak perlu camp Telegram tunggu job.",
+   "concept": "Tunjuk driver asyik refresh group, kemudian switch ke Driver mode dan check ride demand bila free. Jangan janji jumlah job atau income.",
+   "phases": [
+    "public_launch",
+    "launch_week",
+    "early_growth",
+    "growth_optimisation",
+    "retention"
+   ]
+  },
+  {
+   "pillar": "Privacy",
+   "hook": "Nak cari ride tak semestinya kena bagi nombor phone.",
+   "concept": "Explain bahawa coordination boleh dibuat dalam in-app chat dan nombor phone tak perlu diberi kepada setiap orang yang DM.",
+   "phases": [
+    "public_launch",
+    "launch_week",
+    "early_growth",
+    "growth_optimisation",
+    "retention"
+   ]
+  },
+  {
+   "pillar": "Relatable",
+   "hook": "Class 8AM. Hujan. Mahallah jauh. 😭",
+   "concept": "Campus skit yang relatable: student tengok hujan + jam, kemudian post ride. Product appearance ringan dan natural.",
+   "phases": [
+    "public_launch",
+    "launch_week",
+    "early_growth",
+    "growth_optimisation",
+    "retention"
+   ]
+  },
+  {
+   "pillar": "How It Works",
+   "hook": "KampusRide works macam mana dalam 20 saat?",
+   "concept": "Screen-record real app flow dari Passenger mode: pilih route/time/pax, post request, offers appear, choose one, chat.",
+   "phases": [
+    "public_launch",
+    "launch_week",
+    "early_growth",
+    "growth_optimisation",
+    "retention"
+   ]
+  },
+  {
+   "pillar": "Female Preference",
+   "hook": "Prefer female driver? Letak preference.",
+   "concept": "Explain bahawa passenger boleh set driver gender preference. Matching bergantung pada availability dan tidak guaranteed.",
+   "phases": [
+    "public_launch",
+    "launch_week",
+    "early_growth",
+    "growth_optimisation",
+    "retention"
+   ]
+  },
+  {
+   "pillar": "Driver Lifestyle",
+   "hook": "Free 30 minit sebelum class? Switch Driver mode.",
+   "concept": "Show student driver dengan free window check ride demand. Offer hanya bila available. No earnings promise.",
+   "phases": [
+    "public_launch",
+    "launch_week",
+    "early_growth",
+    "growth_optimisation",
+    "retention"
+   ]
+  },
+  {
+   "pillar": "Reputation",
+   "hook": "Cheapest bukan satu-satunya benda nak compare.",
+   "concept": "Show price + rating + car details + reputation tags + offer note as decision inputs.",
+   "phases": [
+    "public_launch",
+    "launch_week",
+    "early_growth",
+    "growth_optimisation",
+    "retention"
+   ]
+  },
+  {
+   "pillar": "Price Education",
+   "hook": "Ride dalam UIA RM3, RM4, RM5 — price guide tu macam mana?",
+   "concept": "Explain suggested price anchor sebagai guide berdasarkan route/community rate, bukan guaranteed fixed fare.",
+   "phases": [
+    "public_launch",
+    "launch_week",
+    "early_growth",
+    "growth_optimisation",
+    "retention"
+   ]
+  },
+  {
+   "pillar": "Relatable",
+   "hook": "Bila dah pilih driver… tapi 5 orang lagi DM “still need?”",
+   "concept": "Comedy tentang old group workflow, kemudian tunjuk KampusRide organise offers dan selection dalam satu flow.",
+   "phases": [
+    "public_launch",
+    "launch_week",
+    "early_growth",
+    "growth_optimisation",
+    "retention"
+   ]
+  },
+  {
+   "pillar": "Multi Stop",
+   "hook": "Nak pickup member dulu sebelum pergi? Add stop.",
+   "concept": "Demo intermediate stop dalam ride request. Driver nampak stops sebelum offer. Jangan promise extra stop free.",
+   "phases": [
+    "public_launch",
+    "launch_week",
+    "early_growth",
+    "growth_optimisation",
+    "retention"
+   ]
+  },
+  {
+   "pillar": "Use Case",
+   "hook": "Nak ke LRT Gombak? Post route, biar driver offer.",
+   "concept": "Common external-trip scenario: destination → price guide → offers → passenger chooses.",
+   "phases": [
+    "public_launch",
+    "launch_week",
+    "early_growth",
+    "growth_optimisation",
+    "retention"
+   ]
+  },
+  {
+   "pillar": "Trust",
+   "hook": "Driver boleh rate passenger juga? Yes.",
+   "concept": "Explain accountability works both ways dan passenger pun boleh build reputation.",
+   "phases": [
+    "public_launch",
+    "launch_week",
+    "early_growth",
+    "growth_optimisation",
+    "retention"
+   ]
+  },
+  {
+   "pillar": "Privacy",
+   "hook": "Apa driver boleh nampak — dan apa yang dia tak perlu nampak.",
+   "concept": "Explain enough ride/profile context to offer while personal phone details stay private.",
+   "phases": [
+    "public_launch",
+    "launch_week",
+    "early_growth",
+    "growth_optimisation",
+    "retention"
+   ]
+  },
+  {
+   "pillar": "Driver Value",
+   "hook": "Fare anda, anda keep. KampusRide tak potong per ride.",
+   "concept": "Explain peer-to-peer fare and no per-ride commission. Do not publish unconfirmed subscription price.",
+   "phases": [
+    "public_launch",
+    "launch_week",
+    "early_growth",
+    "growth_optimisation",
+    "retention"
+   ]
+  },
+  {
+   "pillar": "Positioning",
+   "hook": "KampusRide bukan “Grab versi kampus”.",
+   "concept": "Explain community cost-sharing marketplace: passenger posts, drivers offer, passenger chooses, direct fare.",
+   "phases": [
+    "public_launch",
+    "launch_week",
+    "early_growth",
+    "growth_optimisation",
+    "retention"
+   ]
+  },
+  {
+   "pillar": "New Student",
+   "hook": "Tak kenal semua mahallah lagi? Takpe.",
+   "concept": "Show current IIUM place list/search helping newer students choose common campus locations.",
+   "phases": [
+    "public_launch",
+    "launch_week",
+    "early_growth",
+    "growth_optimisation",
+    "retention"
+   ]
+  },
+  {
+   "pillar": "Notifications",
+   "hook": "Tak payah refresh group tiap 2 minit.",
+   "concept": "Show push notification when an offer/message arrives. Emphasise less manual checking.",
+   "phases": [
+    "public_launch",
+    "launch_week",
+    "early_growth",
+    "growth_optimisation",
+    "retention"
+   ]
+  },
+  {
+   "pillar": "Driver Reputation",
+   "hook": "Rating anda ikut anda — bukan hilang dalam chat lama.",
+   "concept": "Explain on-platform rating/reputation history. Do not guarantee more jobs.",
+   "phases": [
+    "public_launch",
+    "launch_week",
+    "early_growth",
+    "growth_optimisation",
+    "retention"
+   ]
+  },
+  {
+   "pillar": "Passenger Choice",
+   "hook": "Offer murah belum tentu offer yang anda nak pilih.",
+   "concept": "Show multiple offers and passenger control over the final choice.",
+   "phases": [
+    "public_launch",
+    "launch_week",
+    "early_growth",
+    "growth_optimisation",
+    "retention"
+   ]
+  },
+  {
+   "pillar": "Accountability",
+   "hook": "Apa beza ride community yang “tersusun”?",
+   "concept": "Compare scattered anonymous workflow vs profiles, in-app chat, trip record, ratings and moderation.",
+   "phases": [
+    "public_launch",
+    "launch_week",
+    "early_growth",
+    "growth_optimisation",
+    "retention"
+   ]
+  },
+  {
+   "pillar": "Dual Mode",
+   "hook": "Pagi passenger. Petang driver.",
+   "concept": "Show one user switching between Passenger and Driver modes through a normal campus day.",
+   "phases": [
+    "public_launch",
+    "launch_week",
+    "early_growth",
+    "growth_optimisation",
+    "retention"
+   ]
+  },
+  {
+   "pillar": "Relatable",
+   "hook": "Kawan: “boleh tumpang?” Aku: “post KampusRide je 😂”",
+   "concept": "Light campus comedy that ends with a quick app shot rather than a hard sell.",
+   "phases": [
+    "public_launch",
+    "launch_week",
+    "early_growth",
+    "growth_optimisation",
+    "retention"
+   ]
+  },
+  {
+   "pillar": "FAQ",
+   "hook": "Bayar dekat KampusRide ke driver?",
+   "concept": "Answer clearly: passenger pays selected driver directly; KampusRide does not process the ride fare.",
+   "phases": [
+    "public_launch",
+    "launch_week",
+    "early_growth",
+    "growth_optimisation",
+    "retention"
+   ]
+  },
+  {
+   "pillar": "FAQ",
+   "hook": "Semua driver mesti student UIA ke?",
+   "concept": "Explain carefully that the pool can be mixed; do not claim all drivers are IIUM students or formally document-verified.",
+   "phases": [
+    "public_launch",
+    "launch_week",
+    "early_growth",
+    "growth_optimisation",
+    "retention"
+   ]
+  },
+  {
+   "pillar": "Female Preference",
+   "hook": "Female preferred ≠ female guaranteed.",
+   "concept": "Set expectation clearly: preference helps prioritise female drivers when available; supply may be limited.",
+   "phases": [
+    "public_launch",
+    "launch_week",
+    "early_growth",
+    "growth_optimisation",
+    "retention"
+   ]
+  },
+  {
+   "pillar": "Brand",
+   "hook": "Satu request. Satu tempat. Sampai ride selesai.",
+   "concept": "Montage the full lifecycle: post → offer → choose → chat → en route → arrived → complete → rate.",
+   "phases": [
+    "public_launch",
+    "launch_week",
+    "early_growth",
+    "growth_optimisation",
+    "retention"
+   ]
+  },
+  {
+   "pillar": "Driver Growth",
+   "hook": "Ada kereta dan selalu drive sekitar UIA?",
+   "concept": "Driver recruitment: offer rides when free, see demand, keep direct fare, build reputation. No guaranteed-job claim.",
+   "phases": [
+    "public_launch",
+    "launch_week",
+    "early_growth",
+    "growth_optimisation",
+    "retention"
+   ]
+  },
+  {
+   "pillar": "Community",
+   "hook": "Ride community, tapi lebih tersusun.",
+   "concept": "Brand montage featuring real campus moments and both passenger/driver perspectives.",
+   "phases": [
+    "public_launch",
+    "launch_week",
+    "early_growth",
+    "growth_optimisation",
+    "retention"
+   ]
+  }
+ ],
+ "talking_points": [
+  {
+   "match": [
+    "type",
+    "drive",
+    "driving",
+    "tengah drive"
+   ],
+   "text": "Dalam Telegram, driver yang nak secure job kadang rasa kena reply atau nego cepat walaupun tengah bergerak. Itu workflow yang kita tak patut normalize. KampusRide susun ride request dan offer dalam satu tempat supaya driver boleh review bila selamat berhenti — bukan berlumba menaip masa memandu."
+  },
+  {
+   "match": [
+    "chat hilang",
+    "delete",
+    "deleted"
+   ],
+   "text": "Bila passenger dah confirm kemudian mesej hilang, driver boleh kehilangan route/context masa dah bersiap atau tengah menuju pickup. KampusRide jadikan request, selected match, chat dan ride status satu flow supaya kurang bergantung pada DM yang berselerak."
+  },
+  {
+   "match": [
+    "no-show",
+    "noshow",
+    "tak muncul"
+   ],
+   "text": "No-show tetap boleh berlaku di mana-mana platform. Bezanya, KampusRide ada selected match, in-app chat, ride-status flow dan rating/reputation supaya apa yang berlaku tak sekadar hilang dalam private chat. Accountability lebih jelas, bukan safety guarantee."
+  },
+  {
+   "match": [
+    "nego",
+    "price",
+    "harga"
+   ],
+   "text": "Nego dalam banyak DM mudah jadi tak terkawal: siapa offer berapa, siapa dah confirm, siapa masih counter. KampusRide letak suggested price sebagai guide dan kumpulkan offer/counteroffer pada satu ride request. Passenger masih pilih, driver masih boleh offer — cuma flow lebih jelas."
+  },
+  {
+   "match": [
+    "spam",
+    "scam",
+    "sexual",
+    "harass"
+   ],
+   "text": "Open group dan random DM boleh membuka ruang kepada spam, scam atau sexual harassment. KampusRide tak boleh janji semua abuse akan hilang, tetapi private contact, authenticated account, in-app chat, trip context, reputation dan moderation beri layer accountability yang Telegram ride arrangement tak dibina khusus untuk sediakan."
+  },
+  {
+   "match": [
+    "rules",
+    "regulated",
+    "accountable"
+   ],
+   "text": "Community ride perlukan rules dan accountability, tapi jangan campur-adukkan platform rules dengan legal regulation. KampusRide boleh ada moderation, suspension, trip context dan audit controls. Status undang-undang pula mesti disahkan berasingan — bukan dibuat claim marketing."
+  },
+  {
+   "match": [
+    "female"
+   ],
+   "text": "Masa buat ride request, pilih female preferred. Bila female driver available, preference itu boleh diprioritikan. Ia preference, bukan guarantee kerana availability boleh berubah."
+  },
+  {
+   "match": [
+    "intro",
+    "apa sebenarnya",
+    "what is",
+    "about kampusride"
+   ],
+   "text": "KampusRide susunkan cara student UIA cari dan offer transporter dalam satu flow: passenger post ride request, driver hantar offer, passenger compare dan pilih, kemudian coordination kekal dalam app. Komuniti yang sama, cara yang lebih tersusun."
+  },
+  {
+   "match": [
+    "bayar",
+    "payment",
+    "fare",
+    "commission",
+    "potong"
+   ],
+   "text": "Passenger bayar fare terus kepada driver yang dipilih. KampusRide tidak pegang atau process fare ride dan tidak potong komisen per ride. App urus request, offer, chat, ride status dan rating."
+  }
+ ],
+ "phase": {
+  "current": "pre_launch",
+  "options": [
+   {
+    "key": "controlled_beta",
+    "label": "Controlled beta",
+    "guidance": "KampusRide is NOT yet generally launched. Education, how-to, trust, community listening and launch-update CTAs only. Never show or say that viewers can book or post a ride today.",
+    "ctas": [
+     "Follow KampusRide untuk launch updates.",
+     "Student UIA — apa yang paling penting kita kena fix sebelum launch?",
+     "Driver kampus — flow macam ni lagi senang tak?",
+     "Save post ni untuk bila KampusRide dah live.",
+     "Kalau boleh improve satu benda sebelum launch, korang pilih apa?"
+    ],
+    "replace": [
+     {
+      "pattern": "Post ride anda dalam KampusRide\\.?",
+      "with": "Follow KampusRide untuk launch updates."
+     },
+     {
+      "pattern": "Compare offer dalam satu tempat\\.?",
+      "with": "Follow KampusRide untuk launch updates."
+     },
+     {
+      "pattern": "Cuba KampusRide untuk ride seterusnya\\.?",
+      "with": "Save post ni untuk bila KampusRide dah live."
+     },
+     {
+      "pattern": "Check KampusRide bila perlukan transporter\\.?",
+      "with": "Follow KampusRide untuk launch updates."
+     },
+     {
+      "pattern": "Switch ke Driver mode[^.]*\\.?",
+      "with": "Driver kampus — share feedback untuk flow sebelum launch."
+     },
+     {
+      "pattern": "Check ride feed bila anda available\\.?",
+      "with": "Driver kampus — share feedback untuk flow sebelum launch."
+     },
+     {
+      "pattern": "Offer ride bila route dan masa sesuai\\.?",
+      "with": "Follow KampusRide untuk launch updates."
+     }
+    ],
+    "qa_notes": [
+     "PRE-LAUNCH: do not imply KampusRide is already generally available or that a viewer can book/post a ride today."
+    ]
+   },
+   {
+    "key": "beta_driver_onboarding",
+    "label": "Beta driver onboarding",
+    "guidance": "KampusRide is NOT yet generally launched. Education, how-to, trust, community listening and launch-update CTAs only. Never show or say that viewers can book or post a ride today.",
+    "ctas": [
+     "Follow KampusRide untuk launch updates.",
+     "Student UIA — apa yang paling penting kita kena fix sebelum launch?",
+     "Driver kampus — flow macam ni lagi senang tak?",
+     "Save post ni untuk bila KampusRide dah live.",
+     "Kalau boleh improve satu benda sebelum launch, korang pilih apa?"
+    ],
+    "replace": [
+     {
+      "pattern": "Post ride anda dalam KampusRide\\.?",
+      "with": "Follow KampusRide untuk launch updates."
+     },
+     {
+      "pattern": "Compare offer dalam satu tempat\\.?",
+      "with": "Follow KampusRide untuk launch updates."
+     },
+     {
+      "pattern": "Cuba KampusRide untuk ride seterusnya\\.?",
+      "with": "Save post ni untuk bila KampusRide dah live."
+     },
+     {
+      "pattern": "Check KampusRide bila perlukan transporter\\.?",
+      "with": "Follow KampusRide untuk launch updates."
+     },
+     {
+      "pattern": "Switch ke Driver mode[^.]*\\.?",
+      "with": "Driver kampus — share feedback untuk flow sebelum launch."
+     },
+     {
+      "pattern": "Check ride feed bila anda available\\.?",
+      "with": "Driver kampus — share feedback untuk flow sebelum launch."
+     },
+     {
+      "pattern": "Offer ride bila route dan masa sesuai\\.?",
+      "with": "Follow KampusRide untuk launch updates."
+     }
+    ],
+    "qa_notes": [
+     "PRE-LAUNCH: do not imply KampusRide is already generally available or that a viewer can book/post a ride today."
+    ]
+   },
+   {
+    "key": "pre_launch",
+    "label": "Pre-launch",
+    "guidance": "KampusRide is NOT yet generally launched. Education, how-to, trust, community listening and launch-update CTAs only. Never show or say that viewers can book or post a ride today.",
+    "ctas": [
+     "Follow KampusRide untuk launch updates.",
+     "Student UIA — apa yang paling penting kita kena fix sebelum launch?",
+     "Driver kampus — flow macam ni lagi senang tak?",
+     "Save post ni untuk bila KampusRide dah live.",
+     "Kalau boleh improve satu benda sebelum launch, korang pilih apa?"
+    ],
+    "replace": [
+     {
+      "pattern": "Post ride anda dalam KampusRide\\.?",
+      "with": "Follow KampusRide untuk launch updates."
+     },
+     {
+      "pattern": "Compare offer dalam satu tempat\\.?",
+      "with": "Follow KampusRide untuk launch updates."
+     },
+     {
+      "pattern": "Cuba KampusRide untuk ride seterusnya\\.?",
+      "with": "Save post ni untuk bila KampusRide dah live."
+     },
+     {
+      "pattern": "Check KampusRide bila perlukan transporter\\.?",
+      "with": "Follow KampusRide untuk launch updates."
+     },
+     {
+      "pattern": "Switch ke Driver mode[^.]*\\.?",
+      "with": "Driver kampus — share feedback untuk flow sebelum launch."
+     },
+     {
+      "pattern": "Check ride feed bila anda available\\.?",
+      "with": "Driver kampus — share feedback untuk flow sebelum launch."
+     },
+     {
+      "pattern": "Offer ride bila route dan masa sesuai\\.?",
+      "with": "Follow KampusRide untuk launch updates."
+     }
+    ],
+    "qa_notes": [
+     "PRE-LAUNCH: do not imply KampusRide is already generally available or that a viewer can book/post a ride today."
+    ]
+   },
+   {
+    "key": "stabilisation",
+    "label": "Stabilisation",
+    "guidance": "KampusRide is NOT yet generally launched. Education, how-to, trust, community listening and launch-update CTAs only. Never show or say that viewers can book or post a ride today.",
+    "ctas": [
+     "Follow KampusRide untuk launch updates.",
+     "Student UIA — apa yang paling penting kita kena fix sebelum launch?",
+     "Driver kampus — flow macam ni lagi senang tak?",
+     "Save post ni untuk bila KampusRide dah live.",
+     "Kalau boleh improve satu benda sebelum launch, korang pilih apa?"
+    ],
+    "replace": [
+     {
+      "pattern": "Post ride anda dalam KampusRide\\.?",
+      "with": "Follow KampusRide untuk launch updates."
+     },
+     {
+      "pattern": "Compare offer dalam satu tempat\\.?",
+      "with": "Follow KampusRide untuk launch updates."
+     },
+     {
+      "pattern": "Cuba KampusRide untuk ride seterusnya\\.?",
+      "with": "Save post ni untuk bila KampusRide dah live."
+     },
+     {
+      "pattern": "Check KampusRide bila perlukan transporter\\.?",
+      "with": "Follow KampusRide untuk launch updates."
+     },
+     {
+      "pattern": "Switch ke Driver mode[^.]*\\.?",
+      "with": "Driver kampus — share feedback untuk flow sebelum launch."
+     },
+     {
+      "pattern": "Check ride feed bila anda available\\.?",
+      "with": "Driver kampus — share feedback untuk flow sebelum launch."
+     },
+     {
+      "pattern": "Offer ride bila route dan masa sesuai\\.?",
+      "with": "Follow KampusRide untuk launch updates."
+     }
+    ],
+    "qa_notes": [
+     "PRE-LAUNCH: do not imply KampusRide is already generally available or that a viewer can book/post a ride today."
+    ]
+   },
+   {
+    "key": "driver_activation_sprint",
+    "label": "Driver activation sprint",
+    "guidance": "KampusRide is NOT yet generally launched. Education, how-to, trust, community listening and launch-update CTAs only. Never show or say that viewers can book or post a ride today.",
+    "ctas": [
+     "Follow KampusRide untuk launch updates.",
+     "Student UIA — apa yang paling penting kita kena fix sebelum launch?",
+     "Driver kampus — flow macam ni lagi senang tak?",
+     "Save post ni untuk bila KampusRide dah live.",
+     "Kalau boleh improve satu benda sebelum launch, korang pilih apa?"
+    ],
+    "replace": [
+     {
+      "pattern": "Post ride anda dalam KampusRide\\.?",
+      "with": "Follow KampusRide untuk launch updates."
+     },
+     {
+      "pattern": "Compare offer dalam satu tempat\\.?",
+      "with": "Follow KampusRide untuk launch updates."
+     },
+     {
+      "pattern": "Cuba KampusRide untuk ride seterusnya\\.?",
+      "with": "Save post ni untuk bila KampusRide dah live."
+     },
+     {
+      "pattern": "Check KampusRide bila perlukan transporter\\.?",
+      "with": "Follow KampusRide untuk launch updates."
+     },
+     {
+      "pattern": "Switch ke Driver mode[^.]*\\.?",
+      "with": "Driver kampus — share feedback untuk flow sebelum launch."
+     },
+     {
+      "pattern": "Check ride feed bila anda available\\.?",
+      "with": "Driver kampus — share feedback untuk flow sebelum launch."
+     },
+     {
+      "pattern": "Offer ride bila route dan masa sesuai\\.?",
+      "with": "Follow KampusRide untuk launch updates."
+     }
+    ],
+    "qa_notes": [
+     "PRE-LAUNCH: do not imply KampusRide is already generally available or that a viewer can book/post a ride today."
+    ]
+   },
+   {
+    "key": "public_launch",
+    "label": "Public launch",
+    "guidance": "KampusRide is live for IIUM Gombak. Practical how-to, real campus situations and both sides of the marketplace. Set realistic supply expectations; never guarantee availability.",
+    "ctas": [
+     "Post ride anda dalam KampusRide.",
+     "Compare offer dalam satu tempat.",
+     "Cuba KampusRide untuk ride seterusnya.",
+     "Check KampusRide bila perlukan transporter.",
+     "Switch ke Driver mode bila anda selamat berhenti dan free.",
+     "Check ride feed bila anda available.",
+     "Offer ride bila route dan masa sesuai."
+    ],
+    "replace": [],
+    "qa_notes": []
+   },
+   {
+    "key": "launch_week",
+    "label": "Launch week",
+    "guidance": "KampusRide is live for IIUM Gombak. Practical how-to, real campus situations and both sides of the marketplace. Set realistic supply expectations; never guarantee availability.",
+    "ctas": [
+     "Post ride anda dalam KampusRide.",
+     "Compare offer dalam satu tempat.",
+     "Cuba KampusRide untuk ride seterusnya.",
+     "Check KampusRide bila perlukan transporter.",
+     "Switch ke Driver mode bila anda selamat berhenti dan free.",
+     "Check ride feed bila anda available.",
+     "Offer ride bila route dan masa sesuai."
+    ],
+    "replace": [],
+    "qa_notes": []
+   },
+   {
+    "key": "early_growth",
+    "label": "Early growth",
+    "guidance": "KampusRide is live for IIUM Gombak. Practical how-to, real campus situations and both sides of the marketplace. Set realistic supply expectations; never guarantee availability.",
+    "ctas": [
+     "Post ride anda dalam KampusRide.",
+     "Compare offer dalam satu tempat.",
+     "Cuba KampusRide untuk ride seterusnya.",
+     "Check KampusRide bila perlukan transporter.",
+     "Switch ke Driver mode bila anda selamat berhenti dan free.",
+     "Check ride feed bila anda available.",
+     "Offer ride bila route dan masa sesuai."
+    ],
+    "replace": [],
+    "qa_notes": []
+   },
+   {
+    "key": "growth_optimisation",
+    "label": "Growth optimisation",
+    "guidance": "KampusRide is live for IIUM Gombak. Practical how-to, real campus situations and both sides of the marketplace. Set realistic supply expectations; never guarantee availability.",
+    "ctas": [
+     "Post ride anda dalam KampusRide.",
+     "Compare offer dalam satu tempat.",
+     "Cuba KampusRide untuk ride seterusnya.",
+     "Check KampusRide bila perlukan transporter.",
+     "Switch ke Driver mode bila anda selamat berhenti dan free.",
+     "Check ride feed bila anda available.",
+     "Offer ride bila route dan masa sesuai."
+    ],
+    "replace": [],
+    "qa_notes": []
+   },
+   {
+    "key": "retention",
+    "label": "Retention",
+    "guidance": "KampusRide is live for IIUM Gombak. Practical how-to, real campus situations and both sides of the marketplace. Set realistic supply expectations; never guarantee availability.",
+    "ctas": [
+     "Post ride anda dalam KampusRide.",
+     "Compare offer dalam satu tempat.",
+     "Cuba KampusRide untuk ride seterusnya.",
+     "Check KampusRide bila perlukan transporter.",
+     "Switch ke Driver mode bila anda selamat berhenti dan free.",
+     "Check ride feed bila anda available.",
+     "Offer ride bila route dan masa sesuai."
+    ],
+    "replace": [],
+    "qa_notes": []
+   }
+  ]
+ },
+ "calendar": [
+  {
+   "start": "2026-08-18",
+   "end": "2026-10-02",
+   "label": "Semester 1 registration",
+   "guidance": "Semester 1 course registration and new-intake registration are active. Use new-semester preparation, route familiarity and community education. Not an official IIUM partnership.",
+   "moment": false
+  },
+  {
+   "start": "2026-10-03",
+   "end": "2026-10-09",
+   "label": "New-intake registration (final week)",
+   "guidance": "New-intake online registration runs through 9 October 2026. Use first-weeks/new-student context only when relevant and do not invent Ta’aruf dates.",
+   "moment": false
+  },
+  {
+   "start": "2026-09-01",
+   "end": "2026-09-11",
+   "label": "Semester 3 lectures",
+   "guidance": "Short-semester lecture period. Use live beta behaviour for learning, not as a proxy for normal-semester demand.",
+   "moment": false
+  },
+  {
+   "start": "2026-09-12",
+   "end": "2026-09-13",
+   "label": "Semester 3 revision",
+   "guidance": "Keep public content lighter and prioritise product stabilisation.",
+   "moment": false
+  },
+  {
+   "start": "2026-09-14",
+   "end": "2026-09-19",
+   "label": "Semester 3 exams",
+   "guidance": "Keep marketing low-pressure; prioritise QA, support and launch readiness.",
+   "moment": false
+  },
+  {
+   "start": "2026-09-20",
+   "end": "2026-09-27",
+   "label": "Return-to-campus preparation",
+   "guidance": "Semester 1 lectures begin 28 September 2026. Do not let the date itself force launch; the product phase is the source of truth.",
+   "moment": false
+  },
+  {
+   "start": "2026-09-28",
+   "end": "2026-11-13",
+   "label": "Semester 1 first lecture block",
+   "guidance": "Prioritise real campus routines, class movement, rain, LRT Gombak, app how-to and practical adoption content.",
+   "moment": false
+  },
+  {
+   "start": "2026-11-14",
+   "end": "2026-11-22",
+   "label": "Mid-semester break",
+   "guidance": "Prioritise balik kampung, luggage, airport/LRT movement, lighter campus demand and travel-prep content.",
+   "moment": false
+  },
+  {
+   "start": "2026-11-23",
+   "end": "2027-01-08",
+   "label": "Semester 1 second lecture block",
+   "guidance": "Return to regular campus routine and utility-led ride content.",
+   "moment": false
+  },
+  {
+   "start": "2027-01-09",
+   "end": "2027-01-13",
+   "label": "Revision period",
+   "guidance": "Keep content concise and utility-first; study/revision movement context rather than heavy promotion.",
+   "moment": false
+  },
+  {
+   "start": "2027-01-14",
+   "end": "2027-02-05",
+   "label": "Examination period",
+   "guidance": "Low-friction logistics and exam mobility; avoid noisy hard-sell content.",
+   "moment": false
+  },
+  {
+   "start": "2027-02-06",
+   "end": "2027-02-21",
+   "label": "Inter-semester vacation",
+   "guidance": "Lighter feedback, retention, community stories and product-improvement content.",
+   "moment": false
+  }
+ ],
+ "channels": [
+  {
+   "platform": "Threads",
+   "role": "Main conversation channel with the IIUM community",
+   "tone": "Real observation or opinion, soft sell, end with one genuine question",
+   "formats": [
+    "Threads text post",
+    "Conversation starter",
+    "Mini-story / opinion post",
+    "Question-led post"
+   ],
+   "ctas": [
+    "Student UIA — korang pernah kena situasi macam ni?",
+    "Passenger — part paling penat dalam transporter flow sekarang apa?",
+    "Driver kampus — masalah paling real bila cari job dalam group apa?",
+    "Kalau boleh fix satu benda dalam current transporter flow, korang pilih apa?"
+   ],
+   "manual": false
+  },
+  {
+   "platform": "TikTok / Reels",
+   "role": "Reach new students",
+   "tone": "Campus UGC/POV, casual, fast hook",
+   "formats": [
+    "15-30 sec short-form video",
+    "UGC / POV video",
+    "Talking-head explainer"
+   ],
+   "manual": false
+  },
+  {
+   "platform": "Instagram carousel",
+   "role": "Saveable how-to and explainers",
+   "tone": "Clean, instructional",
+   "formats": [
+    "Carousel",
+    "Static ad"
+   ],
+   "manual": false
+  },
+  {
+   "platform": "WhatsApp",
+   "role": "Tester and community groups",
+   "tone": "Direct, short",
+   "formats": [
+    "WhatsApp text post"
+   ],
+   "manual": true
+  }
+ ],
+ "claims": {
+  "never": [
+   "official IIUM endorsement",
+   "guaranteed safety or that no-shows, scams or harassment are prevented",
+   "guaranteed female driver (it is a preference)",
+   "guaranteed ride availability, jobs or earnings",
+   "APAD approval, licensed e-hailing status or settled legal/regulatory status",
+   "fixed or cheapest fares (the suggested price is a guide)",
+   "invented user, ride, rating or driver counts",
+   "that every driver is an IIUM student or document-verified",
+   "that KampusRide employs drivers, owns vehicles, processes fares or takes a per-ride commission"
+  ],
+  "always": [
+   "Drivers only check or respond when safely stopped; never show phone use while a vehicle is moving.",
+   "Treat the Telegram transporter community with respect.",
+   "One product idea and one CTA per piece."
+  ]
+ },
+ "visual": {
+  "setting": "Authentic Malaysian university campus life at IIUM Gombak: mahallah, kulliyyah, walkways, LRT Gombak, rain, natural daylight, modest student styling, believable smartphone use.",
+  "rules": [
+   "Use the supplied official KampusRide logo exactly; never redraw it. Without a logo asset use the wordmark as plain text.",
+   "Use approved real KampusRide screenshots as UI references; never invent unsupported screens.",
+   "No IIUM logo or official marks unless separately approved.",
+   "Chats shown on screen must be fictional and anonymised."
+  ]
+ },
+ "modes": [
+  {
+   "key": "install_tutorial",
+   "label": "Install + notifications tutorial",
+   "match": [
+    "install",
+    "add to home screen",
+    "enable notification",
+    "home screen"
+   ],
+   "instructions": "Public onboarding tutorial. Follow the six fixed slides exactly. Not a general introduction, not a Telegram comparison, not a launch announcement.",
+   "example_request": "Create a public how-to showing students how to install KampusRide on Android and iPhone, then enable notifications.",
+   "qa_notes": [
+    "Do not turn this into a general KampusRide introduction or Telegram comparison.",
+    "Use approved KampusRide logo/app icon and real screenshots where available.",
+    "Do not claim App Store/Play Store availability while KampusRide is installed as a web app/PWA."
+   ],
+   "fixed": {
+    "hook": "Nak install KampusRide? Senang je 📱",
+    "script": "SLIDE 1 — HOW TO INSTALL KAMPUSRIDE 📱\nTak perlu cari dekat App Store atau Play Store. Install terus dari browser.\n\nSLIDE 2 — ANDROID: OPEN IN CHROME\nBuka KampusRide menggunakan Google Chrome.\n\nSLIDE 3 — ANDROID: INSTALL APP\nTap ⋮ → Install app → Install. KampusRide akan muncul dekat Home Screen.\n\nSLIDE 4 — IPHONE: ADD TO HOME SCREEN\nBuka KampusRide dalam Safari → Share → Add to Home Screen → Open as Web App → Add.\n\nSLIDE 5 — ENABLE NOTIFICATIONS 🔔\nBuka KampusRide dan tap Allow bila notification permission keluar. Ini penting untuk driver offer, ride updates dan trip status.\n\nSLIDE 6 — DONE ✅\nKampusRide dah ready dekat Home Screen. From Campus, For You.",
+    "caption": "Nak letak KampusRide dekat Home Screen? Senang je 👇\n\nAndroid: Chrome → ⋮ → Install app → Install ✅\niPhone: Safari → Share → Add to Home Screen → Open as Web App → Add ✅\n\nLepas install, buka KampusRide dan tap Allow bila notification permission keluar 🔔\n\nSupaya tak terlepas driver offer, ride updates dan trip status.\n\nInstall KampusRide, add to Home Screen dan enable notifications supaya tak terlepas ride updates.",
+    "cta": "Install KampusRide, add to Home Screen dan enable notifications supaya tak terlepas ride updates.",
+    "slides": [
+     {
+      "title": "How to Install KampusRide 📱",
+      "visual": "Simple cover slide with Android and iPhone visual cues and the approved KampusRide app icon.",
+      "text": "Tak perlu cari dekat App Store atau Play Store. Install terus dari browser."
+     },
+     {
+      "title": "Android: open in Chrome",
+      "visual": "Android phone showing KampusRide opened in Google Chrome.",
+      "text": "Buka KampusRide menggunakan Google Chrome."
+     },
+     {
+      "title": "Android: install app",
+      "visual": "Chrome three-dot menu with Install app highlighted.",
+      "text": "Tap ⋮ → Install app → Install. KampusRide akan muncul dekat Home Screen."
+     },
+     {
+      "title": "iPhone: add to Home Screen",
+      "visual": "Safari share sheet with Add to Home Screen highlighted.",
+      "text": "Buka KampusRide dalam Safari → Share → Add to Home Screen → Open as Web App → Add."
+     },
+     {
+      "title": "Enable notifications 🔔",
+      "visual": "Notification permission prompt with Allow highlighted.",
+      "text": "Buka KampusRide dan tap Allow bila notification permission keluar. Ini penting untuk driver offer, ride updates dan trip status."
+     },
+     {
+      "title": "Done ✅",
+      "visual": "Home Screen with the approved KR app icon installed.",
+      "text": "KampusRide dah ready dekat Home Screen. From Campus, For You."
+     }
+    ]
+   }
+  },
+  {
+   "key": "simulation_recruitment",
+   "label": "Simulation-only beta recruitment (30 days)",
+   "match": [
+    "simulation[- ]only beta recruitment",
+    "anonymous public recruitment"
+   ],
+   "instructions": "Public items: keep the product completely anonymous (no name, logo, screenshots, palette, website or QR). Call it a \"new UIA Transporter app\". State clearly: guided simulation only, no real trips, fares or payments. Private items: KampusRide may be named; every activity is simulation-only.",
+   "example_request": "Simulation-only beta recruitment: 20 passenger testers and 10 student-driver testers at IIUM Gombak.",
+   "qa_notes": [
+    "Public recruitment must not reveal the product identity in text or visuals.",
+    "Do not use any supplied brand assets, screenshots, icons or brand colours in public recruitment.",
+    "State clearly that this is a guided simulation with no real trips, fares or payments.",
+    "Do not imply official IIUM endorsement or invent contact details."
+   ],
+   "plan_sequence": [
+    {
+     "pillar": "Public · Main Recruitment",
+     "hook": "Beta testers wanted — IIUM Gombak.",
+     "concept": "PUBLIC ANONYMOUS RECRUITMENT. Invite 20 passenger testers and 10 student-driver testers for a new UIA Transporter app. Use “UIA Transporter app” as the familiar community-facing description, but do not use the KampusRide name, logo, screenshots or identifying product details. State clearly that this is a guided simulation only.",
+     "cta": "Message the admin to join. Limited slots."
+    },
+    {
+     "pillar": "Public · Passenger Recruitment",
+     "hook": "Selalu cari transporter sekitar UIA Gombak?",
+     "concept": "PUBLIC ANONYMOUS RECRUITMENT. Invite passenger testers who can evaluate whether posting a request, comparing options and choosing a driver feels clear. No real trip, fare or payment will occur.",
+     "cta": "Passenger tester berminat? Message admin."
+    },
+    {
+     "pillar": "Public · Driver Recruitment",
+     "hook": "Student driver UIA Gombak — nak bantu test flow baru?",
+     "concept": "PUBLIC ANONYMOUS RECRUITMENT. Invite student drivers to test request review, offers and selection while safely parked. Do not imply jobs, earnings, real passengers or real driving.",
+     "cta": "Student driver tester berminat? Message admin."
+    },
+    {
+     "pillar": "Public · Simulation Explainer",
+     "hook": "Simulation-only beta tu maksudnya apa?",
+     "concept": "PUBLIC ANONYMOUS RECRUITMENT. Explain that participants follow guided fictional scenarios inside the app. There are no real trips, no fares, no payment and no obligation to continue after testing.",
+     "cta": "Nak tengok flow dulu? Message admin."
+    },
+    {
+     "pillar": "Public · Eligibility",
+     "hook": "Siapa boleh join beta test ni?",
+     "concept": "PUBLIC ANONYMOUS RECRUITMENT. Open to the IIUM Gombak community. Separate passenger and student-driver tester roles. Keep screening private with the admin and do not collect sensitive details publicly.",
+     "cta": "Pilih role anda dan message admin."
+    },
+    {
+     "pillar": "Public · What Testers Do",
+     "hook": "Tak perlu jadi tech expert untuk jadi beta tester.",
+     "concept": "PUBLIC ANONYMOUS RECRUITMENT. Testers only need to follow a short guided scenario, say where they feel confused and report any broken step. Do not reveal the app identity publicly.",
+     "cta": "Boleh bagi honest feedback? Message admin."
+    },
+    {
+     "pillar": "Public · Final Recruitment",
+     "hook": "Last call: passenger + student driver beta slots.",
+     "concept": "PUBLIC ANONYMOUS RECRUITMENT. Give a final limited-slots reminder for the 20 passenger and 10 student-driver target. Repeat simulation-only, no real trip and no payment.",
+     "cta": "Message admin before recruitment closes."
+    },
+    {
+     "pillar": "Private · Welcome",
+     "hook": "Welcome to the private testing group.",
+     "concept": "PRIVATE TESTER GROUP. Reveal KampusRide here, thank accepted testers and restate that all activities are guided simulations only. No real ride, payment or live commitment.",
+     "cta": "Reply with your assigned tester role."
+    },
+    {
+     "pillar": "Private · Ground Rules",
+     "hook": "Sebelum test, baca 5 ground rules ni.",
+     "concept": "PRIVATE TESTER GROUP. Cover respectful conduct, fictional scenario data, no real pickup, no payment, no sharing private group materials and honest issue reporting.",
+     "cta": "React ✅ selepas baca semua rules."
+    },
+    {
+     "pillar": "Private · Test Setup",
+     "hook": "Quick setup check sebelum simulation bermula.",
+     "concept": "PRIVATE TESTER GROUP. Confirm testers can open KampusRide, understand Passenger and Driver modes and know where to report issues. Avoid collecting passwords, OTPs or sensitive identity data.",
+     "cta": "Reply READY bila setup selesai."
+    },
+    {
+     "pillar": "Private · Passenger Start",
+     "hook": "Passenger simulation 01: post satu request fiksyen.",
+     "concept": "PRIVATE SIMULATION. Guide passenger testers to create a fictional IIUM route, time and passenger count. Explicitly prohibit using a real immediate trip need.",
+     "cta": "Report step pertama yang rasa tak clear."
+    },
+    {
+     "pillar": "Private · Driver Start",
+     "hook": "Driver simulation 01: review request masa safely parked.",
+     "concept": "PRIVATE SIMULATION. Guide student-driver testers to inspect a fictional request and judge whether route, time and passenger information are sufficient. No driving occurs.",
+     "cta": "Apa info yang masih missing?"
+    },
+    {
+     "pillar": "Private · Suggested Price",
+     "hook": "Suggested price tu nampak macam guide atau fixed fare?",
+     "concept": "PRIVATE SIMULATION. Test whether passenger and driver understand that the displayed anchor is guidance for a fictional scenario, not a guaranteed or processed fare.",
+     "cta": "Reply: GUIDE / FIXED / CONFUSING."
+    },
+    {
+     "pillar": "Private · Driver Offer",
+     "hook": "Driver simulation 02: submit fictional offer.",
+     "concept": "PRIVATE SIMULATION. Test the offer form, validation and confirmation state using fictional values. No money changes hands.",
+     "cta": "Berapa tap sampai offer selesai?"
+    },
+    {
+     "pillar": "Private · Passenger Compare",
+     "hook": "Passenger simulation 02: compare beberapa offer.",
+     "concept": "PRIVATE SIMULATION. Ask passenger testers to compare fictional driver options, price, context and reputation signals without implying any safety guarantee.",
+     "cta": "Info mana paling membantu pilihan?"
+    },
+    {
+     "pillar": "Private · Counteroffer",
+     "hook": "Counteroffer flow: jelas atau terlalu banyak step?",
+     "concept": "PRIVATE SIMULATION. Run one fictional negotiation round and check whether both roles understand whose turn it is and what the latest amount means.",
+     "cta": "Screenshot atau describe step yang confusing."
+    },
+    {
+     "pillar": "Private · Selection",
+     "hook": "Passenger pilih driver — kedua-dua side nampak confirmation yang sama?",
+     "concept": "PRIVATE SIMULATION. Test the selected-match state and make sure other fictional offers resolve clearly. No real driver is dispatched.",
+     "cta": "Passenger + driver confirm apa yang anda nampak."
+    },
+    {
+     "pillar": "Private · Chat",
+     "hook": "Lepas match, trip context + chat cukup jelas tak?",
+     "concept": "PRIVATE SIMULATION. Exchange only test messages. Check whether route and selected-match context remain visible. Do not share phone numbers or personal details.",
+     "cta": "Apa context yang patut kekal visible?"
+    },
+    {
+     "pillar": "Private · Ride Status",
+     "hook": "Test status flow tanpa bergerak ke mana-mana.",
+     "concept": "PRIVATE SIMULATION. Step through fictional ride statuses while everyone remains stationary. Never encourage app use while driving.",
+     "cta": "Status mana paling ambiguous?"
+    },
+    {
+     "pillar": "Private · Completion",
+     "hook": "Complete + rating flow: useful atau sekadar decoration?",
+     "concept": "PRIVATE SIMULATION. Complete the fictional scenario and test two-sided ratings as accountability context, never as safety certification.",
+     "cta": "Rating tag apa paling practical?"
+    },
+    {
+     "pillar": "Private · Cancellation",
+     "hook": "Simulation edge case: passenger cancel sebelum match.",
+     "concept": "PRIVATE SIMULATION. Test a fictional passenger cancellation and whether the driver receives clear state changes. No real inconvenience occurs.",
+     "cta": "Adakah cancellation reason perlu?"
+    },
+    {
+     "pillar": "Private · Driver Withdrawal",
+     "hook": "Simulation edge case: driver tarik balik offer.",
+     "concept": "PRIVATE SIMULATION. Test fictional offer withdrawal and whether passenger options update clearly.",
+     "cta": "State selepas withdraw jelas tak?"
+    },
+    {
+     "pillar": "Private · No-Show Handling",
+     "hook": "Kalau no-show berlaku, sistem patut record apa?",
+     "concept": "PRIVATE DISCUSSION. Discuss status, evidence and moderation needs using a fictional scenario. Do not claim KampusRide can prevent all no-shows.",
+     "cta": "Cadangkan satu response yang fair."
+    },
+    {
+     "pillar": "Private · Privacy Review",
+     "hook": "Info apa patut private sebelum dan selepas match?",
+     "concept": "PRIVATE DISCUSSION. Review personal-data exposure, trip context and in-app chat. Do not promise complete protection from abuse.",
+     "cta": "Flag satu privacy concern utama."
+    },
+    {
+     "pillar": "Private · Accessibility",
+     "hook": "Boleh faham flow ni tanpa founder explain setiap step?",
+     "concept": "PRIVATE RETEST. Ask testers to repeat the core fictional flow with minimal guidance and log every point requiring admin intervention.",
+     "cta": "Reply where you needed help."
+    },
+    {
+     "pillar": "Private · Bug Triage",
+     "hook": "Top 5 blockers: mana wajib fix dulu?",
+     "concept": "PRIVATE FEEDBACK. Summarise only verified tester findings. Rank core-loop blockers above visual preferences and do not invent metrics.",
+     "cta": "Vote satu blocker paling critical."
+    },
+    {
+     "pillar": "Private · Passenger Retest",
+     "hook": "Passenger retest: adakah flow sekarang lebih clear?",
+     "concept": "PRIVATE RETEST. Repeat the fictional passenger path after fixes and compare against the previously logged friction points.",
+     "cta": "Mark each issue FIXED / PARTIAL / OPEN."
+    },
+    {
+     "pillar": "Private · Driver Retest",
+     "hook": "Driver retest: offer flow dah cukup practical?",
+     "concept": "PRIVATE RETEST. Repeat the fictional driver path while safely stationary and verify offer, withdrawal, selection and status feedback.",
+     "cta": "Mark each issue FIXED / PARTIAL / OPEN."
+    },
+    {
+     "pillar": "Private · Readiness Review",
+     "hook": "Simulation complete — apa yang masih block next phase?",
+     "concept": "PRIVATE REVIEW. Evaluate stability, privacy, support and comprehension. Simulation success does not automatically authorise real rides or public launch.",
+     "cta": "List any remaining no-go issue."
+    },
+    {
+     "pillar": "Private · Closeout",
+     "hook": "Terima kasih beta testers — next step ikut evidence, bukan hype.",
+     "concept": "PRIVATE CLOSEOUT. Thank the cohort, summarise verified learnings without exposing identities, and state that any next testing or launch phase requires explicit founder approval.",
+     "cta": "Final feedback: satu benda keep, satu benda improve."
+    }
+   ]
+  }
+ ],
+ "qa_notes": [
+  "Use the real Telegram pain point specifically; do not reduce every comparison to \"too many DMs\".",
+  "Do not attack or shame the IIUM transporter community.",
+  "Keep Malay/Manglish natural, campus-native and short enough for the format."
+ ],
+ "links": {}
+}

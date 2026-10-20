@@ -1,12 +1,13 @@
 {
   "name": "contentos",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "check:engine": "npx tsx scripts/engine-check.mts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.8",

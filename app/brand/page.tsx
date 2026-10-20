@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { getSupabaseBrowserClient } from '@/lib/supabase-client';
+import BrandProfilePanel from '@/components/brand-profile-panel';
 
 type Brand = {
   id: string;
@@ -154,6 +155,7 @@ export default function BrandPage() {
         <div className="brandResourceStack">
           <Link href="/knowledge" className="resourceCard"><span>KNOWLEDGE</span><strong>{knowledgeCount}</strong><h3>Knowledge Base</h3><p>Product facts, guidelines, FAQs, strategy and verified context.</p><em>Open Knowledge →</em></Link>
           <Link href="/assets" className="resourceCard"><span>ASSETS</span><strong>{assetCount}</strong><h3>Brand Assets</h3><p>Logos, visual profile, screenshots and approved source materials.</p><em>Open Assets →</em></Link>
+          {brand.id && <BrandProfilePanel key={brand.id} supabase={supabase} brandId={brand.id} />}
         </div>
       </div>}
     </section>

@@ -42,7 +42,6 @@ export default function AssetsPage() {
   const [error, setError] = useState('');
 
   const selectedBrandName = brands.find((brand) => brand.id === brandId)?.name ?? 'Active brand';
-  const isKampusRide = selectedBrandName.toLowerCase() === 'kampusride';
 
   useEffect(() => {
     let mounted = true;
@@ -140,9 +139,7 @@ export default function AssetsPage() {
     {message && <div className="notice">{message}</div>}
     {error && <div className="error globalError">{error}</div>}
 
-    <div className="assetIntro panel"><div><span className="eyebrow">START HERE</span><h2>Upload real references before generating visuals.</h2><p>{isKampusRide
-      ? 'Best first set: approved logo variants, KR app icon, real product screenshots, and visual references you actually like. ContentOS should use these references, not invent replacements.'
-      : 'Best first set: approved logo, product screenshots/photos and visual references you actually like.'}</p></div></div>
+    <div className="assetIntro panel"><div><span className="eyebrow">START HERE</span><h2>Upload real references before generating visuals.</h2><p>Best first set: approved logo variants, app icon, real product screenshots or photos, and visual references you actually like. ContentOS uses these references instead of inventing replacements.</p></div></div>
 
     <section className="toolGrid assetToolGrid">
       <div className="assetForms">

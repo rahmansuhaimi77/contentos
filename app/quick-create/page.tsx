@@ -52,16 +52,7 @@ const formatOptions = ['Carousel', '15-30 second short-form video', 'UGC / POV v
 const phaseOptions = ['Pre-Launch', 'Launch Week', 'Early Growth', 'Evergreen'];
 const defaultRouting: Routing = { copy_engine: 'openai', visual_engine: 'openai_image', video_engine: 'flow_handoff', review_engine: 'none' };
 
-const installTutorialPreset = {
-  helper: 'Create a public how-to showing students how to install KampusRide on Android and iPhone, then enable notifications.',
-  idea: 'Create a public 6-slide step-by-step tutorial titled “How to Install KampusRide + Enable Notifications”. Slide 1: How to Install KampusRide. Slide 2: Android — open KampusRide in Google Chrome. Slide 3: Android — tap the three-dot menu → Install app → Install. Slide 4: iPhone — open KampusRide in Safari → Share → Add to Home Screen → Open as Web App → Add. Slide 5: Enable Notifications — open KampusRide and tap Allow when the notification permission appears. Slide 6: Done — show the approved KR app icon on the Home Screen with “From Campus, For You.” Keep it simple, highly visual and student-friendly. Do not turn this into a general app introduction or Telegram comparison.',
-  objective: 'Product education / onboarding — make installation and notification setup easy to understand and complete.',
-  phase: 'Pre-Launch',
-  platform: 'Instagram carousel',
-  format: 'Carousel',
-  language: 'Bahasa Melayu / natural Manglish, simple student-friendly instructions',
-};
-
+/** ?request=… pre-fills the idea box (used by brand-specific shortcuts such as tutorials). */
 function routingNames(routing: Routing) {
   return {
     copy: routing.copy_engine === 'claude' ? 'Claude' : 'ChatGPT',
@@ -124,16 +115,8 @@ export default function QuickCreatePage() {
       if (!authData.user) { setLoading(false); return; }
 
       const params = new URLSearchParams(window.location.search);
-      if (params.get('preset') === 'install') {
-        setContentType('carousel');
-        setHelperRequest(installTutorialPreset.helper);
-        setIdea(installTutorialPreset.idea);
-        setObjective(installTutorialPreset.objective);
-        setPhase(installTutorialPreset.phase);
-        setPlatform(installTutorialPreset.platform);
-        setFormat(installTutorialPreset.format);
-        setLanguage(installTutorialPreset.language);
-      }
+      const presetRequest = params.get('request');
+      if (presetRequest) setHelperRequest(presetRequest.slice(0, 2000));
 
       const selected = window.localStorage.getItem('contentos:selectedBrandId');
       await loadBrand(selected);
@@ -269,7 +252,7 @@ export default function QuickCreatePage() {
     <section className={styles.panel}>
       <div className={styles.panelHead}><div><span className={styles.eyebrow}>2 · IDEA</span><h2>What is it about?</h2><p>One sentence is enough. ContentOS uses {brand?.name || 'the active brand'} knowledge and current phase.</p></div></div>
       <div className={styles.formGrid}>
-        <label className={`${styles.field} ${styles.wide}`}><span>Your idea</span><textarea value={helperRequest} onChange={(event) => setHelperRequest(event.target.value)} placeholder="Example: Teach students how to install KampusRide on Android and iPhone and enable notifications." rows={3} /></label>
+        <label className={`${styles.field} ${styles.wide}`}><span>Your idea</span><textarea value={helperRequest} onChange={(event) => setHelperRequest(event.target.value)} placeholder="Example: A carousel with 5 things to check before you pick up a rental car." rows={3} /></label>
         <div className={styles.generateRow}><button type="button" disabled={filling || !brand || helperRequest.trim().length < 3} onClick={fillForMe}>{filling ? 'Filling…' : '✦ Help me fill'}</button></div>
       </div>
     </section>

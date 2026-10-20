@@ -1,0 +1,148 @@
+import { z } from 'zod';
+
+/**
+ * A Brand Profile is everything ContentOS needs to know to write for one brand.
+ * It is DATA, not code: the planner, generator and production steps read it, and no
+ * generator may branch on a brand's name. A new brand needs a profile, not a pull request.
+ *
+ * Stored in `contentos_brands.profile` (migration 011). Brands without a stored profile
+ * fall back to a bundled starter pack in `lib/engine/packs/` matched by slug.
+ */
+
+const Exemplar = z.object({
+  pillar: z.string(),
+  hook: z.string(),
+  concept: z.string(),
+  cta: z.string().optional(),
+  /** Which phases this idea is valid in. Empty = every phase. */
+  phases: z.array(z.string()).default([]),
+  audience: z.string().optional(),
+});
+
+const TalkingPoint = z.object({
+  /** Lower-case keywords; the point applies when any appears in the hook/concept/request. */
+  match: z.array(z.string()),
+  text: z.string(),
+});
+
+const Phase = z.object({
+  key: z.string(),
+  label: z.string(),
+  guidance: z.string(),
+  ctas: z.array(z.string()).default([]),
+  /** Phrase replacements applied to every output in this phase, e.g. live CTAs before launch. */
+  replace: z.array(z.object({ pattern: z.string(), with: z.string() })).default([]),
+  qa_notes: z.array(z.string()).default([]),
+});
+
+const CalendarWindow = z.object({
+  start: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  end: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  label: z.string(),
+  guidance: z.string(),
+  /** Optional named moment the planner should build content towards (holiday, launch). */
+  moment: z.boolean().default(false),
+});
+
+const Channel = z.object({
+  platform: z.string(),
+  role: z.string(),
+  tone: z.string(),
+  formats: z.array(z.string()).default([]),
+  cadence: z.string().default(''),
+  link: z.string().default(''),
+  ctas: z.array(z.string()).default([]),
+  /** True when posting must be done by a person (e.g. Facebook Groups have no API). */
+  manual: z.boolean().default(false),
+});
+
+const Mode = z.object({
+  key: z.string(),
+  label: z.string(),
+  /** Lower-case keywords or regex sources; any match in the request/objective switches this mode on. */
+  match: z.array(z.string()),
+  instructions: z.string(),
+  example_request: z.string().default(''),
+  qa_notes: z.array(z.string()).default([]),
+  /** Optional fixed content for tutorials and other assets that must be exact. */
+  fixed: z.object({
+    hook: z.string(),
+    script: z.string(),
+    caption: z.string(),
+    cta: z.string(),
+    slides: z.array(z.object({ title: z.string(), visual: z.string(), text: z.string() })).default([]),
+  }).optional(),
+  /** Optional fixed 30-day sequence; replaces the planner when this mode is the plan objective. */
+  plan_sequence: z.array(z.object({ pillar: z.string(), hook: z.string(), concept: z.string(), cta: z.string() })).default([]),
+});
+
+export const BrandProfileSchema = z.object({
+  version: z.literal(1).default(1),
+  slug: z.string(),
+  summary: z.string(),
+  language: z.object({
+    default: z.string(),
+    guidance: z.string(),
+  }),
+  audiences: z.array(z.object({ key: z.string(), name: z.string(), description: z.string(), ctas: z.array(z.string()).default([]) })).default([]),
+  pillars: z.array(z.object({ name: z.string(), goal: z.string(), weight: z.number().min(0).default(1) })).default([]),
+  exemplars: z.array(Exemplar).default([]),
+  talking_points: z.array(TalkingPoint).default([]),
+  phase: z.object({
+    current: z.string(),
+    options: z.array(Phase).default([]),
+  }),
+  calendar: z.array(CalendarWindow).default([]),
+  channels: z.array(Channel).default([]),
+  claims: z.object({
+    never: z.array(z.string()).default([]),
+    always: z.array(z.string()).default([]),
+  }).default({ never: [], always: [] }),
+  visual: z.object({
+    setting: z.string().default(''),
+    rules: z.array(z.string()).default([]),
+  }).default({ setting: '', rules: [] }),
+  modes: z.array(Mode).default([]),
+  qa_notes: z.array(z.string()).default([]),
+  links: z.record(z.string(), z.string()).default({}),
+});
+
+export type BrandProfile = z.infer<typeof BrandProfileSchema>;
+export type ProfileExemplar = z.infer<typeof Exemplar>;
+export type ProfilePhase = z.infer<typeof Phase>;
+export type ProfileChannel = z.infer<typeof Channel>;
+export type ProfileMode = z.infer<typeof Mode>;
+export type ProfileCalendarWindow = z.infer<typeof CalendarWindow>;
+
+export function slugify(name: string) {
+  return (name || '').toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g, '');
+}
+
+export function parseProfile(value: unknown): BrandProfile | null {
+  if (!value || typeof value !== 'object' || Object.keys(value as object).length === 0) return null;
+  const parsed = BrandProfileSchema.safeParse(value);
+  return parsed.success ? parsed.data : null;
+}
+
+/** Minimal profile for a brand that has only its Brand Brain filled in. */
+export function profileFromBrandBrain(brand: {
+  name: string; product?: string; audience?: string; positioning?: string; voice?: string;
+  offer?: string; proof?: string; cta?: string; preferred_cta?: string; avoid?: string;
+}): BrandProfile {
+  const cta = brand.cta || brand.preferred_cta || '';
+  return BrandProfileSchema.parse({
+    slug: slugify(brand.name),
+    summary: [brand.product, brand.positioning].filter(Boolean).join(' '),
+    language: { default: 'Bahasa Melayu', guidance: brand.voice || 'Natural Malaysian Bahasa Melayu, English where it reads naturally.' },
+    audiences: brand.audience ? [{ key: 'main', name: 'Main audience', description: brand.audience, ctas: cta ? [cta] : [] }] : [],
+    pillars: [
+      { name: 'Problem', goal: 'Name a real situation the audience recognises.', weight: 2 },
+      { name: 'How it works', goal: 'Show the product solving that situation, step by step.', weight: 2 },
+      { name: 'Proof', goal: 'Use only verified proof from the knowledge base.', weight: 1 },
+      { name: 'Offer', goal: 'One clear offer with a clear next step.', weight: 1 },
+      { name: 'FAQ', goal: 'Answer one real question honestly.', weight: 1 },
+    ],
+    phase: { current: 'live', options: [{ key: 'live', label: 'Live', guidance: brand.offer || '', ctas: cta ? [cta] : [] }] },
+    claims: { never: brand.avoid ? [brand.avoid] : [], always: [] },
+  });
+}

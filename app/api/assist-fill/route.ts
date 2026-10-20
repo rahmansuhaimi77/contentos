@@ -1,8 +1,11 @@
-import OpenAI from 'openai';
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { z } from 'zod';
+import { loadBrandEngine, phaseKeyFor, type BrandEngineContext } from '@/lib/engine/load';
+import { generateJson } from '@/lib/engine/ai';
+import { brandContext, currentPhase, malaysiaToday, modeFor } from '@/lib/engine/context';
 
 export const runtime = 'nodejs';
+export const maxDuration = 60;
 
 const FALLBACK_SUPABASE_URL = 'https://xqlfytlknhazusowiiug.supabase.co';
 const FALLBACK_SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_BjTjAlbEe74g3PLYu6akVg_tjruki1i';
@@ -37,14 +40,6 @@ type Brand = {
   preferred_cta: string;
   avoid: string;
 };
-
-function extractJson(text: string) {
-  const cleaned = text.replace(/^```json\s*/i, '').replace(/```\s*$/i, '').trim();
-  const start = cleaned.indexOf('{');
-  const end = cleaned.lastIndexOf('}');
-  if (start < 0 || end < 0) throw new Error('Assistant did not return JSON.');
-  return JSON.parse(cleaned.slice(start, end + 1));
-}
 
 async function getAuthenticatedClient(req: Request) {
   const token = req.headers.get('authorization')?.replace(/^Bearer\s+/i, '');
@@ -91,7 +86,8 @@ function phaseFromContext(currentPhase: string | null, request: string): Fill['p
   if (/pre[- ]?launch|before launch|beta|coming soon/i.test(request)) return 'Pre-Launch';
   if (currentPhase === 'launch_week' || currentPhase === 'public_launch') return 'Launch Week';
   if (currentPhase === 'early_growth' || currentPhase === 'growth_optimisation' || currentPhase === 'retention') return 'Early Growth';
-  return 'Pre-Launch';
+  if (currentPhase && /beta|pre_launch|stabilisation|activation/.test(currentPhase)) return 'Pre-Launch';
+  return 'Evergreen';
 }
 
 function languageFromRequest(request: string) {
@@ -109,21 +105,22 @@ function objectiveFromRequest(request: string) {
   return 'Create a useful, platform-ready marketing asset that follows the request exactly.';
 }
 
-function expandRequest(brand: Brand, request: string, format: Fill['format'], contentType: ContentType) {
+function expandRequest(ctx: BrandEngineContext, request: string, format: Fill['format'], contentType: ContentType) {
+  const brand = ctx.brand;
   const clean = request.trim();
-  const install = /install.*kampusride|kampusride.*install|add to home screen|enable (push )?notifications?/i.test(clean);
-  if (brand.name.toLowerCase().includes('kampusride') && install) {
-    return 'Create a public 6-slide step-by-step tutorial titled “How to Install KampusRide + Enable Notifications”. This must be an installation tutorial, not a general brand introduction. Slide 1: How to Install KampusRide. Slide 2: Android — open KampusRide in Google Chrome. Slide 3: Android — tap the three-dot menu → Install app → Install. Slide 4: iPhone — open KampusRide in Safari → Share → Add to Home Screen → Open as Web App → Add. Slide 5: Enable Notifications — open KampusRide and tap Allow when the notification permission appears. Slide 6: Done — show the approved KR app icon on the Home Screen with “From Campus, For You.” Use simple BM / natural Manglish, short instructional copy and approved KampusRide branding. Do not turn this into a Telegram comparison or “What is KampusRide?” post. Do not imply App Store/Play Store availability, official IIUM endorsement, guaranteed safety, fares or live ride availability.';
+  const mode = modeFor(ctx.profile, clean);
+  if (mode?.example_request) {
+    return `${mode.example_request} ${mode.instructions}`;
   }
   const typeLabel = contentType === 'write' ? 'copy/caption' : contentType === 'pack' ? 'multi-platform post pack' : contentType;
   return `Create a ${typeLabel} (${format}) for ${brand.name}. Follow this request exactly: ${clean}. Keep it aligned with the brand audience and positioning. Make the output specific and production-ready rather than generic. Do not invent facts, proof, prices, availability, endorsements or guarantees.`;
 }
 
-function smartFill(brand: Brand, currentPhase: string | null, request: string, contentType: ContentType): Fill {
+function smartFill(ctx: BrandEngineContext, currentPhase: string | null, request: string, contentType: ContentType): Fill {
   const platform = platformFromRequest(request, contentType);
   const format = formatFromRequest(request, platform, contentType);
   return {
-    idea: expandRequest(brand, request, format, contentType),
+    idea: expandRequest(ctx, request, format, contentType),
     objective: objectiveFromRequest(request),
     phase: phaseFromContext(currentPhase, request),
     platform,
@@ -140,30 +137,16 @@ export async function POST(req: Request) {
     if (!parsed.success) return Response.json({ error: 'Tell the assistant what you want to create.' }, { status: 400 });
 
     const contentType: ContentType = parsed.data.contentType || 'carousel';
-    const [{ data: brandRow, error: brandError }, { data: growthRow }, { data: knowledgeRows }] = await Promise.all([
-      supabase.from('contentos_brands').select('name,product,audience,positioning,voice,offer,preferred_cta,avoid').eq('id', parsed.data.brandId).single(),
-      supabase.from('contentos_growth_profiles').select('current_phase').eq('brand_id', parsed.data.brandId).maybeSingle(),
-      supabase.from('contentos_knowledge_items').select('kind,title,content').eq('brand_id', parsed.data.brandId).order('updated_at', { ascending: false }).limit(20),
-    ]);
+    const ctx = await loadBrandEngine(supabase, parsed.data.brandId);
+    if (!ctx) return Response.json({ error: 'Active brand not found.' }, { status: 404 });
+    const phaseKey = phaseKeyFor(ctx);
+    const fallback = smartFill(ctx, phaseKey, parsed.data.request, contentType);
 
-    if (brandError || !brandRow) return Response.json({ error: 'Active brand not found.' }, { status: 404 });
-    const brand = brandRow as Brand;
-    const fallback = smartFill(brand, growthRow?.current_phase ?? null, parsed.data.request, contentType);
+    const context = brandContext(ctx.profile, ctx.brand.name, { date: malaysiaToday(), phase: currentPhase(ctx.profile, phaseKey), knowledge: ctx.knowledge.slice(0, 20) });
+    const prompt = `You are the brief assistant inside ContentOS. Fill a Quick Create form from the user's plain-language request. Do not write the final social post yet.\n\n${context}\n\nSELECTED CONTENT TYPE\n${contentType}\n\nUSER REQUEST\n${parsed.data.request}\n\nThe selected content type is authoritative unless the user explicitly asks for another format. Expand vague requests into a clear production brief, but never substitute a different topic. Choose exactly one allowed value for phase, platform and format.\n\nReturn ONLY JSON with this exact shape:\n{\n  "idea": "detailed production-ready brief",\n  "objective": "single clear objective",\n  "phase": "Pre-Launch | Launch Week | Early Growth | Evergreen",\n  "platform": "Instagram carousel | TikTok / Reels | Threads | Facebook | WhatsApp | Multi-platform",\n  "format": "Carousel | 15-30 second short-form video | UGC / POV video | Static ad | Threads text post | Long-form post",\n  "language": "language and tone instruction"\n}`;
 
-    if (!process.env.OPENAI_API_KEY || !process.env.OPENAI_MODEL) return Response.json({ ...fallback, mode: 'smart' as const });
-
-    const knowledge = (knowledgeRows ?? []).map((item: any) => `[${item.kind}] ${item.title}: ${item.content}`).join('\n');
-    const prompt = `You are the brief assistant inside ContentOS. Fill a Quick Create form from the user's plain-language request. Do not create the final social post yet.\n\nACTIVE BRAND\nName: ${brand.name}\nProduct: ${brand.product}\nAudience: ${brand.audience}\nPositioning: ${brand.positioning}\nVoice: ${brand.voice}\nCurrent context/offer: ${brand.offer}\nPreferred CTA: ${brand.preferred_cta}\nNever do/say: ${brand.avoid}\nCurrent product phase: ${growthRow?.current_phase || 'not set'}\n\nSELECTED CONTENT TYPE\n${contentType}\n\nVERIFIED KNOWLEDGE\n${knowledge || 'No extra knowledge supplied.'}\n\nUSER REQUEST\n${parsed.data.request}\n\nThe selected content type is authoritative unless the user explicitly asks for another format in the request. Expand vague requests into a clear production brief, but never substitute a different topic. Choose exactly one allowed value for phase, platform and format. Never invent claims, prices, availability, endorsements or product capabilities.\n\nReturn ONLY JSON with this exact shape:\n{\n  "idea": "detailed production-ready brief",\n  "objective": "single clear objective",\n  "phase": "Pre-Launch | Launch Week | Early Growth | Evergreen",\n  "platform": "Instagram carousel | TikTok / Reels | Threads | Facebook | WhatsApp | Multi-platform",\n  "format": "Carousel | 15-30 second short-form video | UGC / POV video | Static ad | Threads text post | Long-form post",\n  "language": "language and tone instruction"\n}`;
-
-    try {
-      const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-      const response = await client.responses.create({ model: process.env.OPENAI_MODEL, input: prompt });
-      const result = FillSchema.parse(extractJson(response.output_text || ''));
-      return Response.json({ ...result, mode: 'ai' as const });
-    } catch (aiError) {
-      console.error('assist-fill AI fallback', aiError);
-      return Response.json({ ...fallback, mode: 'smart' as const });
-    }
+    const ai = await generateJson(FillSchema, 'You turn plain-language requests into precise content briefs. Return only JSON.', prompt);
+    return Response.json(ai ? { ...ai.data, mode: 'ai' as const } : { ...fallback, mode: 'smart' as const });
   } catch (error) {
     console.error(error);
     return Response.json({ error: error instanceof Error ? error.message : 'Unable to fill the form.' }, { status: 500 });

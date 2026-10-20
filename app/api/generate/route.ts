@@ -1,14 +1,11 @@
-import OpenAI from 'openai';
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { z } from 'zod';
-import { buildCampaignPrompt, type PromptKnowledgeItem } from '@/lib/prompt';
-import { buildDemoResult } from '@/lib/demo-generator';
-import { buildThreadsDemoResult } from '@/lib/threads-generator';
-import { buildKampusRideCampaignResult, isKampusRide } from '@/lib/kampusride-strategy';
-import { buildKampusRidePreLaunchCampaignResult } from '@/lib/kampusride-launch-context';
 import { sanitizeGenerationResultForAudience } from '@/lib/audience-copy-safety';
+import { findBrandIdByName, loadBrandEngine, resolveProfile, type BrandEngineContext } from '@/lib/engine/load';
+import { generateCampaign } from '@/lib/engine/campaign';
 
 export const runtime = 'nodejs';
+export const maxDuration = 60;
 
 const FALLBACK_SUPABASE_URL = 'https://xqlfytlknhazusowiiug.supabase.co';
 const FALLBACK_SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_BjTjAlbEe74g3PLYu6akVg_tjruki1i';
@@ -35,26 +32,6 @@ const InputSchema = z.object({
   }),
 });
 
-const ResultSchema = z.object({
-  strategy: z.string(),
-  variants: z.array(z.object({
-    hook: z.string(),
-    angle: z.string(),
-    script: z.string(),
-    caption: z.string(),
-    cta: z.string(),
-    creative_prompt: z.string(),
-  })),
-});
-
-function extractJson(text: string) {
-  const cleaned = text.replace(/^```json\s*/i, '').replace(/```\s*$/i, '').trim();
-  const start = cleaned.indexOf('{');
-  const end = cleaned.lastIndexOf('}');
-  if (start === -1 || end === -1) throw new Error('Model did not return JSON.');
-  return JSON.parse(cleaned.slice(start, end + 1));
-}
-
 async function getAuthenticatedClient(req: Request) {
   const token = req.headers.get('authorization')?.replace(/^Bearer\s+/i, '');
   if (!token) return null;
@@ -73,27 +50,6 @@ async function getAuthenticatedClient(req: Request) {
   return supabase;
 }
 
-async function loadKnowledge(supabase: any, brandName: string): Promise<PromptKnowledgeItem[]> {
-  const { data: brandRows } = await supabase
-    .from('contentos_brands')
-    .select('id')
-    .ilike('name', brandName)
-    .order('updated_at', { ascending: false })
-    .limit(1);
-
-  const brandId = (brandRows as Array<{ id: string }> | null)?.[0]?.id;
-  if (!brandId) return [];
-
-  const { data } = await supabase
-    .from('contentos_knowledge_items')
-    .select('kind,title,content')
-    .eq('brand_id', brandId)
-    .order('updated_at', { ascending: false })
-    .limit(40);
-
-  return (data ?? []) as PromptKnowledgeItem[];
-}
-
 export async function POST(req: Request) {
   try {
     const supabase = await getAuthenticatedClient(req);
@@ -106,40 +62,18 @@ export async function POST(req: Request) {
       return Response.json({ error: 'Invalid request', details: parsed.error.flatten() }, { status: 400 });
     }
 
-    const knowledge = await loadKnowledge(supabase, parsed.data.brand.name);
-    const isThreads = /threads/i.test(parsed.data.brief.platform);
-    const kampusRide = isKampusRide(parsed.data.brand.name);
+    const { brand, brief } = parsed.data;
+    const brandId = await findBrandIdByName(supabase, brand.name);
+    const loaded = brandId ? await loadBrandEngine(supabase, brandId) : null;
+    // A brand that has not been saved yet still works from what the user typed in the form.
+    const ctx: BrandEngineContext = loaded ?? (() => {
+      const row = { id: '', name: brand.name, product: brand.product, audience: brand.audience, positioning: brand.positioning, voice: brand.voice, offer: brand.offer, proof: brand.proof, preferred_cta: brand.cta, avoid: brand.avoid };
+      const { profile, source } = resolveProfile(row);
+      return { brand: row, profile, profileSource: source, knowledge: [], growthProfile: null, growthCalendar: [], recentHooks: [] };
+    })();
 
-    if (!process.env.OPENAI_API_KEY || !process.env.OPENAI_MODEL) {
-      let generated = kampusRide
-        ? buildKampusRidePreLaunchCampaignResult(parsed.data, knowledge, buildKampusRideCampaignResult(parsed.data))
-        : isThreads
-          ? buildThreadsDemoResult(parsed.data, knowledge)
-          : buildDemoResult(parsed.data, knowledge);
-
-      generated = sanitizeGenerationResultForAudience(generated, parsed.data.brand, parsed.data.brief);
-      return Response.json(generated);
-    }
-
-    const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-    const prompt = buildCampaignPrompt(parsed.data.brand, parsed.data.brief, knowledge);
-    const response = await client.responses.create({
-      model: process.env.OPENAI_MODEL,
-      input: prompt,
-    });
-
-    const output = extractJson(response.output_text || '');
-    const validated = ResultSchema.parse(output);
-
-    if (validated.variants.length !== parsed.data.brief.count) {
-      return Response.json({ error: 'Model returned the wrong number of variants.' }, { status: 502 });
-    }
-
-    const aiResult = { ...validated, mode: 'ai' as const };
-    const contextual = kampusRide
-      ? buildKampusRidePreLaunchCampaignResult(parsed.data, knowledge, aiResult)
-      : aiResult;
-    return Response.json(sanitizeGenerationResultForAudience(contextual, parsed.data.brand, parsed.data.brief));
+    const generated = await generateCampaign(ctx, brief);
+    return Response.json(sanitizeGenerationResultForAudience(generated, brand, brief));
   } catch (error) {
     console.error(error);
     return Response.json(

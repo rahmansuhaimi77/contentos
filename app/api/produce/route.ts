@@ -1,16 +1,11 @@
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { z } from 'zod';
-import {
-  buildProductionPack,
-  type ProductionKnowledgeItem,
-  type ProductionVisualContext,
-} from '@/lib/production-pack-generator';
-import { buildThreadsProductionPack } from '@/lib/threads-production-pack';
-import { buildKampusRideProductionPack, isKampusRide } from '@/lib/kampusride-strategy';
-import { enforceKampusRidePreLaunchProduction } from '@/lib/kampusride-launch-context';
-import { buildQuickCreateProductionPack } from '@/lib/quick-create-production';
+import type { ProductionVisualContext } from '@/lib/production-pack-generator';
+import { loadBrandEngine } from '@/lib/engine/load';
+import { buildProduction } from '@/lib/engine/production';
 
 export const runtime = 'nodejs';
+export const maxDuration = 60;
 
 const FALLBACK_SUPABASE_URL = 'https://xqlfytlknhazusowiiug.supabase.co';
 const FALLBACK_SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_BjTjAlbEe74g3PLYu6akVg_tjruki1i';
@@ -36,14 +31,8 @@ async function getAuthenticatedClient(req: Request) {
   return { supabase, user: data.user };
 }
 
-async function loadProductionContext(supabase: any, brandId: string) {
-  const [knowledgeResult, visualResult, assetsResult] = await Promise.all([
-    supabase
-      .from('contentos_knowledge_items')
-      .select('kind,title,content')
-      .eq('brand_id', brandId)
-      .order('updated_at', { ascending: false })
-      .limit(100),
+async function loadVisualContext(supabase: any, brandId: string) {
+  const [visualResult, assetsResult] = await Promise.all([
     supabase
       .from('contentos_brand_visuals')
       .select('primary_color,secondary_color,accent_color,font_notes,visual_style,image_rules')
@@ -56,7 +45,6 @@ async function loadProductionContext(supabase: any, brandId: string) {
       .limit(50),
   ]);
 
-  if (knowledgeResult.error) throw knowledgeResult.error;
   if (visualResult.error) throw visualResult.error;
   if (assetsResult.error) throw assetsResult.error;
 
@@ -66,12 +54,7 @@ async function loadProductionContext(supabase: any, brandId: string) {
     asset_kinds: [...new Set(assetRows.map((row) => row.kind))],
     asset_titles: assetRows.map((row) => row.title),
   };
-
-  return {
-    knowledgeItems: (knowledgeResult.data ?? []) as ProductionKnowledgeItem[],
-    visualContext,
-    assetRows,
-  };
+  return { visualContext, assetRows };
 }
 
 function extractQuickCreateRequest(brief: any) {
@@ -102,28 +85,22 @@ async function produceQuickCreate(auth: { supabase: any; user: any }, variantId:
     return Response.json({ error: 'This creative is not a Quick Create item.' }, { status: 400 });
   }
 
-  const { data: brand, error: brandError } = await auth.supabase
-    .from('contentos_brands')
-    .select('id,name')
-    .eq('id', campaign.brand_id)
-    .single();
-  if (brandError || !brand) return Response.json({ error: 'Brand not found.' }, { status: 404 });
+  const ctx = await loadBrandEngine(auth.supabase, campaign.brand_id);
+  if (!ctx) return Response.json({ error: 'Brand not found.' }, { status: 404 });
 
-  const { knowledgeItems, visualContext, assetRows } = await loadProductionContext(auth.supabase, brand.id);
-  const pack = buildQuickCreateProductionPack({
-    brandName: brand.name,
+  const { visualContext, assetRows } = await loadVisualContext(auth.supabase, ctx.brand.id);
+  const request = extractQuickCreateRequest(brief);
+  const { pack, mode } = await buildProduction(ctx, {
     platform: campaign.platform,
     format: campaign.format,
     language: campaign.language,
+    pillar: typeof brief.target_phase === 'string' ? brief.target_phase : 'Quick Create',
     objective: campaign.objective,
     hook: variant.hook,
-    script: variant.script,
-    caption: variant.caption,
+    concept: variant.script || variant.caption || request,
     cta: variant.cta,
-    creativePrompt: variant.creative_prompt,
-    request: extractQuickCreateRequest(brief),
-    targetPhase: typeof brief.target_phase === 'string' ? brief.target_phase : 'Unscheduled',
-  }, knowledgeItems, visualContext);
+    request,
+  }, visualContext);
 
   const { error: saveError } = await auth.supabase
     .from('contentos_content_variants')
@@ -140,7 +117,7 @@ async function produceQuickCreate(auth: { supabase: any; user: any }, variantId:
     pack,
     campaignId: campaign.id,
     variantId: variant.id,
-    mode: 'zero-cost',
+    mode: mode === 'ai' ? 'ai' : 'zero-cost',
     productionStatus: 'produced',
     visualAssets: { count: assetRows.length, kinds: visualContext.asset_kinds ?? [] },
   });
@@ -149,7 +126,7 @@ async function produceQuickCreate(auth: { supabase: any; user: any }, variantId:
 async function produceCalendarItem(auth: { supabase: any; user: any }, planId: string, dayNumber: number) {
   const { data: item, error: itemError } = await auth.supabase
     .from('contentos_plan_items')
-    .select('id,plan_id,day_number,pillar,objective,platform,format,hook,concept,cta,status,production_status')
+    .select('id,plan_id,day_number,planned_date,pillar,objective,platform,format,hook,concept,cta,status,production_status')
     .eq('plan_id', planId)
     .eq('day_number', dayNumber)
     .single();
@@ -162,16 +139,12 @@ async function produceCalendarItem(auth: { supabase: any; user: any }, planId: s
     .single();
   if (planError || !plan) return Response.json({ error: 'Content plan not found.' }, { status: 404 });
 
-  const { data: brand, error: brandError } = await auth.supabase
-    .from('contentos_brands')
-    .select('id,name,preferred_cta')
-    .eq('id', plan.brand_id)
-    .single();
-  if (brandError || !brand) return Response.json({ error: 'Brand not found.' }, { status: 404 });
+  const ctx = await loadBrandEngine(auth.supabase, plan.brand_id);
+  if (!ctx) return Response.json({ error: 'Brand not found.' }, { status: 404 });
+  const brand = ctx.brand;
 
-  const { knowledgeItems, visualContext, assetRows } = await loadProductionContext(auth.supabase, brand.id);
-  const productionInput = {
-    brandName: brand.name,
+  const { visualContext, assetRows } = await loadVisualContext(auth.supabase, brand.id);
+  const { pack, mode } = await buildProduction(ctx, {
     platform: item.platform,
     format: item.format,
     language: plan.language,
@@ -180,15 +153,8 @@ async function produceCalendarItem(auth: { supabase: any; user: any }, planId: s
     hook: item.hook,
     concept: item.concept,
     cta: item.cta || brand.preferred_cta || '',
-  };
-
-  let pack = isKampusRide(brand.name)
-    ? buildKampusRideProductionPack(productionInput, knowledgeItems, visualContext)
-    : /threads/i.test(item.platform)
-      ? buildThreadsProductionPack(productionInput, knowledgeItems, visualContext)
-      : buildProductionPack(productionInput, knowledgeItems, visualContext);
-
-  if (isKampusRide(brand.name)) pack = enforceKampusRidePreLaunchProduction(pack, knowledgeItems);
+    plannedDate: item.planned_date || undefined,
+  }, visualContext);
 
   const { data: existingVariants } = await auth.supabase
     .from('contentos_content_variants')
@@ -252,7 +218,7 @@ async function produceCalendarItem(auth: { supabase: any; user: any }, planId: s
     pack,
     campaignId,
     variantId,
-    mode: 'zero-cost',
+    mode: mode === 'ai' ? 'ai' : 'zero-cost',
     productionStatus: 'produced',
     visualAssets: { count: assetRows.length, kinds: visualContext.asset_kinds ?? [] },
   });

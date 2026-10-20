@@ -2,7 +2,7 @@
 
 A multi-brand AI marketing operating system: Brand Brain → campaign generation → saved creative library → human approval.
 
-## v0.2 status
+## v0.2 status (foundation)
 
 Working in this build:
 
@@ -17,6 +17,22 @@ Working in this build:
 - Protected generation endpoint that requires a valid Supabase session
 - Zero-cost demo generator when no OpenAI key is configured
 - Optional OpenAI Responses API generation when an API key/model are added
+
+## v0.3 — Brand Engine
+
+Every brand-specific rule is **data**, not code. Generators never branch on a brand's name.
+
+- `lib/engine/profile.ts` — the Brand Profile shape: summary, language, audiences, weighted pillars, example ideas (by phase), verified talking points, product phases (with CTA and phrase rules), dated calendar windows, channels, never/always claims, visual rules, special modes (fixed tutorials, fixed 30-day sequences).
+- `lib/engine/packs/*.json` — starter packs (KampusRide, SewaPro). Used until a brand saves its own profile.
+- `lib/engine/{planner,campaign,production}.ts` — one generic planner, campaign writer and production-pack builder for every brand.
+- `lib/engine/ai.ts` — Gemini (free tier, `GEMINI_API_KEY`) first, then OpenAI (`OPENAI_API_KEY` + `OPENAI_MODEL`). With no key, drafts come from the profile's idea bank (zero-cost mode).
+- Brand page → **Brand profile** panel: see the source, switch the product phase, edit the full profile.
+
+Setup (one time):
+1. Run `supabase/migrations/011_brand_profile.sql` in the Supabase SQL editor (adds `contentos_brands.profile`).
+2. Add `GEMINI_API_KEY` in Vercel → contentos → Settings → Environment Variables. Optional: `GEMINI_MODEL` to pin a model; otherwise the best available Flash model is picked automatically, falling back to Flash-Lite on quota errors.
+
+Check: `npm run check:engine` runs the engine offline for every starter pack.
 
 ## Architecture
 

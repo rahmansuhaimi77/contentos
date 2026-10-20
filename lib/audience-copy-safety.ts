@@ -43,10 +43,7 @@ export function deriveAudienceHeadline(brandName: string, request: string, langu
   if (/install|add to home screen|notification/.test(lower)) {
     return malay ? `Nak install ${brandName}? Senang je 📱` : `How to Install ${brandName} 📱`;
   }
-  if (/female.*(?:driver|preferred)|(?:driver|preferred).*female/.test(lower)) {
-    return malay ? 'Prefer female driver? Ini caranya.' : 'Prefer a female driver? Here’s how.';
-  }
-  if (/\bintro\b|introduc|what is|apa (?:itu|sebenarnya)|about\s+kampusride|about\s+the brand/.test(lower)) {
+  if (/\bintro\b|introduc|what is|apa (?:itu|sebenarnya)|about\s+the brand/.test(lower)) {
     return malay ? `${brandName} ni sebenarnya apa?` : `Meet ${brandName}`;
   }
   if (/how to|step[- ]by[- ]step|tutorial|guide|teach/.test(lower)) {
@@ -56,20 +53,7 @@ export function deriveAudienceHeadline(brandName: string, request: string, langu
   return brandName;
 }
 
-function kampusRideIntroBody() {
-  return 'KampusRide susunkan cara student UIA cari dan offer transporter dalam satu flow: passenger post ride request, driver hantar offer, passenger compare dan pilih, kemudian coordination kekal dalam app. Komuniti yang sama, cara yang lebih tersusun.';
-}
-
-function kampusRideFemaleBody() {
-  return 'Masa buat ride request, pilih female preferred. Bila female driver available, preference itu boleh diprioritikan. Ia preference, bukan guarantee kerana availability boleh berubah.';
-}
-
 function safeBody(brand: BrandLike, request: string) {
-  const lower = request.toLowerCase();
-  if (brand.name.toLowerCase().includes('kampusride')) {
-    if (/female.*(?:driver|preferred)|(?:driver|preferred).*female/.test(lower)) return kampusRideFemaleBody();
-    if (/\bintro\b|introduc|what is|about\s+kampusride/.test(lower)) return kampusRideIntroBody();
-  }
   const product = (brand.product || '').trim();
   const positioning = (brand.positioning || '').trim();
   return [product, positioning].filter(Boolean).join(' ').trim() || request;

@@ -1,0 +1,116 @@
+{
+ "version": 1,
+ "slug": "sewapro",
+ "summary": "SewaPro is a car rental company in Kuala Lumpur and Selangor, operating since 2019. Economy to luxury cars, delivery to the customer's location or self-pickup, KLIA/KLIA2 pickup. Booking is by WhatsApp (+60 14-570 5911) or sewapro.my. Minimum rental 2 days; bookings at least 1 day before pickup. Customer support daily 9am to 12am.",
+ "language": {
+  "default": "Bahasa Melayu (70%) with natural English (30%)",
+  "guidance": "Sound like a warm, straight-talking local friend who happens to run a great fleet. Short sentences (5-10 words), lots of line breaks. Use 'ya', 'lah', 'je', 'no hal', 'jom' sparingly: maximum 1-2 per message. Maximum one em dash per piece. Never start with 'We' or 'Our'; start with the customer's situation. English for Luxury, Premium, KLIA/airport and corporate content. Address people as Encik/Puan/Cik only when gender is known, otherwise first name."
+ },
+ "audiences": [
+  {"key": "family", "name": "Families in Bangi, Kajang, Semenyih, Putrajaya, Shah Alam", "description": "Parents planning weekend trips, balik kampung, school holidays and festive travel. Care about seats, luggage, a clean car and honest price.", "ctas": ["WhatsApp 014-570 5911 untuk check harga.", "Bagi tarikh dan kawasan, kami terus quote."]},
+  {"key": "replacement", "name": "Car in workshop / car broke down", "description": "Needs a car for a week or a month while their own car is repaired. Values speed and monthly rates.", "ctas": ["WhatsApp kami, kami check kereta untuk minggu ni."]},
+  {"key": "traveller", "name": "Travellers landing at KLIA", "description": "Domestic and international visitors who want a car ready on arrival. English-first.", "ctas": ["Book ahead and your car is ready at KLIA. WhatsApp +60 14-570 5911."]},
+  {"key": "student", "name": "University students", "description": "UiTM, UKM, Sunway, Monash, Taylor's students renting for weekends with friends. Budget-led.", "ctas": ["Weekend 2 hari dengan kawan-kawan? WhatsApp kami."]},
+  {"key": "business", "name": "Companies and SMEs", "description": "Staff and project cars for a week to several months. Want invoices and one contact.", "ctas": ["Untuk syarikat: sewapro.my/business"]}
+ ],
+ "pillars": [
+  {"name": "Real fleet, real trust", "goal": "Real cars, real handovers, real customers (with permission). Proof over claims.", "weight": 3},
+  {"name": "Save-worthy tips", "goal": "Checklists and cost breakdowns people save and share: what to check at pickup, deposit, fuel, insurance, rental vs Grab vs own car.", "weight": 3},
+  {"name": "Offer of the week", "goal": "One clear offer tied to a real moment: weekend, festive, school holiday, monthly rental.", "weight": 2},
+  {"name": "How it works", "goal": "WhatsApp dates + area + car → quote → deposit → car delivered. Make booking feel easy.", "weight": 2},
+  {"name": "Face behind SewaPro", "goal": "Rahman, since 2019, local and reachable. Founder voice builds trust.", "weight": 1},
+  {"name": "FAQ", "goal": "Answer one real customer question honestly: minimum days, deposit, documents, delivery, cancellation.", "weight": 1}
+ ],
+ "exemplars": [
+  {"pillar": "Face behind SewaPro", "hook": "Nak sewa kereta tapi takut kena tipu?", "concept": "Rahman on camera beside a clean car: since 2019 renting cars around KL & Selangor, how booking works on WhatsApp, the price you're quoted is the price you pay.", "phases": []},
+  {"pillar": "Save-worthy tips", "hook": "5 benda WAJIB check sebelum ambil kereta sewa", "concept": "Carousel: video around the car, photo of fuel gauge, ask about insurance excess, tyres and lights, get price/deposit/return date in writing.", "phases": []},
+  {"pillar": "Offer of the week", "hook": "Weekend ni nak keluar jalan, tapi kereta tak muat satu family?", "concept": "2-day weekend rental, Saturday pickup Monday return, Economy from RM240 for 2 days, MPV 7-seater for big families, delivery around Bangi/Kajang/Putrajaya. Book before Thursday.", "phases": []},
+  {"pillar": "FAQ", "hook": "Kenapa minimum 2 hari?", "concept": "Every car arrives cleaned, checked and fuelled; one-day rentals make everything rushed. 2 days or more means a better-kept car and a better daily rate.", "phases": []},
+  {"pillar": "Save-worthy tips", "hook": "Kos balik kampung: kereta sendiri vs sewa vs bas", "concept": "Honest cost breakdown for a family of 5 going home for the festive break: fuel, tolls, wear on own car vs a rented MPV vs bus tickets. Only use prices from the knowledge base.", "phases": []},
+  {"pillar": "Offer of the week", "hook": "Cuti 4 hari. Satu kereta. Satu keluarga.", "concept": "Festive long weekend MPV/SUV showcase with real car footage. Book early before cars run out. No fake scarcity numbers.", "phases": []},
+  {"pillar": "Real fleet, real trust", "hook": "Ini kereta yang sampai depan rumah anda.", "concept": "Real handover footage (with customer permission): car arrives clean, quick walk-around, keys handed over. Let the footage do the talking.", "phases": []},
+  {"pillar": "Save-worthy tips", "hook": "Checklist perjalanan jauh sebelum gerak", "concept": "Carousel for long trips: tyre pressure, spare tyre, fuel plan, rest stops, emergency contact, what to do if anything goes wrong with a rental car.", "phases": []},
+  {"pillar": "Offer of the week", "hook": "Cuti sekolah 4 minggu. Rancang kereta sekarang.", "concept": "School holiday early-bird: lock the price now for December dates. No discount needed; the value is certainty before peak demand.", "phases": []},
+  {"pillar": "Save-worthy tips", "hook": "Sewa mingguan vs harian: mana lebih jimat?", "concept": "Simple comparison of 7 daily rentals vs a weekly rate using only prices from the knowledge base. Ends with 'tanya harga mingguan'.", "phases": []},
+  {"pillar": "Offer of the week", "hook": "Kereta masuk workshop? Jangan tambah satu lagi headache.", "concept": "Replacement car for a week or a month while their own car is being fixed. Monthly rental angle.", "phases": []},
+  {"pillar": "Save-worthy tips", "hook": "Berapa sebenarnya kos ada kereta sebulan?", "concept": "Instalment, insurance, roadtax, servicing, parking vs a monthly rental. Use only verified prices; frame as 'kira sendiri' rather than a claim.", "phases": []},
+  {"pillar": "How it works", "hook": "Tarikh, kawasan, kereta. Bagi sekali je.", "concept": "Show the WhatsApp flow: customer sends dates + area + car type, gets a clear quote, pays deposit, car delivered.", "phases": []},
+  {"pillar": "FAQ", "hook": "Dokumen apa perlu untuk sewa kereta?", "concept": "IC or passport, valid driving licence, refundable deposit, age 21 and above. Send photos on WhatsApp to get ready early.", "phases": []},
+  {"pillar": "FAQ", "hook": "Deposit tu dapat balik ke?", "concept": "Explain the refundable security deposit: returned after the car comes back in the same condition. Honest and simple.", "phases": []},
+  {"pillar": "Save-worthy tips", "hook": "Sebelum transfer deposit, confirm 5 benda ni dulu.", "concept": "Checklist: dates, car model/category, total price, pickup or delivery location, deposit and refund terms. Protects the customer from scams elsewhere too.", "phases": []},
+  {"pillar": "Real fleet, real trust", "hook": "Landing KLIA, kereta dah tunggu.", "concept": "English traveller content: book ahead, car ready on arrival, no queue at a counter.", "phases": []},
+  {"pillar": "Save-worthy tips", "hook": "MPV untuk 6 orang: jangan tengok seat je.", "concept": "Seats vs luggage space vs comfort for a long trip. Helps families pick the right category.", "phases": []},
+  {"pillar": "Save-worthy tips", "hook": "Tak pasti nak pilih Sedan, MPV atau SUV?", "concept": "Quick guide by passengers, luggage, trip type and budget. Ends with 'WhatsApp, kami tolong pilih'.", "phases": []},
+  {"pillar": "Offer of the week", "hook": "Group family dah confirm trip. Kereta je belum.", "concept": "Relatable family group chat ending with one message to SewaPro.", "phases": []},
+  {"pillar": "Real fleet, real trust", "hook": "Harga yang kami bagi, itulah harga yang anda bayar.", "concept": "No hidden charges: what's included (insurance), what isn't (fuel), deposit returned. Straight talk.", "phases": []},
+  {"pillar": "How it works", "hook": "Apa jadi lepas anda WhatsApp SewaPro?", "concept": "Step by step: quote within the hour during support hours, deposit locks the car, reminder the day before, handover, return.", "phases": []},
+  {"pillar": "Face behind SewaPro", "hook": "Sejak 2019, satu benda saya belajar pasal sewa kereta.", "concept": "Founder lesson: customers remember how quickly you replied and how clean the car was, not the logo. Personal and short.", "phases": []},
+  {"pillar": "Offer of the week", "hook": "Weekend 2 hari dengan kawan-kawan?", "concept": "Student weekend package: Economy for 2 days, split between friends. Book 1 day ahead.", "phases": []}
+ ],
+ "talking_points": [
+  {"match": ["minimum", "2 hari", "1 hari", "sehari"], "text": "Sewaan minimum 2 hari, dan tempahan perlu dibuat sekurang-kurangnya 1 hari sebelum pickup."},
+  {"match": ["harga", "price", "murah", "kos", "rm"], "text": "Harga sehari bermula Economy RM120, MPV RM200, SUV RM250, Premium RM250, Luxury RM900. Harga akhir bergantung tarikh dan model. Termasuk insurans, tidak termasuk minyak. Sewa 3 hari ke atas dapat harga sehari lebih rendah."},
+  {"match": ["deposit", "dokumen", "lesen", "ic", "passport"], "text": "Perlu IC atau pasport, lesen memandu yang sah dan deposit keselamatan yang dipulangkan selepas kereta dihantar balik. Umur 21 tahun ke atas."},
+  {"match": ["delivery", "hantar", "rumah", "klia", "airport"], "text": "Kereta boleh dihantar dan diambil semula di lokasi pelanggan sekitar KL & Selangor, termasuk KLIA dan KLIA2, atau self-pickup."},
+  {"match": ["cancel", "batal"], "text": "Batal lebih 48 jam sebelum pickup: deposit dipulangkan penuh. 24 hingga 48 jam: 50%. Kurang 24 jam atau tak hadir: tiada bayaran balik."},
+  {"match": ["whatsapp", "reply", "contact", "hubungi", "support"], "text": "WhatsApp 014-570 5911 setiap hari 9 pagi hingga 12 malam. Mesej di luar waktu itu dijawab pagi esok."},
+  {"match": ["minyak", "fuel"], "text": "Kereta diberi dengan paras minyak tertentu dan perlu dipulangkan pada paras yang sama."}
+ ],
+ "phase": {
+  "current": "live",
+  "options": [
+   {"key": "live", "label": "Taking bookings", "guidance": "SewaPro is taking bookings now. Every piece ends with one clear next step: WhatsApp or the tracking link for that channel.", "ctas": ["WhatsApp 014-570 5911 untuk check harga.", "Bagi tarikh dan kawasan, kami terus quote.", "Check harga di sewapro.my"], "replace": [], "qa_notes": []}
+  ]
+ },
+ "calendar": [
+  {"start": "2026-10-21", "end": "2026-10-27", "label": "Kenal SewaPro", "guidance": "Introduce SewaPro and the founder. Weekend 2-day offer.", "moment": false},
+  {"start": "2026-10-28", "end": "2026-11-05", "label": "Deepavali pre-booking", "guidance": "Deepavali is Sunday 8 November 2026 with Tuesday 10 November off in most states, so taking Monday 9 November gives a 4-day break (7-10 Nov). Push MPV and SUV for families. Last call by Thursday 5 November.", "moment": true},
+  {"start": "2026-11-06", "end": "2026-11-10", "label": "Deepavali", "guidance": "Festive greeting on 8 November with no sales message. Real handover content otherwise.", "moment": true},
+  {"start": "2026-11-11", "end": "2026-11-17", "label": "School holiday early-bird", "guidance": "KL & Selangor school holidays run 5-31 December 2026. 'Lock harga sekarang' for December dates.", "moment": false},
+  {"start": "2026-11-18", "end": "2026-12-04", "label": "Long rentals + school holiday", "guidance": "Weekly and monthly rentals, replacement cars, school-holiday bookings. Chinese New Year 2027 is 6 February 2027: start early-bird mentions.", "moment": false},
+  {"start": "2026-12-05", "end": "2026-12-31", "label": "School holidays", "guidance": "Peak season. Availability-led content and family trips. Christmas 25 December. Never fake scarcity; say 'tempah awal' instead.", "moment": true},
+  {"start": "2027-01-01", "end": "2027-02-05", "label": "Chinese New Year build-up", "guidance": "CNY on 6 February 2027. Balik kampung and family travel. Book early.", "moment": true}
+ ],
+ "channels": [
+  {"platform": "Facebook group", "role": "Biggest lead source: the 150k Bangi/Kajang/Semenyih/Putrajaya community Rahman runs as admin", "tone": "Warm, community first, BM", "formats": ["Facebook post"], "cadence": "Maximum 1 SewaPro post per week (Wednesday 8:30pm) plus the pinned post", "link": "sewapro.my/?utm_source=fbgroup", "ctas": ["Sebut 'member group' bila WhatsApp, saya layan dulu."], "manual": true},
+  {"platform": "Facebook page", "role": "Proof: real cars, reviews, the WhatsApp button", "tone": "Warm and storytelling, BM", "formats": ["Facebook post", "15-30 sec short-form video", "Carousel"], "cadence": "3 posts per week", "link": "sewapro.my/?utm_source=facebook", "ctas": [], "manual": false},
+  {"platform": "Instagram", "role": "Brand, saves and shares", "tone": "Confident and aspirational, BM/EN mix", "formats": ["Carousel", "Reels", "Stories"], "cadence": "3 feed posts per week plus daily Stories", "link": "sewapro.my/?utm_source=instagram", "ctas": ["Link di bio untuk check harga."], "manual": false},
+  {"platform": "TikTok", "role": "Cold reach to new people", "tone": "Casual and fun, authentic", "formats": ["15-30 sec short-form video"], "cadence": "3 videos per week plus 1 trend", "link": "sewapro.my/?utm_source=tiktok", "ctas": ["Link di bio untuk check harga."], "manual": false}
+ ],
+ "claims": {
+  "never": [
+   "that SewaPro is a broker, aggregator, finder or uses rental partners or suppliers (customer-facing content presents SewaPro as the car rental company)",
+   "24/7 support (support hours are daily 9am to 12am)",
+   "same-day bookings or 1-day rentals",
+   "fake scarcity numbers ('tinggal 2 kereta je') unless confirmed",
+   "testimonials, reviews or customer counts that are not in the knowledge base",
+   "prices that are not in the knowledge base",
+   "specific car models being available on specific dates"
+  ],
+  "always": [
+   "Minimum rental 2 days, book at least 1 day before pickup.",
+   "One clear CTA per piece.",
+   "Use the channel's tracking link when linking to the website."
+  ]
+ },
+ "visual": {
+  "setting": "Everyday Kuala Lumpur and Selangor: residential streets in Bangi and Kajang, condo drop-offs, KLIA arrivals, family loading luggage. Natural daylight, real phone footage feel.",
+  "rules": [
+   "Brand colour deep blue #1e40af, clean and minimal ('Premium Simplicity').",
+   "Prefer real SewaPro car photos from Brand Assets over generated cars.",
+   "Never show competitor logos or another company's branding on cars.",
+   "No fake WhatsApp screenshots with real customer names or numbers."
+  ]
+ },
+ "modes": [],
+ "qa_notes": [
+  "Read it out loud: it should sound like a real Malaysian person, not a script.",
+  "No 'Hehe' or 'Haha'. Never dismiss a price question.",
+  "Maximum 3 emoji per paragraph."
+ ],
+ "links": {
+  "website": "https://sewapro.my",
+  "whatsapp": "https://wa.me/60145705911",
+  "business": "https://sewapro.my/business"
+ }
+}
