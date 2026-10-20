@@ -68,7 +68,7 @@ function extractQuickCreateRequest(brief: any) {
 async function produceQuickCreate(auth: { supabase: any; user: any }, variantId: string) {
   const { data: variant, error: variantError } = await auth.supabase
     .from('contentos_content_variants')
-    .select('id,campaign_id,hook,script,caption,cta,creative_prompt,status')
+    .select('id,campaign_id,hook,script,caption,cta,creative_prompt,status,production_pack')
     .eq('id', variantId)
     .single();
   if (variantError || !variant) return Response.json({ error: 'Creative not found.' }, { status: 404 });
@@ -105,7 +105,7 @@ async function produceQuickCreate(auth: { supabase: any; user: any }, variantId:
   const { error: saveError } = await auth.supabase
     .from('contentos_content_variants')
     .update({
-      production_pack: pack,
+      production_pack: { ...pack, generated_assets: (variant as { production_pack?: { generated_assets?: unknown[] } }).production_pack?.generated_assets ?? [] },
       creative_prompt: pack.creative_prompt,
       status: 'in_review',
       updated_at: new Date().toISOString(),
@@ -200,6 +200,10 @@ async function produceCalendarItem(auth: { supabase: any; user: any }, planId: s
   };
 
   if (variantId) {
+    // Keep posters already made for this item when its copy is re-produced.
+    const { data: existingPack } = await auth.supabase.from('contentos_content_variants').select('production_pack').eq('id', variantId).maybeSingle();
+    const keptAssets = (existingPack?.production_pack as { generated_assets?: unknown[] } | null)?.generated_assets;
+    if (keptAssets?.length) (variantPayload as { production_pack: unknown }).production_pack = { ...pack, generated_assets: keptAssets };
     const { error: variantError } = await auth.supabase.from('contentos_content_variants').update(variantPayload).eq('id', variantId);
     if (variantError) throw variantError;
   } else {

@@ -10,7 +10,13 @@ type Brand = { id: string; name: string };
 type Plan = { id: string; name: string; start_date: string | null; objective: string; platforms: string[]; language: string; created_at: string };
 type Item = { id: string; day_number: number; planned_date: string | null; pillar: string; objective: string; platform: string; format: string; hook: string; concept: string; cta: string; status: string; production_status: string };
 
-const platformOptions = ['TikTok / Reels', 'Threads', 'Facebook', 'Instagram', 'WhatsApp'];
+const defaultPlatforms = ['TikTok / Reels', 'Threads', 'Facebook', 'Instagram', 'WhatsApp'];
+
+function addDays(date: string, days: number) {
+  const d = new Date(`${date}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+}
 
 function malaysiaToday() {
   return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kuala_Lumpur', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
@@ -39,6 +45,9 @@ export default function CalendarPage() {
   const [platforms, setPlatforms] = useState<string[]>(['Threads', 'WhatsApp']);
   const [language, setLanguage] = useState('Bahasa Melayu / natural Manglish where appropriate');
   const [startDate, setStartDate] = useState(malaysiaToday());
+  const [platformOptions, setPlatformOptions] = useState<string[]>(defaultPlatforms);
+  const [variantByItem, setVariantByItem] = useState<Record<string, string>>({});
+  const [batch, setBatch] = useState<{ done: number; total: number; current: string } | null>(null);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
@@ -97,7 +106,70 @@ export default function CalendarPage() {
       .order('planned_date', { ascending: true })
       .order('day_number', { ascending: true });
     if (itemError) { setError(itemError.message); return; }
-    setItems((rows ?? []) as Item[]);
+    const nextItems = (rows ?? []) as Item[];
+    setItems(nextItems);
+    await loadVariants(nextItems);
+    await loadChannels(targetBrandId);
+  }
+
+  async function loadVariants(list: Item[]) {
+    if (!list.length) { setVariantByItem({}); return; }
+    const { data } = await supabase.from('contentos_content_variants').select('id,source_plan_item_id').in('source_plan_item_id', list.map((i) => i.id));
+    setVariantByItem(Object.fromEntries((data ?? []).map((row: { id: string; source_plan_item_id: string }) => [row.source_plan_item_id, row.id])));
+  }
+
+  /** The brand's own channels (from its profile) are offered alongside the defaults. */
+  async function loadChannels(targetBrandId: string) {
+    try {
+      const { data } = await supabase.auth.getSession();
+      const token = data.session?.access_token;
+      if (!token) return;
+      const res = await fetch(`/api/brand-profile?brandId=${targetBrandId}`, { headers: { Authorization: `Bearer ${token}` } });
+      const body = await res.json();
+      const channels: string[] = (body?.profile?.channels ?? []).map((c: { platform: string }) => c.platform);
+      if (channels.length) setPlatformOptions([...new Set([...channels, ...defaultPlatforms])]);
+    } catch { /* defaults are fine */ }
+  }
+
+  /** Free template posters (exact text, real photo) for every item in the next 7 days. */
+  async function postersForWeek() {
+    if (!plan) return;
+    const today = malaysiaToday();
+    const end = addDays(today, 6);
+    const week = items.filter((i) => i.planned_date && i.planned_date >= today && i.planned_date <= end);
+    if (!week.length) { setMessage('No calendar items in the next 7 days.'); return; }
+    setError(''); setMessage('');
+    const { data } = await supabase.auth.getSession();
+    const token = data.session?.access_token;
+    if (!token) { setError('Your session expired. Please sign in again.'); return; }
+    const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` };
+    const made: string[] = [];
+    const failed: string[] = [];
+    const map = { ...variantByItem };
+    for (let index = 0; index < week.length; index += 1) {
+      const item = week[index];
+      setBatch({ done: index, total: week.length, current: item.hook });
+      try {
+        let variantId = map[item.id];
+        if (!variantId) {
+          const res = await fetch('/api/produce', { method: 'POST', headers, body: JSON.stringify({ planId: plan.id, dayNumber: item.day_number }) });
+          const body = await res.json();
+          if (!res.ok) throw new Error(body.error || 'produce failed');
+          variantId = body.variantId;
+          map[item.id] = variantId;
+        }
+        const poster = await fetch('/api/poster', { method: 'POST', headers, body: JSON.stringify({ variantId, template: 'photo', size: /stor|tiktok|reel/i.test(`${item.platform} ${item.format}`) ? 'story' : 'feed' }) });
+        const body = await poster.json();
+        if (!poster.ok) throw new Error(body.error || 'poster failed');
+        made.push(item.hook);
+      } catch {
+        failed.push(item.hook);
+      }
+    }
+    setVariantByItem(map);
+    setBatch(null);
+    setMessage(`${made.length} poster${made.length === 1 ? '' : 's'} made for the next 7 days${failed.length ? `; ${failed.length} failed (open them to retry)` : ''}. Open any item with “Poster →” to review, download or try an AI scene.`);
+    await loadCalendar(brandId);
   }
 
   function togglePlatform(platform: string) {
@@ -158,7 +230,7 @@ export default function CalendarPage() {
       <section className={styles.panel}>
         <div className={styles.summary}>
           <div><strong>{plan?.name || `${selectedBrand?.name || 'Brand'} Content Calendar`}</strong><span>{items.length ? `${items.length} planned content items · choose one to create` : 'No calendar yet for this brand.'}</span></div>
-          <div className={styles.toolbar}><Link className={styles.secondary} href="/growth-calendar">Strategy</Link><Link className={styles.secondary} href="/quick-create">Quick Create</Link></div>
+          <div className={styles.toolbar}><Link className={styles.secondary} href="/growth-calendar">Strategy</Link><Link className={styles.secondary} href="/quick-create">Quick Create</Link>{items.length > 0 && <button className={styles.primary} type="button" onClick={postersForWeek} disabled={!!batch}>{batch ? `Making posters ${batch.done + 1}/${batch.total}…` : 'Make posters: next 7 days (free)'}</button>}</div>
         </div>
       </section>
 
@@ -172,7 +244,9 @@ export default function CalendarPage() {
               <h3>{item.hook}</h3><p>{item.concept}</p>
             </div>
             <div className={styles.actions}>
-              <Link href={`/create?planId=${encodeURIComponent(plan!.id)}&day=${item.day_number}`}>Create content →</Link>
+              {variantByItem[item.id]
+                ? <Link href={`/creative/${variantByItem[item.id]}`}>Poster →</Link>
+                : <Link href={`/create?planId=${encodeURIComponent(plan!.id)}&day=${item.day_number}`}>Create content →</Link>}
               <button onClick={() => navigator.clipboard.writeText(`${item.hook}\n\n${item.concept}\n\nCTA: ${item.cta}`)}>Copy brief</button>
             </div>
           </article>;

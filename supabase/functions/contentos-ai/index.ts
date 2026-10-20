@@ -95,7 +95,12 @@ async function providerStatus(req: Request) {
 }
 
 type Scene = { scene?: number; duration?: string; visual?: string; on_screen_text?: string; voiceover?: string; image_prompt?: string };
-type GeneratedAsset = { id: string; kind: 'static_poster'; storage_path: string; created_at: string; provider: 'openai'; model: string; size: string; quality: string };
+type GeneratedAsset = { id: string; kind: 'static_poster' | 'ai_background'; storage_path: string; created_at: string; provider: 'openai'; model: string; size: string; quality: string };
+
+// Image model is configurable (Supabase secret OPENAI_IMAGE_MODEL); falls back to gpt-image-1 if the
+// configured model is unavailable to the account.
+const IMAGE_MODEL = Deno.env.get('OPENAI_IMAGE_MODEL') || 'gpt-image-1';
+const IMAGE_QUALITY = Deno.env.get('OPENAI_IMAGE_QUALITY') || 'medium';
 type Pack = { hook?: string; script?: string; cta?: string; creative_prompt?: string; storyboard?: Scene[]; generated_assets?: GeneratedAsset[]; [key: string]: unknown };
 type BrandAsset = { title: string; storage_path: string; mime_type: string | null };
 
@@ -151,6 +156,30 @@ RULES
 - Produce only the final poster image.`;
 }
 
+/**
+ * Background-only scene. ContentOS places every word, the logo and the contact line on top
+ * itself (app/api/poster), because image models misspell text and misdraw phone numbers.
+ */
+function buildBackgroundPrompt(args: { platform: string; variant: any; pack: Pack; visual: any }) {
+  const scene = args.pack.storyboard?.[0];
+  return `Create a photographic background image for a social media poster. Portrait 1024x1536.
+
+ABSOLUTELY NO TEXT: no words, letters, numbers, logos, watermarks, signs, number plates, captions or UI anywhere in the image.
+
+SCENE
+Topic: ${args.variant.hook || args.pack.hook || ''}
+Context: ${String(args.variant.script || args.pack.script || '').slice(0, 600)}
+Visual direction: ${scene?.visual || args.pack.creative_prompt || ''}
+Style: ${args.visual?.visual_style || 'realistic, natural daylight, authentic Malaysian setting'}
+Rules: ${args.visual?.image_rules || ''}
+
+COMPOSITION
+- The top 40% must be calm and uncluttered (sky, wall, soft background) because a headline is overlaid there.
+- The bottom 15% will be covered by a solid contact bar; keep nothing important there.
+- Main subject in the middle third. Realistic, not illustrated. Malaysian setting.
+- Cars: generic modern Malaysian-market vehicles with no badges, no logos and blank or hidden number plates.`;
+}
+
 function decodeBase64(value: string) {
   const binary = atob(value);
   const bytes = new Uint8Array(binary.length);
@@ -158,10 +187,10 @@ function decodeBase64(value: string) {
   return bytes;
 }
 
-async function callOpenAIImage(apiKey: string, prompt: string, references: Array<{ bytes: Uint8Array; filename: string; mimeType: string }>) {
-  const model = 'gpt-image-1';
+async function callOpenAIImage(apiKey: string, prompt: string, references: Array<{ bytes: Uint8Array; filename: string; mimeType: string }>, modelOverride?: string): Promise<{ bytes: Uint8Array; model: string; size: string; quality: string }> {
+  const model = modelOverride || IMAGE_MODEL;
   const size = '1024x1536';
-  const quality = 'medium';
+  const quality = IMAGE_QUALITY;
   let response: Response;
 
   if (references.length) {
@@ -184,6 +213,9 @@ async function callOpenAIImage(apiKey: string, prompt: string, references: Array
   }
 
   const payload = await response.json();
+  if (!response.ok && model !== 'gpt-image-1' && [400, 404].includes(response.status) && /model/i.test(String(payload?.error?.message || ''))) {
+    return callOpenAIImage(apiKey, prompt, references, 'gpt-image-1');
+  }
   if (!response.ok) throw new Error(payload?.error?.message || `OpenAI image generation failed (${response.status}).`);
   const encoded = payload?.data?.[0]?.b64_json;
   if (!encoded) throw new Error('OpenAI returned no image data.');
@@ -207,7 +239,8 @@ async function generateStatic(req: Request) {
 
   const brief = campaign.brief || {};
   const contentType = String(brief.content_type || '').toLowerCase();
-  if (!(contentType === 'poster' || /static/i.test(campaign.format || ''))) return json({ error: 'One-click image generation is enabled for static posters first.' }, 400);
+  const mode = String(body.mode || 'poster') === 'background' ? 'background' : 'poster';
+  if (mode === 'poster' && !(contentType === 'poster' || /static/i.test(campaign.format || ''))) return json({ error: 'One-click image generation is enabled for static posters first.' }, 400);
 
   const { data: credential } = await admin.from('contentos_ai_provider_credentials')
     .select('api_key_secret_id,status').eq('brand_id', campaign.brand_id).eq('provider', 'openai').maybeSingle();
@@ -221,7 +254,7 @@ async function generateStatic(req: Request) {
     admin.from('contentos_brand_assets').select('title,storage_path,mime_type').eq('brand_id', campaign.brand_id).eq('kind','logo').order('created_at', { ascending: false }),
   ]);
 
-  const selected = chooseReferenceAssets((assets || []) as BrandAsset[], requestText);
+  const selected = mode === 'background' ? [] : chooseReferenceAssets((assets || []) as BrandAsset[], requestText);
   const references: Array<{ bytes: Uint8Array; filename: string; mimeType: string }> = [];
   for (const asset of selected) {
     const { data, error } = await admin.storage.from('contentos-assets').download(asset.storage_path);
@@ -230,20 +263,22 @@ async function generateStatic(req: Request) {
   }
 
   const pack = (variant.production_pack || {}) as Pack;
-  const prompt = buildPrompt({ brandName: brand?.name || 'Brand', platform: campaign.platform, objective: campaign.objective, request: requestText, variant, pack, visual, hasReferences: references.length > 0 });
+  const prompt = mode === 'background'
+    ? buildBackgroundPrompt({ platform: campaign.platform, variant, pack, visual })
+    : buildPrompt({ brandName: brand?.name || 'Brand', platform: campaign.platform, objective: campaign.objective, request: requestText, variant, pack, visual, hasReferences: references.length > 0 });
   const generated = await callOpenAIImage(apiKey, prompt, references);
   const assetId = crypto.randomUUID();
-  const storagePath = `${campaign.brand_id}/${variant.id}/generated/${assetId}.png`;
+  const storagePath = `${campaign.brand_id}/${variant.id}/${mode === 'background' ? 'backgrounds' : 'generated'}/${assetId}.png`;
   const { error: uploadError } = await admin.storage.from(BUCKET).upload(storagePath, generated.bytes, { contentType: 'image/png', cacheControl: '3600', upsert: false });
   if (uploadError) throw new Error(`Visual created, but saving failed: ${uploadError.message}`);
 
-  const asset: GeneratedAsset = { id: assetId, kind: 'static_poster', storage_path: storagePath, created_at: new Date().toISOString(), provider: 'openai', model: generated.model, size: generated.size, quality: generated.quality };
+  const asset: GeneratedAsset = { id: assetId, kind: mode === 'background' ? 'ai_background' : 'static_poster', storage_path: storagePath, created_at: new Date().toISOString(), provider: 'openai', model: generated.model, size: generated.size, quality: generated.quality };
   const nextPack: Pack = { ...pack, generated_assets: [asset, ...(pack.generated_assets || [])].slice(0, 10) };
   const { error: updateError } = await admin.from('contentos_content_variants').update({ production_pack: nextPack, updated_at: new Date().toISOString() }).eq('id', variant.id);
   if (updateError) { await admin.storage.from(BUCKET).remove([storagePath]); throw new Error(`Visual created, but linking it failed: ${updateError.message}`); }
 
   const { data: signed } = await admin.storage.from(BUCKET).createSignedUrl(storagePath, 3600);
-  return json({ asset, signedUrl: signed?.signedUrl || null, pack: nextPack, message: 'Static poster generated and saved to ContentOS.' });
+  return json({ asset, signedUrl: signed?.signedUrl || null, pack: nextPack, message: mode === 'background' ? 'AI background generated. ContentOS adds the exact text on top.' : 'Static poster generated and saved to ContentOS.' });
 }
 
 Deno.serve(async (req: Request) => {

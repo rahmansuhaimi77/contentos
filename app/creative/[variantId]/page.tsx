@@ -22,7 +22,8 @@ type Scene = {
 
 type GeneratedAsset = {
   id: string;
-  kind: 'static_poster';
+  kind: 'static_poster' | 'template_poster' | 'ai_background';
+  template?: string;
   storage_path: string;
   created_at: string;
   provider: string;
@@ -66,7 +67,8 @@ export default function CreativeWorkspacePage() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [preparing, setPreparing] = useState(false);
-  const [generating, setGenerating] = useState(false);
+  const [generating, setGenerating] = useState<string | false>(false);
+  const [size, setSize] = useState<'feed' | 'story'>('feed');
   const [variant, setVariant] = useState<Variant | null>(null);
   const [campaign, setCampaign] = useState<Campaign | null>(null);
   const [brandName, setBrandName] = useState('Brand');
@@ -78,7 +80,8 @@ export default function CreativeWorkspacePage() {
   const contentType = String(campaign?.brief?.content_type || '').toLowerCase();
   const isStatic = contentType === 'poster' || /static/i.test(campaign?.format || '');
   const isVideo = contentType === 'video' || /video/i.test(campaign?.format || '');
-  const generatedAssets = pack?.generated_assets || [];
+  const generatedAssets = (pack?.generated_assets || []).filter((asset) => asset.kind !== 'ai_background');
+  const hasBackground = (pack?.generated_assets || []).some((asset) => asset.kind === 'ai_background');
 
   useEffect(() => { void initialise(); }, [variantId]);
 
@@ -166,33 +169,62 @@ export default function CreativeWorkspacePage() {
     }
   }
 
-  async function generateVisual() {
-    if (!variant || !isStatic) return;
-    setGenerating(true);
-    setError('');
-    setMessage('');
+  async function applyResult(result: { pack?: ProductionPack; asset?: GeneratedAsset; signedUrl?: string | null }) {
+    const nextPack = result.pack as ProductionPack;
+    setPack(nextPack);
+    if (result.asset?.id && result.signedUrl) setAssetUrls((current) => ({ ...current, [result.asset!.id]: result.signedUrl! }));
+    else await loadAssetUrls(nextPack);
+  }
+
+  /** Free: exact text, real logo, real product photo (or the saved AI scene). */
+  async function makePoster(template: 'photo' | 'bold' | 'scene') {
+    if (!variant) return;
+    setGenerating(template); setError(''); setMessage('');
     try {
       const token = await getToken();
-      const response = await fetch('/api/generate-visual', {
+      const response = await fetch('/api/poster', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ variantId: variant.id }),
+        body: JSON.stringify({ variantId: variant.id, template, size }),
       });
       const result = await response.json();
-      if (!response.ok) throw new Error(result.error || 'Unable to generate the visual.');
-      const nextPack = result.pack as ProductionPack;
-      setPack(nextPack);
-      if (result.asset?.id && result.signedUrl) {
-        setAssetUrls((current) => ({ ...current, [result.asset.id]: result.signedUrl }));
-      } else {
-        await loadAssetUrls(nextPack);
-      }
-      setMessage('Visual generated and saved. Review it below before approval.');
+      if (!response.ok) throw new Error(result.error || 'Unable to make the poster.');
+      await applyResult(result);
+      setMessage(result.template === 'bold' && template === 'photo'
+        ? 'Poster ready. No matching vehicle photo for this post, so it uses the text design (no misleading car).'
+        : `Poster ready${result.photo ? ` with your ${result.photo} photo` : ''}. Check it below before approval.`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unable to generate the visual.');
-    } finally {
-      setGenerating(false);
-    }
+      setError(err instanceof Error ? err.message : 'Unable to make the poster.');
+    } finally { setGenerating(false); }
+  }
+
+  /** Paid (OpenAI image): paints a text-free scene, then ContentOS puts the exact text on it. */
+  async function makeAiScenePoster() {
+    if (!variant) return;
+    setGenerating('ai'); setError(''); setMessage('');
+    try {
+      const token = await getToken();
+      const bg = await fetch('/api/generate-visual', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ variantId: variant.id, mode: 'background' }),
+      });
+      const bgResult = await bg.json();
+      if (!bg.ok) throw new Error(bgResult.error || 'Unable to generate the AI scene.');
+      setPack(bgResult.pack as ProductionPack);
+      setGenerating('scene');
+      const response = await fetch('/api/poster', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ variantId: variant.id, template: 'scene', size }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'AI scene saved, but the poster could not be finished.');
+      await applyResult(result);
+      setMessage('AI scene poster ready. The text, phone number and logo were added by ContentOS, not the AI.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unable to make the AI poster.');
+    } finally { setGenerating(false); }
   }
 
   function scenePrompt(scene: Scene) {
@@ -236,7 +268,6 @@ export default function CreativeWorkspacePage() {
       </div>
       <div className={styles.toolbar}>
         <Link className={styles.secondary} href="/review">← Review</Link>
-        {isStatic && <button className={styles.primary} type="button" onClick={generateVisual} disabled={generating || !pack}>{generating ? 'Generating visual…' : generatedAssets.length ? 'Regenerate visual' : '✦ Generate visual'}</button>}
         {isVideo && <a className={styles.primary} href={FLOW_URL} target="_blank" rel="noreferrer">Open Google Flow ↗</a>}
       </div>
     </header>
@@ -247,30 +278,38 @@ export default function CreativeWorkspacePage() {
     {!pack ? <section className={styles.panel}>
       <div className={styles.createBar}><p>The copy exists, but this item does not have a production pack yet.</p><button onClick={preparePack} disabled={preparing}>{preparing ? 'Preparing…' : 'Prepare creative pack'}</button></div>
     </section> : <>
-      {isStatic && <section className={styles.panel}>
+      <section className={styles.panel}>
         <div className={styles.panelHead}>
-          <div><span className={styles.eyebrow}>FINAL VISUAL</span><h2>{generatedAssets.length ? 'Generated poster' : 'Generate the actual poster'}</h2><p>{generatedAssets.length ? 'Newest version appears first. Regenerate if you want another option; nothing is published automatically.' : 'ContentOS will use the production brief and approved brand references, save the image here, and keep it behind Review.'}</p></div>
-          <button className={styles.primary} type="button" onClick={generateVisual} disabled={generating}>{generating ? 'Generating…' : generatedAssets.length ? 'Regenerate' : '✦ Generate visual'}</button>
+          <div><span className={styles.eyebrow}>POSTER</span><h2>{generatedAssets.length ? 'Posters' : 'Make the poster'}</h2><p>Headline, phone number, CTA and logo are placed by ContentOS exactly as written. Only the background can come from AI.</p></div>
+        </div>
+        <div className={creative.posterControls}>
+          <div className={creative.sizeToggle}>
+            <button type="button" className={size === 'feed' ? creative.on : ''} onClick={() => setSize('feed')}>Feed 4:5</button>
+            <button type="button" className={size === 'story' ? creative.on : ''} onClick={() => setSize('story')}>Story 9:16</button>
+          </div>
+          <button className={styles.primary} type="button" onClick={() => makePoster('photo')} disabled={!!generating}>{generating === 'photo' ? 'Making…' : 'Free: real car photo'}</button>
+          <button className={styles.secondary} type="button" onClick={() => makePoster('bold')} disabled={!!generating}>{generating === 'bold' ? 'Making…' : 'Free: bold text'}</button>
+          <button className={styles.secondary} type="button" onClick={makeAiScenePoster} disabled={!!generating}>{generating === 'ai' ? 'AI painting scene…' : generating === 'scene' ? 'Adding text…' : 'AI scene (≈RM0.20)'}</button>
+          {hasBackground && <button className={styles.secondary} type="button" onClick={() => makePoster('scene')} disabled={!!generating}>Reuse last AI scene (free)</button>}
         </div>
 
-        {generating && <div className={creative.visualGenerating}><strong>Creating poster…</strong><span>This can take a little while. Keep this page open.</span></div>}
-
-        {!generating && generatedAssets.length === 0 && <div className={creative.visualEmpty}>No rendered visual yet. Tap <b>Generate visual</b>.</div>}
+        {generating === 'ai' && <div className={creative.visualGenerating}><strong>AI is painting the background…</strong><span>About 30–40 seconds. Keep this page open.</span></div>}
+        {!generating && generatedAssets.length === 0 && <div className={creative.visualEmpty}>No poster yet. Start with <b>Free: real car photo</b>.</div>}
 
         <div className={creative.visualPreviewGrid}>
           {generatedAssets.map((asset, index) => <article className={creative.visualPreviewCard} key={asset.id}>
             <div className={creative.visualImageWrap}>
-              {assetUrls[asset.id] ? <img src={assetUrls[asset.id]} alt={`${brandName} generated poster ${index + 1}`} /> : <div className={creative.visualEmpty}>Loading preview…</div>}
+              {assetUrls[asset.id] ? <img src={assetUrls[asset.id]} alt={`${brandName} poster ${index + 1}`} /> : <div className={creative.visualEmpty}>Loading preview…</div>}
               {index === 0 && <span className={creative.latestBadge}>LATEST</span>}
             </div>
             <div className={creative.visualMeta}>
-              <div><strong>Static poster</strong><span>{new Date(asset.created_at).toLocaleString('en-MY')}</span></div>
-              <small>{asset.model} · {asset.quality} · {asset.size}</small>
-              {assetUrls[asset.id] && <a href={assetUrls[asset.id]} target="_blank" rel="noreferrer">Open full image ↗</a>}
+              <div><strong>{asset.kind === 'template_poster' ? (asset.template === 'scene' ? 'AI scene + exact text' : 'Template poster') : 'AI poster (text drawn by AI — check carefully)'}</strong><span>{new Date(asset.created_at).toLocaleString('en-MY')}</span></div>
+              <small>{asset.model} · {asset.size}</small>
+              {assetUrls[asset.id] && <a href={`${assetUrls[asset.id]}&download=${encodeURIComponent(`${brandName}-${index + 1}.png`)}`}>Download ↓</a>}
             </div>
           </article>)}
         </div>
-      </section>}
+      </section>
 
       <section className={styles.panel}>
         <div className={styles.context}>
