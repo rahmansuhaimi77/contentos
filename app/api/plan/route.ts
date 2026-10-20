@@ -5,6 +5,7 @@ import { buildPlan } from '@/lib/engine/planner';
 import { malaysiaToday } from '@/lib/engine/context';
 
 export const runtime = 'nodejs';
+export const maxDuration = 120;
 
 const FALLBACK_SUPABASE_URL = 'https://xqlfytlknhazusowiiug.supabase.co';
 const FALLBACK_SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_BjTjAlbEe74g3PLYu6akVg_tjruki1i';
