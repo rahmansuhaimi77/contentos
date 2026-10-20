@@ -28,15 +28,17 @@ export type PlannerRequest = {
   days?: number;
 };
 
+// Lenient on purpose: a missing or oddly-typed field should not throw away 10 good days.
+const text = z.preprocess((v) => (v == null ? '' : String(v)), z.string());
 const AiPlanSchema = z.object({
   items: z.array(z.object({
-    day_number: z.number().int().min(1),
-    pillar: z.string(),
-    platform: z.string(),
-    format: z.string(),
-    hook: z.string(),
-    concept: z.string(),
-    cta: z.string(),
+    day_number: z.coerce.number().optional(),
+    pillar: text,
+    platform: text,
+    format: text,
+    hook: z.string().min(3),
+    concept: text,
+    cta: text,
   })).min(1),
 });
 
@@ -173,13 +175,13 @@ export async function buildPlan(ctx: BrandEngineContext, req: PlannerRequest): P
       return {
         day_number: index + 1,
         planned_date: addDaysIso(req.startDate, index),
-        pillar: item.pillar,
+        pillar: item.pillar || demo[index].pillar,
         objective: req.objective,
         platform: item.platform || req.platforms[index % req.platforms.length],
-        format: item.format || formatFor(ctx.profile, item.platform, index),
+        format: item.format || formatFor(ctx.profile, item.platform || req.platforms[index % req.platforms.length], index),
         hook: item.hook,
-        concept: item.concept,
-        cta: item.cta,
+        concept: item.concept || demo[index].concept,
+        cta: item.cta || demo[index].cta,
       };
     });
     return { items, model: ai.model };

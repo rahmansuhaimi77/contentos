@@ -58,9 +58,11 @@ async function geminiModels(apiKey: string): Promise<string[]> {
     .map((m) => m.name.replace(/^models\//, ''))
     .filter((name) => rankGeminiModel(name) > 0)
     .sort((a, b) => rankGeminiModel(b) - rankGeminiModel(a));
+  // Flash-Lite first: in production it answers in 3-5s, has the larger free daily quota,
+  // and the full Flash model has been returning 503 "high demand". Flash is the fallback.
   const full = usable.find((n) => !n.includes('lite'));
   const lite = usable.find((n) => n.includes('lite'));
-  const models = [full, lite].filter(Boolean) as string[];
+  const models = [lite, full].filter(Boolean) as string[];
   if (!models.length) throw new Error('No Gemini text model is available for this API key.');
   geminiCandidates = { at: Date.now(), models };
   return models;
@@ -91,7 +93,7 @@ async function callGemini(apiKey: string, model: string, system: string, prompt:
   return body.candidates?.[0]?.content?.parts?.map((p) => p.text || '').join('') || '';
 }
 
-export async function generateJson<T>(schema: z.ZodType<T>, system: string, prompt: string): Promise<AiResult<T> | null> {
+export async function generateJson<S extends z.ZodTypeAny>(schema: S, system: string, prompt: string): Promise<AiResult<z.output<S>> | null> {
   const errors: string[] = [];
 
   const geminiKey = process.env.GEMINI_API_KEY;
@@ -99,10 +101,16 @@ export async function generateJson<T>(schema: z.ZodType<T>, system: string, prom
     try {
       for (const model of await geminiModels(geminiKey)) {
         try {
-          const text = await callGemini(geminiKey, model, system, prompt);
-          const parsed = schema.safeParse(extractJson(text));
-          if (parsed.success) return { data: parsed.data, provider: 'gemini', model };
-          errors.push(`${model}: output did not match the expected shape`);
+          // One retry on the same model when the JSON comes back malformed.
+          for (let attempt = 1; attempt <= 2; attempt += 1) {
+            const text = await callGemini(geminiKey, model, system, prompt);
+            let json: unknown;
+            try { json = extractJson(text); } catch { errors.push(`${model}#${attempt}: not JSON`); continue; }
+            const parsed = schema.safeParse(json);
+            if (parsed.success) return { data: parsed.data, provider: 'gemini', model };
+            const issue = parsed.error.issues[0];
+            errors.push(`${model}#${attempt}: shape mismatch at ${issue?.path.join('.') || 'root'} (${issue?.message})`);
+          }
         } catch (error) {
           const status = (error as { status?: number }).status;
           const timedOut = error instanceof Error && (error.name === 'TimeoutError' || error.name === 'AbortError');

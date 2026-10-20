@@ -63,7 +63,7 @@ globalThis.fetch = (async (url: string, init?: any) => {
   return new Response(JSON.stringify({ candidates: [{ content: { parts: [{ text: '```json\n' + JSON.stringify(out) + '\n```' }] } }] }));
 }) as any;
 const aiPlan = await buildPlan(kr, { objective: 'Awareness', platforms: ['Threads'], language: 'BM', startDate: '2026-10-20' });
-check(aiPlan.mode === 'ai' && aiPlan.model === 'gemini-9-flash-lite', `AI plan used ${aiPlan.model} after Flash returned 429`);
+check(aiPlan.mode === 'ai' && aiPlan.model === 'gemini-9-flash-lite', `AI plan used ${aiPlan.model} (Flash-Lite first)`);
 check(!aiPlan.items.some(i => /Post ride anda dalam KampusRide/.test(i.cta)), 'Phase rules still applied to AI output');
 check(calls.some(c => c.includes('/models?')) && !calls.some(c => c.includes('image')), 'Model discovered via ListModels; image/embedding models skipped');
 const aiCamp = await generateCampaign(sp, { objective: 'x', platform: 'Instagram', format: 'Carousel', language: 'BM', count: 1, extra: '' });
